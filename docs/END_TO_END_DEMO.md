@@ -29,6 +29,8 @@ Required OCI state:
 - A public/bastion subnet and workload subnet
 - Log Analytics onboarded in the tenancy
 - Vault secrets for GOAD/WinRM credentials when using GOAD reuse
+- Permission for the Wazuh instance principal to read OCI Audit events
+- Either permission to create VCN Flow Logs for the monitored subnet/VCN/VNIC, or an existing Flow Log OCID/log group OCID to reuse
 
 For CAP development, `scripts/cap-up.sh` resolves most values from the local OCI config and writes `terraform/terraform.tfvars`.
 
@@ -39,6 +41,18 @@ cp terraform/terraform.tfvars.example terraform/terraform.tfvars
 ```
 
 Use placeholders only in committed files. Real OCIDs, IPs, and credentials stay in local tfvars, environment variables, or OCI Vault.
+
+If the monitored subnet already has Flow Logs enabled, do not create a duplicate. Set this in local `terraform/terraform.tfvars`:
+
+```hcl
+existing_flow_logs = [{
+  compartment_id = "<SOURCE_COMPARTMENT_OCID>"
+  log_group_id   = "<EXISTING_FLOW_LOG_GROUP_OCID>"
+  log_id         = "<EXISTING_FLOW_LOG_OCID>"
+}]
+```
+
+When `existing_flow_logs` is set, Terraform reuses that Flow Log and creates only the SCH permissions/connector needed to route it to the Wazuh stream.
 
 ## 2. Deploy Wazuh and Linux Agents
 
@@ -210,6 +224,7 @@ oci_decoders=ready
 oci_rules=ready
 oci_logcollector=ready
 consumer=ready
+consumer_systemd=ready
 ```
 
 Run the synthetic OCI Audit and VCN Flow detection gate:
@@ -234,7 +249,36 @@ WAZUH_SSH_CONTROL=none make simulate-detections
 
 The synthetic gate appends normalized JSON lines to `/var/ossec/logs/oci/audit.json` and `/var/ossec/logs/oci/flow.json`, then checks Wazuh alerts for rule `100000` and `100100`.
 
-## 8. Build OCI Log Analytics Dashboard
+## 8. Validate Real OCI Audit and VCN Flow Logs
+
+Run:
+
+```bash
+make validate-real-oci-logs
+```
+
+This performs real OCI actions:
+
+- creates and deletes a temporary tag namespace to generate OCI Audit events
+- generates denied TCP traffic to a monitored host to produce VCN Flow records
+- waits for Wazuh rules `100000` and `100100`
+
+Expected green output:
+
+```text
+real_oci_logs=green
+audit_rule_100000=green
+flow_rule_100100=green
+```
+
+The real path is:
+
+- OCI Audit API -> Wazuh Audit consumer -> `/var/ossec/logs/oci/audit.json` -> Wazuh logcollector
+- OCI VCN Flow Log -> Service Connector Hub -> OCI Streaming -> Wazuh Flow consumer -> `/var/ossec/logs/oci/flow.json` -> Wazuh logcollector
+
+Allow several minutes for OCI Logging, SCH, Streaming, and Wazuh rule processing. The synthetic gate remains useful for parser/rule regressions, but `make validate-real-oci-logs` is the end-to-end ingestion proof.
+
+## 9. Build OCI Log Analytics Dashboard
 
 Open OCI Console:
 
@@ -271,7 +315,7 @@ Recommended dashboard panels:
 
 If Wazuh alert queries return zero rows immediately after configuration, wait for OCI Unified Agent and SCH propagation, then generate a Wazuh alert with `make e2e`.
 
-## 9. Build Wazuh Dashboard Views
+## 10. Build Wazuh Dashboard Views
 
 Open Wazuh Dashboard through the SSH tunnel.
 
@@ -297,7 +341,7 @@ Required Wazuh views:
 - GOAD Windows and Sysmon
 - MITRE technique rollup
 
-## 10. Generate Demo Events
+## 11. Generate Demo Events
 
 Linux FIM:
 
@@ -336,18 +380,27 @@ make simulate-detections
 
 This is the fastest deterministic way to prove the Wazuh content path before waiting for live OCI Audit or VCN Flow delivery.
 
-## 11. Demo Flow
+Real OCI Audit and VCN Flow:
+
+```bash
+make validate-real-oci-logs
+```
+
+Use this for the live demo proof that the deployment is ingesting real OCI telemetry from the target tenancy.
+
+## 12. Demo Flow
 
 1. Show Wazuh manager status and active Linux agents.
 2. Show Linux FIM alert from `make e2e`.
 3. Show GOAD hosts running with `make goad-discover`.
 4. Show Log Analytics bridge green with `make log-analytics-bridge`.
-5. Show OCI rules green with `make simulate-detections`.
-6. In OCI Log Analytics, open the source inventory and dashboard panels.
-7. In Wazuh Dashboard, open OCI Audit, VCN Flow, Linux FIM, and GOAD/Sysmon views.
-8. Trigger one benign event per telemetry family and show it in both systems where applicable.
+5. Show OCI parser/rule content green with `make simulate-detections`.
+6. Show real OCI ingestion green with `make validate-real-oci-logs`.
+7. In OCI Log Analytics, open the source inventory and dashboard panels.
+8. In Wazuh Dashboard, open OCI Audit, VCN Flow, Linux FIM, and GOAD/Sysmon views.
+9. Trigger one benign event per telemetry family and show it in both systems where applicable.
 
-## 12. Teardown
+## 13. Teardown
 
 Destroy standalone lab resources:
 

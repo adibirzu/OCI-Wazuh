@@ -3,6 +3,10 @@ resource "oci_streaming_stream_pool" "this" {
   name           = "${var.project_name}-stream-pool"
   freeform_tags  = var.freeform_tags
   defined_tags   = var.defined_tags
+
+  lifecycle {
+    ignore_changes = [defined_tags]
+  }
 }
 
 resource "oci_streaming_stream" "this" {
@@ -12,4 +16,8 @@ resource "oci_streaming_stream" "this" {
   stream_pool_id     = oci_streaming_stream_pool.this.id
   freeform_tags      = var.freeform_tags
   defined_tags       = var.defined_tags
+
+  lifecycle {
+    ignore_changes = [defined_tags]
+  }
 }

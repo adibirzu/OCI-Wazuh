@@ -95,6 +95,48 @@ variable "ingestion_mode" {
   }
 }
 
+variable "audit_log_resource_id" {
+  type        = string
+  default     = ""
+  description = "Audit resource OCID. Empty means tenancy-wide audit ingestion using tenancy_id."
+  sensitive   = true
+}
+
+variable "audit_log_category" {
+  type        = string
+  default     = "all"
+  description = "OCI Audit log category. Default all works for tenancy-wide audit logs; set Audit if your tenancy requires the older category."
+}
+
+variable "flow_log_resource_ids" {
+  type        = list(string)
+  default     = []
+  description = "Subnet or VNIC OCIDs for VCN Flow Logs. Empty means agent_subnet_id."
+  sensitive   = true
+}
+
+variable "flow_log_category" {
+  type        = string
+  default     = "subnet"
+  description = "Fallback OCI Flow Logs category. Subnet, VCN, and VNIC OCIDs are auto-mapped to subnet/vcn/vnic."
+}
+
+variable "existing_flow_logs" {
+  type = list(object({
+    compartment_id = string
+    log_group_id   = string
+    log_id         = string
+  }))
+  default     = []
+  description = "Existing OCI Flow Logs to reuse instead of creating new ones. Use this when a subnet/VCN/VNIC already has Flow Logs enabled."
+}
+
+variable "oci_log_retention_days" {
+  type        = number
+  default     = 30
+  description = "OCI Logging retention duration for VCN Flow logs."
+}
+
 variable "windows_mode" {
   type        = string
   default     = "auto"

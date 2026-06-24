@@ -1,4 +1,4 @@
-.PHONY: bootstrap lint validate e2e cost up down plan cap-preflight goad-discover log-analytics-bridge wazuh-log-analytics wazuh-content simulate-detections
+.PHONY: bootstrap lint validate e2e cost up down plan cap-preflight goad-discover log-analytics-bridge wazuh-log-analytics wazuh-content simulate-detections validate-real-oci-logs
 
 bootstrap:
 	bash scripts/bootstrap.sh
@@ -20,6 +20,9 @@ wazuh-content:
 
 simulate-detections:
 	bash scripts/simulate-detections.sh
+
+validate-real-oci-logs:
+	bash scripts/validate-real-oci-logs.sh
 
 lint:
 	terraform -chdir=terraform fmt -check -recursive

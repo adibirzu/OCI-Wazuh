@@ -17,9 +17,10 @@ make wazuh-log-analytics
 make log-analytics-bridge
 make wazuh-content
 make simulate-detections
+make validate-real-oci-logs
 ```
 
-If the development tenant rate-limits repeated SSH probes, retry the Wazuh content or simulator gate with `WAZUH_SSH_CONTROL=none`.
+If the development tenant rate-limits repeated SSH probes, prefer the default SSH ControlMaster path and wait 2-5 minutes before retrying. Use `WAZUH_SSH_CONTROL=none` only for isolated debugging.
 
 ## OCI-DEMO Attach
 
@@ -37,8 +38,9 @@ make down
 
 ## Ingestion Modes
 
-- `streaming`: OCI Logging/Service Connector Hub to OCI Streaming, consumed by the Wazuh node.
-- `object_storage`: Service Connector Hub to Object Storage, polled by the Wazuh node.
+- `streaming`: VCN Flow Logs from OCI Logging through Service Connector Hub to OCI Streaming, consumed by the Wazuh node. OCI Audit is collected from the real OCI Audit API by the Wazuh node.
+- `object_storage`: VCN Flow Logs from Service Connector Hub to Object Storage, polled by the Wazuh node. OCI Audit still uses the Audit API path.
+- `direct_api`: Audit-only fallback for development or restricted tenancies.
 - `log_analytics_bridge`: OS/EDR/Wazuh alerts also sent to OCI Log Analytics for correlation dashboards.
 
 The default development path is `streaming`.

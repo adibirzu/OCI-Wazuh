@@ -9,5 +9,11 @@ bastion_subnet_id = "<PUBLIC_SUBNET_OCID>"
 agent_subnet_id = "<PRIVATE_OR_REUSED_SUBNET_OCID>"
 operator_cidr  = "<YOUR_PUBLIC_IP>/32"
 ingestion_mode = "streaming"
+audit_log_resource_id = "" # empty = tenancy_id. Set a compartment OCID to scope audit narrower.
+audit_log_category = "all"
+flow_log_resource_ids = [] # empty = agent_subnet_id. Add subnet or VNIC OCIDs for other monitored networks.
+flow_log_category = "subnet"
+existing_flow_logs = [] # [{ compartment_id = "<SOURCE_COMPARTMENT_OCID>", log_group_id = "<EXISTING_FLOW_LOG_GROUP_OCID>", log_id = "<EXISTING_FLOW_LOG_OCID>" }]
+oci_log_retention_days = 30
 windows_mode   = "auto"
 enable_log_analytics_bridge = true

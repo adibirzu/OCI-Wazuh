@@ -33,6 +33,13 @@ resource "oci_core_instance" "bastion" {
   metadata = {
     ssh_authorized_keys = var.ssh_public_key
   }
+
+  lifecycle {
+    ignore_changes = [
+      defined_tags,
+      metadata,
+    ]
+  }
 }
 
 resource "oci_core_instance" "ol9_agent" {
@@ -63,6 +70,13 @@ resource "oci_core_instance" "ol9_agent" {
     ssh_authorized_keys = var.ssh_public_key
     user_data           = local.agent_user_data.ol9
   }
+
+  lifecycle {
+    ignore_changes = [
+      defined_tags,
+      metadata,
+    ]
+  }
 }
 
 resource "oci_core_instance" "ubuntu_agent" {
@@ -92,5 +106,12 @@ resource "oci_core_instance" "ubuntu_agent" {
   metadata = {
     ssh_authorized_keys = var.ssh_public_key
     user_data           = local.agent_user_data.ubuntu
+  }
+
+  lifecycle {
+    ignore_changes = [
+      defined_tags,
+      metadata,
+    ]
   }
 }

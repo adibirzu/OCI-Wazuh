@@ -3,6 +3,20 @@ locals {
     project   = var.project_name
     component = "wazuh-detection-lab"
   }
+  flow_log_resource_ids         = length(var.flow_log_resource_ids) > 0 ? var.flow_log_resource_ids : [var.agent_subnet_id]
+  managed_flow_log_resource_ids = length(var.existing_flow_logs) > 0 ? [] : local.flow_log_resource_ids
+  managed_flow_log_sources = [
+    for log_id in module.flowlogs.flow_log_ids : {
+      compartment_id = var.compartment_id
+      log_group_id   = module.logging_audit.log_group_id
+      log_id         = log_id
+    }
+  ]
+  oci_log_sources                 = length(var.existing_flow_logs) > 0 ? var.existing_flow_logs : local.managed_flow_log_sources
+  oci_log_ids                     = [for source in local.oci_log_sources : source.log_id]
+  oci_log_source_compartment_ids  = distinct([for source in local.oci_log_sources : source.compartment_id])
+  sch_log_source_policy_scope_ids = { for idx, compartment_id in local.oci_log_source_compartment_ids : tostring(idx) => compartment_id }
+  stream_id                       = var.ingestion_mode == "streaming" ? module.streaming[0].stream_id : ""
 }
 
 data "oci_core_subnet" "bastion" {
@@ -160,4 +174,137 @@ module "compute" {
   wazuh_manager_ip          = module.wazuh_server.private_ip
   freeform_tags             = local.common_freeform_tags
   defined_tags              = var.defined_tags
+}
+
+module "streaming" {
+  count          = var.ingestion_mode == "streaming" ? 1 : 0
+  source         = "./modules/streaming"
+  compartment_id = var.compartment_id
+  project_name   = var.project_name
+  freeform_tags  = local.common_freeform_tags
+  defined_tags   = var.defined_tags
+}
+
+module "logging_audit" {
+  source                = "./modules/logging-audit"
+  tenancy_id            = var.tenancy_id
+  compartment_id        = var.compartment_id
+  project_name          = var.project_name
+  audit_log_resource_id = var.audit_log_resource_id
+  audit_log_category    = var.audit_log_category
+  log_retention_days    = var.oci_log_retention_days
+  freeform_tags         = local.common_freeform_tags
+  defined_tags          = var.defined_tags
+}
+
+module "flowlogs" {
+  source             = "./modules/flowlogs"
+  project_name       = var.project_name
+  log_group_id       = module.logging_audit.log_group_id
+  resource_ids       = local.managed_flow_log_resource_ids
+  log_retention_days = var.oci_log_retention_days
+  flow_log_category  = var.flow_log_category
+  freeform_tags      = local.common_freeform_tags
+  defined_tags       = var.defined_tags
+}
+
+module "service_connector" {
+  source         = "./modules/service-connector"
+  compartment_id = var.compartment_id
+  project_name   = var.project_name
+  ingestion_mode = var.ingestion_mode
+  stream_id      = local.stream_id
+  log_group_id   = module.logging_audit.log_group_id
+  log_ids        = local.oci_log_ids
+  log_sources    = local.oci_log_sources
+  freeform_tags  = local.common_freeform_tags
+  defined_tags   = var.defined_tags
+
+  depends_on = [
+    oci_identity_policy.sch_log_source,
+    oci_identity_policy.sch_stream_target,
+  ]
+}
+
+resource "oci_identity_dynamic_group" "wazuh_consumer" {
+  compartment_id = var.tenancy_id
+  name           = "${var.project_name}-wazuh-consumer"
+  description    = "Wazuh OCI log consumer instance principal."
+  matching_rule  = "instance.id = '${module.wazuh_server.instance_id}'"
+  freeform_tags  = local.common_freeform_tags
+  defined_tags   = var.defined_tags
+
+  lifecycle {
+    ignore_changes = [defined_tags]
+  }
+}
+
+resource "oci_identity_policy" "wazuh_consumer" {
+  compartment_id = var.compartment_id
+  name           = "${var.project_name}-wazuh-consumer"
+  description    = "Allow the Wazuh instance to consume OCI log batches."
+  freeform_tags  = local.common_freeform_tags
+  defined_tags   = var.defined_tags
+
+  statements = compact([
+    var.ingestion_mode == "streaming" ? "Allow dynamic-group ${oci_identity_dynamic_group.wazuh_consumer.name} to use stream-pull in compartment id ${var.compartment_id}" : "",
+    var.ingestion_mode == "streaming" ? "Allow dynamic-group ${oci_identity_dynamic_group.wazuh_consumer.name} to inspect streams in compartment id ${var.compartment_id}" : "",
+    var.ingestion_mode == "object_storage" ? "Allow dynamic-group ${oci_identity_dynamic_group.wazuh_consumer.name} to read buckets in compartment id ${var.compartment_id}" : "",
+    var.ingestion_mode == "object_storage" ? "Allow dynamic-group ${oci_identity_dynamic_group.wazuh_consumer.name} to read objects in compartment id ${var.compartment_id}" : ""
+  ])
+
+  lifecycle {
+    ignore_changes = [defined_tags]
+  }
+}
+
+resource "oci_identity_policy" "wazuh_audit_consumer" {
+  compartment_id = var.tenancy_id
+  name           = "${var.project_name}-wazuh-audit-consumer"
+  description    = "Allow the Wazuh instance to read real OCI Audit events."
+  freeform_tags  = local.common_freeform_tags
+  defined_tags   = var.defined_tags
+
+  statements = [
+    "Allow dynamic-group ${oci_identity_dynamic_group.wazuh_consumer.name} to inspect compartments in tenancy",
+    "Allow dynamic-group ${oci_identity_dynamic_group.wazuh_consumer.name} to read audit-events in tenancy"
+  ]
+
+  lifecycle {
+    ignore_changes = [defined_tags]
+  }
+}
+
+resource "oci_identity_policy" "sch_log_source" {
+  for_each       = local.sch_log_source_policy_scope_ids
+  compartment_id = var.tenancy_id
+  name           = "${var.project_name}-sch-log-source-${each.key}"
+  description    = "Allow Service Connector Hub to read OCI logs for Wazuh ingestion."
+  freeform_tags  = local.common_freeform_tags
+  defined_tags   = var.defined_tags
+
+  statements = [
+    "Allow any-user to read log-content in compartment id ${each.value} where request.principal.type='serviceconnector'"
+  ]
+
+  lifecycle {
+    ignore_changes = [defined_tags]
+  }
+}
+
+resource "oci_identity_policy" "sch_stream_target" {
+  count          = var.ingestion_mode == "streaming" ? 1 : 0
+  compartment_id = var.tenancy_id
+  name           = "${var.project_name}-sch-stream-target"
+  description    = "Allow Service Connector Hub to publish OCI logs to the Wazuh stream."
+  freeform_tags  = local.common_freeform_tags
+  defined_tags   = var.defined_tags
+
+  statements = [
+    "Allow any-user to use stream-push in compartment id ${var.compartment_id} where request.principal.type='serviceconnector'"
+  ]
+
+  lifecycle {
+    ignore_changes = [defined_tags]
+  }
 }

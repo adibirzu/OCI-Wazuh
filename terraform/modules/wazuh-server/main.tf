@@ -34,4 +34,11 @@ resource "oci_core_instance" "this" {
     ssh_authorized_keys = var.ssh_public_key
     user_data           = local.user_data
   }
+
+  lifecycle {
+    ignore_changes = [
+      defined_tags,
+      metadata,
+    ]
+  }
 }

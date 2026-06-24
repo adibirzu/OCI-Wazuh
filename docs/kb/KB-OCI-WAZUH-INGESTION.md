@@ -14,10 +14,24 @@ Use this KB to select and operate OCI Audit, VCN Flow Log, OS, EDR, and Wazuh al
 
 ## Options
 
-- `streaming`: Service Connector Hub sends OCI Audit and VCN Flow Logs to OCI Streaming; the Wazuh node runs the Python consumer and writes normalized JSON lines under `/var/ossec/logs/oci/`.
-- `object_storage`: Service Connector Hub writes log batches to Object Storage; the Wazuh node polls and normalizes the objects. Use this when Streaming is not available or cost policy forbids a stream pool.
-- `direct_api`: the Wazuh node polls supported OCI APIs directly. Use only for low-rate development or fallback workflows because it is less event-driven and needs tighter API throttling.
+- `streaming`: Service Connector Hub sends VCN Flow Logs from OCI Logging to OCI Streaming; the Wazuh node consumes the stream and writes normalized JSON lines under `/var/ossec/logs/oci/flow.json`. OCI Audit uses the real OCI Audit API consumer in parallel.
+- `object_storage`: Service Connector Hub writes VCN Flow Log batches to Object Storage; the Wazuh node polls and normalizes the objects. OCI Audit still uses the Audit API path. Use this when Streaming is not available or cost policy forbids a stream pool.
+- `direct_api`: Audit-only fallback. The Wazuh node polls OCI Audit directly and writes `/var/ossec/logs/oci/audit.json`.
 - `log_analytics_bridge`: OCI Logging and Wazuh alert data are also visible in OCI Log Analytics for cross-source dashboards and correlations.
+
+OCI Audit is not modeled as an OCI Logging service source in the active OCI catalog used by this lab. The reusable implementation therefore treats Audit as an API source and VCN Flow as a Logging/SCH source.
+
+## Existing Flow Log Reuse
+
+OCI allows one active Flow Log configuration per resource/category combination. If a subnet, VCN, or VNIC already has Flow Logs enabled, set `existing_flow_logs` in local `terraform.tfvars` with the source compartment, log group, and log OCID. Terraform then skips Flow Log creation and creates the SCH permissions/connector to reuse that source.
+
+For new deployments, leave `existing_flow_logs = []` and set `flow_log_resource_ids` to the subnet, VCN, or VNIC OCIDs to monitor. Subnet, VCN, and VNIC OCIDs are mapped to the correct Flow Log categories automatically.
+
+## Real Validation
+
+`make simulate-detections` validates Wazuh decoder/rule behavior with local normalized JSON.
+
+`make validate-real-oci-logs` validates the live tenancy path by creating/deleting a temporary tag namespace and generating denied network traffic. The gate passes only when Wazuh raises Audit rule `100000` and Flow rule `100100` from real OCI telemetry.
 
 ## Log Analytics Bridge
 
