@@ -1,0 +1,6 @@
+---
+- name: Configure Linux Wazuh agents
+  hosts: linux_agents
+  become: true
+  roles:
+    - wazuh_agent

@@ -1,0 +1,4 @@
+sysmon_workdir: "C:\\Agents\\Sysmon"
+sysmon_zip_url: "https://download.sysinternals.com/files/Sysmon.zip"
+sysmon_config_commit: "a9ff298f6d228c181be71b213c73d111c6096f41"
+sysmon_config_url: "https://raw.githubusercontent.com/olafhartong/sysmon-modular/{{ sysmon_config_commit }}/sysmonconfig.xml"

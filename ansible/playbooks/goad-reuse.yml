@@ -1,0 +1,13 @@
+---
+- name: Import SOC Fortress rules on the Wazuh manager
+  hosts: wazuh_manager
+  become: true
+  roles:
+    - socfortress_rules
+
+- name: Reuse GOAD hosts for Wazuh detections
+  hosts: goad_hosts
+  gather_facts: false
+  roles:
+    - wazuh_agent
+    - sysmon

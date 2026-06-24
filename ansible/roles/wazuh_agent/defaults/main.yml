@@ -1,0 +1,4 @@
+wazuh_agent_version: "4.14.5-1"
+wazuh_agent_group: "goad-windows"
+wazuh_windows_agent_msi: "https://packages.wazuh.com/4.x/windows/wazuh-agent-{{ wazuh_agent_version }}.msi"
+wazuh_windows_workdir: "C:\\Agents\\Wazuh"

@@ -1,0 +1,41 @@
+---
+- name: Validate Windows Wazuh manager input
+  ansible.builtin.assert:
+    that:
+      - wazuh_manager_ip is defined
+      - wazuh_manager_ip | length > 0
+    fail_msg: "Set wazuh_manager_ip to the Wazuh manager private address."
+
+- name: Create Wazuh agent staging directory
+  ansible.windows.win_file:
+    path: "{{ wazuh_windows_workdir }}"
+    state: directory
+
+- name: Check Wazuh Windows service
+  ansible.windows.win_service_info:
+    name: WazuhSvc
+  register: wazuh_windows_service
+  failed_when: false
+
+- name: Download Wazuh Windows agent MSI
+  ansible.windows.win_get_url:
+    url: "{{ wazuh_windows_agent_msi }}"
+    dest: "{{ wazuh_windows_workdir }}\\wazuh-agent.msi"
+  when: wazuh_windows_service.exists is not defined or not wazuh_windows_service.exists
+
+- name: Install Wazuh Windows agent
+  ansible.windows.win_package:
+    path: "{{ wazuh_windows_workdir }}\\wazuh-agent.msi"
+    arguments: >-
+      /q
+      WAZUH_MANAGER="{{ wazuh_manager_ip }}"
+      WAZUH_REGISTRATION_SERVER="{{ wazuh_manager_ip }}"
+      WAZUH_AGENT_GROUP="{{ wazuh_agent_group }}"
+    state: present
+  when: wazuh_windows_service.exists is not defined or not wazuh_windows_service.exists
+
+- name: Ensure Wazuh Windows agent is running
+  ansible.windows.win_service:
+    name: WazuhSvc
+    start_mode: auto
+    state: started

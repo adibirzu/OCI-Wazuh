@@ -1,0 +1,11 @@
+<group name="oci,vcn,flow,">
+	  <rule id="100100" level="5">
+	    <decoded_as>json</decoded_as>
+	    <field name="source">flow</field>
+	    <match>"action":"REJECT"</match>
+	    <description>OCI VCN Flow Log rejected traffic observed</description>
+    <mitre>
+      <id>T1046</id>
+    </mitre>
+  </rule>
+</group>

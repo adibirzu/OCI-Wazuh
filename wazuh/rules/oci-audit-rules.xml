@@ -1,0 +1,10 @@
+<group name="oci,audit,">
+	  <rule id="100000" level="3">
+	    <decoded_as>json</decoded_as>
+	    <match>"source":"audit"</match>
+	    <description>OCI Audit event observed</description>
+    <mitre>
+      <id>T1078</id>
+    </mitre>
+  </rule>
+</group>

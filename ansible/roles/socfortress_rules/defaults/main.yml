@@ -1,0 +1,5 @@
+socfortress_rules_repo: "https://github.com/socfortress/Wazuh-Rules.git"
+socfortress_rules_commit: "66b70d6a380b2cffb625801da0b0ccb1933ed95d"
+socfortress_rules_checkout: "/opt/socfortress-wazuh-rules"
+socfortress_rules_dest: "/var/ossec/etc/rules/socfortress"
+socfortress_decoders_dest: "/var/ossec/etc/decoders/socfortress"

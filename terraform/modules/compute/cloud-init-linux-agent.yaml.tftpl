@@ -1,0 +1,47 @@
+#cloud-config
+package_update: true
+packages:
+  - curl
+  - audit
+  - rsyslog
+write_files:
+  - path: /usr/local/bin/oci-wazuh-agent-install.sh
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euxo pipefail
+      WAZUH_MANAGER="${wazuh_manager_ip}"
+      if [[ "${os_family}" == "ubuntu" ]]; then
+        curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --dearmor >/usr/share/keyrings/wazuh.gpg || true
+        echo "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main" >/etc/apt/sources.list.d/wazuh.list
+        apt-get update
+        WAZUH_MANAGER="$WAZUH_MANAGER" apt-get install -y wazuh-agent
+      else
+        rpm --import https://packages.wazuh.com/key/GPG-KEY-WAZUH || true
+        cat >/etc/yum.repos.d/wazuh.repo <<'EOF'
+      [wazuh]
+      gpgcheck=1
+      gpgkey=https://packages.wazuh.com/key/GPG-KEY-WAZUH
+      enabled=1
+      name=EL-$releasever - Wazuh
+      baseurl=https://packages.wazuh.com/4.x/yum/
+      protect=1
+      EOF
+        WAZUH_MANAGER="$WAZUH_MANAGER" dnf install -y wazuh-agent
+      fi
+      python3 - <<'PY'
+      from pathlib import Path
+
+      path = Path("/var/ossec/etc/ossec.conf")
+      text = path.read_text()
+      start = text.index("<syscheck>")
+      end = text.index("</syscheck>", start)
+      block = text[start:end]
+      block = block.replace("<frequency>43200</frequency>", "<frequency>60</frequency>", 1)
+      path.write_text(text[:start] + block + text[end:])
+      PY
+      systemctl daemon-reload
+      systemctl enable --now wazuh-agent || true
+      systemctl restart wazuh-agent || true
+runcmd:
+  - [ bash, /usr/local/bin/oci-wazuh-agent-install.sh ]

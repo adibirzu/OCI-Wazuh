@@ -1,0 +1,4 @@
+<decoder name="oci-audit-json">
+  <prematch>"source":"audit"</prematch>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+</decoder>

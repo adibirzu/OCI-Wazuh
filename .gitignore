@@ -1,0 +1,10 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+terraform/.terraform.lock.hcl
+terraform/terraform.tfvars
+artifacts/validation/*.json
+artifacts/validation/cap-context.txt
+artifacts/validation/
+__pycache__/
+*.pyc

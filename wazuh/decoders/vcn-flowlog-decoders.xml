@@ -1,0 +1,4 @@
+<decoder name="oci-vcn-flow-json">
+  <prematch>"source":"flow"</prematch>
+  <plugin_decoder>JSON_Decoder</plugin_decoder>
+</decoder>

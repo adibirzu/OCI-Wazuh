@@ -1,0 +1,7 @@
+---
+- name: Configure Wazuh all-in-one server
+  hosts: wazuh_server
+  become: true
+  roles:
+    - wazuh_manager
+    - oci_log_consumer

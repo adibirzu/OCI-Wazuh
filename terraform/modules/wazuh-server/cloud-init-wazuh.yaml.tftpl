@@ -1,0 +1,53 @@
+#cloud-config
+package_update: true
+packages:
+  - curl
+  - jq
+  - python3
+  - python3-pip
+  - unzip
+  - rsyslog
+write_files:
+  - path: /etc/oci-wazuh-demo.env
+    permissions: "0600"
+    content: |
+      PROJECT_NAME=${project_name}
+  - path: /usr/local/bin/oci-wazuh-install.sh
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euxo pipefail
+      mkdir -p /opt/oci-wazuh-demo /var/ossec/logs/oci /var/log/oci-wazuh-demo
+      cd /opt/oci-wazuh-demo
+      curl -sO https://packages.wazuh.com/4.14/wazuh-install.sh
+      bash ./wazuh-install.sh -a -i -o > /var/log/oci-wazuh-demo/wazuh-install.log 2>&1
+      for port in 443 1514 1515 55000; do
+        iptables -C INPUT -p tcp --dport "$port" -j ACCEPT 2>/dev/null || iptables -I INPUT 5 -p tcp --dport "$port" -j ACCEPT
+      done
+      python3 - <<'PY'
+      from pathlib import Path
+
+      path = Path("/var/ossec/etc/ossec.conf")
+      text = path.read_text()
+      if "<force>" not in text[text.index("<auth>"):text.index("</auth>", text.index("<auth>"))]:
+          auth_end = text.index("</auth>", text.index("<auth>"))
+          force = """    <force>
+      <enabled>yes</enabled>
+      <key_mismatch>yes</key_mismatch>
+      <disconnected_time enabled="yes">1m</disconnected_time>
+      <after_registration_time>1m</after_registration_time>
+    </force>
+"""
+          text = text[:auth_end] + force + text[auth_end:]
+          path.write_text(text)
+      PY
+      if command -v netfilter-persistent >/dev/null 2>&1; then
+        netfilter-persistent save || true
+      elif [[ -d /etc/iptables ]]; then
+        iptables-save >/etc/iptables/rules.v4 || true
+      fi
+      systemctl restart wazuh-manager || true
+      /var/ossec/bin/wazuh-control status > /var/log/oci-wazuh-demo/wazuh-status.log 2>&1 || true
+      python3 -m pip install --upgrade oci >/var/log/oci-wazuh-demo/pip-oci.log 2>&1 || true
+runcmd:
+  - [ bash, /usr/local/bin/oci-wazuh-install.sh ]

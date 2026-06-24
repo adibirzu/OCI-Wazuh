@@ -1,0 +1,13 @@
+region         = "eu-frankfurt-1"
+oci_config_profile = "cap"
+tenancy_id     = "<TENANCY_OCID>"
+compartment_id = "<COMPARTMENT_OCID>"
+availability_domain = "<AD_NAME>"
+ol9_image_id = "<OL9_IMAGE_OCID>"
+ubuntu2404_image_id = "<UBUNTU_2404_IMAGE_OCID>"
+bastion_subnet_id = "<PUBLIC_SUBNET_OCID>"
+agent_subnet_id = "<PRIVATE_OR_REUSED_SUBNET_OCID>"
+operator_cidr  = "<YOUR_PUBLIC_IP>/32"
+ingestion_mode = "streaming"
+windows_mode   = "auto"
+enable_log_analytics_bridge = true

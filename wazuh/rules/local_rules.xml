@@ -1,0 +1,6 @@
+<group name="local,oci-wazuh-demo,">
+	  <rule id="100900" level="3">
+	    <match>__oci_wazuh_demo_rule_pack_loaded__</match>
+	    <description>OCI Wazuh demo local rule pack loaded</description>
+	  </rule>
+</group>

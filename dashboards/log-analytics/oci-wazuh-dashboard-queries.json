@@ -1,0 +1,71 @@
+{
+  "version": "1.0",
+  "title": "OCI Wazuh Correlation Dashboard Query Pack",
+  "notes": [
+    "Run the source inventory query first and confirm source names in the target tenancy.",
+    "CAP uses Windows System Events, Windows Sysmon Events, OCI Audit Logs, and OCI VCN Flow Unified Schema Logs.",
+    "The Wazuh alert source is created by make wazuh-log-analytics and defaults to oci-wazuh-demo-wazuh-alerts."
+  ],
+  "queries": [
+    {
+      "id": "source_inventory",
+      "title": "Telemetry Source Inventory",
+      "visualization": "table",
+      "query": "* | stats count by \"Log Source\" | sort -count"
+    },
+    {
+      "id": "vcn_flow_actions",
+      "title": "VCN Flow Actions",
+      "visualization": "bar",
+      "query": "'Log Source' = 'OCI VCN Flow Unified Schema Logs' | stats count by Action | sort -count"
+    },
+    {
+      "id": "vcn_rejects_by_pair",
+      "title": "VCN Rejects by Source and Destination",
+      "visualization": "table",
+      "query": "'Log Source' = 'OCI VCN Flow Unified Schema Logs' and Action = 'reject' | stats count by 'Source IP', 'Destination IP', 'Destination Port' | sort -count"
+    },
+    {
+      "id": "oci_audit_events",
+      "title": "OCI Audit Events by Type",
+      "visualization": "bar",
+      "query": "'Log Source' = 'OCI Audit Logs' | stats count by 'Event Type' | sort -count"
+    },
+    {
+      "id": "oci_audit_users",
+      "title": "OCI Audit Events by User and Source",
+      "visualization": "table",
+      "query": "'Log Source' = 'OCI Audit Logs' | stats count by 'User Name', 'Source IP', 'Event Type' | sort -count"
+    },
+    {
+      "id": "windows_sysmon_event_ids",
+      "title": "GOAD Sysmon Event IDs",
+      "visualization": "bar",
+      "query": "'Log Source' = 'Windows Sysmon Events' | stats count by 'Event ID' | sort -count"
+    },
+    {
+      "id": "windows_sysmon_network",
+      "title": "GOAD Sysmon Network Connections",
+      "visualization": "table",
+      "query": "'Log Source' = 'Windows Sysmon Events' and 'Event ID' = '3' | stats count by 'Host Name', 'Process Name', 'Destination IP' | sort -count"
+    },
+    {
+      "id": "linux_host_logs",
+      "title": "Linux Host Logs by Source",
+      "visualization": "bar",
+      "query": "'Log Source' in ('Linux Syslog Logs','Linux Secure Logs') | stats count by 'Log Source' | sort -count"
+    },
+    {
+      "id": "wazuh_alert_volume",
+      "title": "Wazuh Alert Volume",
+      "visualization": "tile",
+      "query": "'Log Source' = 'oci-wazuh-demo-wazuh-alerts' | stats count as WazuhAlerts"
+    },
+    {
+      "id": "wazuh_alert_raw_search",
+      "title": "Wazuh Alerts Raw Search",
+      "visualization": "table",
+      "query": "'Log Source' = 'oci-wazuh-demo-wazuh-alerts' | sort -Time | head 50"
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+variable "compartment_id" { type = string }
+variable "tenancy_id" { type = string }
+variable "project_name" { type = string }
+variable "availability_domain_index" { type = number }
+variable "availability_domain" { type = string }
+variable "ol9_image_id" { type = string }
+variable "ubuntu2404_image_id" { type = string }
+variable "bastion_subnet_id" { type = string }
+variable "agent_subnet_id" { type = string }
+variable "bastion_nsg_ids" { type = list(string) }
+variable "agent_nsg_ids" { type = list(string) }
+variable "agent_assign_public_ip" { type = bool }
+variable "ssh_public_key" { type = string }
+variable "wazuh_manager_ip" { type = string }
+variable "freeform_tags" { type = map(string) }
+variable "defined_tags" { type = map(string) }

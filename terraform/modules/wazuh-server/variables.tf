@@ -1,0 +1,12 @@
+variable "compartment_id" { type = string }
+variable "tenancy_id" { type = string }
+variable "project_name" { type = string }
+variable "availability_domain_index" { type = number }
+variable "availability_domain" { type = string }
+variable "image_id" { type = string }
+variable "subnet_id" { type = string }
+variable "assign_public_ip" { type = bool }
+variable "wazuh_nsg_ids" { type = list(string) }
+variable "ssh_public_key" { type = string }
+variable "freeform_tags" { type = map(string) }
+variable "defined_tags" { type = map(string) }

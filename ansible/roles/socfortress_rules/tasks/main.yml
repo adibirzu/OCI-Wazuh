@@ -1,0 +1,50 @@
+---
+- name: Install git for SOC Fortress rule checkout
+  ansible.builtin.package:
+    name: git
+    state: present
+
+- name: Check out pinned SOC Fortress Wazuh rules
+  ansible.builtin.git:
+    repo: "{{ socfortress_rules_repo }}"
+    dest: "{{ socfortress_rules_checkout }}"
+    version: "{{ socfortress_rules_commit }}"
+    force: true
+  notify: Restart wazuh-manager
+
+- name: Create SOC Fortress rule directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: wazuh
+    group: wazuh
+    mode: "0750"
+  loop:
+    - "{{ socfortress_rules_dest }}"
+    - "{{ socfortress_decoders_dest }}"
+
+- name: Install SOC Fortress XML rule and decoder packs
+  ansible.builtin.shell: |
+    set -eu
+    changed=0
+    while IFS= read -r src; do
+      dest="{{ socfortress_rules_dest }}/$(basename "$src")"
+      if ! cmp -s "$src" "$dest"; then
+        install -o wazuh -g wazuh -m 0640 "$src" "$dest"
+        changed=1
+      fi
+    done < <(find "{{ socfortress_rules_checkout }}" -type f -path "*/rules/*.xml" | sort)
+    while IFS= read -r src; do
+      dest="{{ socfortress_decoders_dest }}/$(basename "$src")"
+      if ! cmp -s "$src" "$dest"; then
+        install -o wazuh -g wazuh -m 0640 "$src" "$dest"
+        changed=1
+      fi
+    done < <(find "{{ socfortress_rules_checkout }}" -type f -path "*/decoders/*.xml" | sort)
+    exit "$changed"
+  args:
+    executable: /bin/bash
+  register: socfortress_install
+  changed_when: socfortress_install.rc == 1
+  failed_when: socfortress_install.rc not in [0, 1]
+  notify: Restart wazuh-manager

@@ -1,0 +1,49 @@
+---
+- name: Create Sysmon staging directory
+  ansible.windows.win_file:
+    path: "{{ sysmon_workdir }}"
+    state: directory
+
+- name: Download Sysmon
+  ansible.windows.win_get_url:
+    url: "{{ sysmon_zip_url }}"
+    dest: "{{ sysmon_workdir }}\\Sysmon.zip"
+
+- name: Download pinned Sysmon config
+  ansible.windows.win_get_url:
+    url: "{{ sysmon_config_url }}"
+    dest: "{{ sysmon_workdir }}\\sysmonconfig.xml"
+
+- name: Expand Sysmon archive
+  ansible.windows.win_powershell:
+    script: |
+      $zip = "{{ sysmon_workdir }}\Sysmon.zip"
+      $dest = "{{ sysmon_workdir }}"
+      Expand-Archive -Path $zip -DestinationPath $dest -Force
+
+- name: Check Sysmon service
+  ansible.windows.win_service_info:
+    name: Sysmon64
+  register: sysmon_service
+  failed_when: false
+
+- name: Install Sysmon service
+  ansible.windows.win_command: >-
+    "{{ sysmon_workdir }}\Sysmon64.exe"
+    -accepteula
+    -i
+    "{{ sysmon_workdir }}\sysmonconfig.xml"
+  when: sysmon_service.exists is not defined or not sysmon_service.exists
+
+- name: Update Sysmon configuration
+  ansible.windows.win_command: >-
+    "{{ sysmon_workdir }}\Sysmon64.exe"
+    -c
+    "{{ sysmon_workdir }}\sysmonconfig.xml"
+  when: sysmon_service.exists is defined and sysmon_service.exists
+
+- name: Ensure Sysmon is running
+  ansible.windows.win_service:
+    name: Sysmon64
+    start_mode: auto
+    state: started
