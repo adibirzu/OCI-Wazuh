@@ -14,7 +14,7 @@ evidence="artifacts/validation/M8-wazuh-log-analytics.txt"
 tfvar_value() {
   local key="$1"
   [[ -f "$tfvars" ]] || return 0
-  awk -F= -v k="$key" '$1 ~ "^[[:space:]]*" k "[[:space:]]*$" {gsub(/[ \"]/,"",$2); print $2}' "$tfvars"
+  awk -F= -v k="$key" '$1 ~ "^[[:space:]]*" k "[[:space:]]*$" {gsub(/[ \"]/,"",$2); print $2; exit}' "$tfvars"
 }
 
 trim_quotes() {

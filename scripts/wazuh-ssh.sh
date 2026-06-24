@@ -27,7 +27,7 @@ PY
 wazuh_tfvar_value() {
   local key="$1"
   [[ -f "$wazuh_tfvars" ]] || return 0
-  awk -F= -v k="$key" '$1 ~ "^[[:space:]]*" k "[[:space:]]*$" {gsub(/[ \"]/,"",$2); print $2}' "$wazuh_tfvars"
+  awk -F= -v k="$key" '$1 ~ "^[[:space:]]*" k "[[:space:]]*$" {gsub(/[ \"]/,"",$2); print $2; exit}' "$wazuh_tfvars"
 }
 
 wazuh_ssh_key() {

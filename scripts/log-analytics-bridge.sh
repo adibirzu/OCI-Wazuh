@@ -12,7 +12,7 @@ evidence="artifacts/validation/M8-log-analytics-bridge.txt"
 tfvar_value() {
   local key="$1"
   [[ -f "$tfvars" ]] || return 0
-  awk -F= -v k="$key" '$1 ~ "^[[:space:]]*" k "[[:space:]]*$" {gsub(/[ \"]/,"",$2); print $2}' "$tfvars"
+  awk -F= -v k="$key" '$1 ~ "^[[:space:]]*" k "[[:space:]]*$" {gsub(/[ \"]/,"",$2); print $2; exit}' "$tfvars"
 }
 
 if [[ -z "$profile" ]]; then
