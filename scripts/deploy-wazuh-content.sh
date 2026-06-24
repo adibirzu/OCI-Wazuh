@@ -104,6 +104,13 @@ if [[ -f "$env_file" ]]; then
   source "$env_file"
   set +a
 fi
+opensearch_env=/etc/oci-wazuh-demo/opensearch.env
+if [[ -f "$opensearch_env" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$opensearch_env"
+  set +a
+fi
 mode="${OCI_WAZUH_INGESTION_MODE:-}"
 project="${OCI_WAZUH_PROJECT_NAME:-oci-wazuh-demo}"
 python_bin="${OCI_WAZUH_PYTHON:-/opt/oci-wazuh-demo/venv/bin/python3}"
@@ -149,6 +156,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 EnvironmentFile=-/etc/oci-wazuh-demo/consumer.env
+EnvironmentFile=-/etc/oci-wazuh-demo/opensearch.env
 ExecStart=/usr/local/bin/oci-wazuh-consumer-start.sh flow
 Restart=always
 RestartSec=15
@@ -167,6 +175,7 @@ Wants=network-online.target
 [Service]
 Type=simple
 EnvironmentFile=-/etc/oci-wazuh-demo/consumer.env
+EnvironmentFile=-/etc/oci-wazuh-demo/opensearch.env
 ExecStart=/usr/local/bin/oci-wazuh-consumer-start.sh audit
 Restart=always
 RestartSec=15

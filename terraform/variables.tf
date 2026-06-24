@@ -148,10 +148,119 @@ variable "windows_mode" {
   }
 }
 
+variable "goad_agent_cidrs" {
+  type        = list(string)
+  default     = []
+  description = "Optional GOAD or reused Windows host CIDRs allowed to enroll and send events to Wazuh on 1514/1515."
+}
+
 variable "enable_log_analytics_bridge" {
   type        = bool
   default     = true
   description = "Forward OS logs, EDR/Sysmon, and Wazuh alerts to OCI Log Analytics."
+}
+
+variable "create_oci_opensearch" {
+  type        = bool
+  default     = false
+  description = "Create an OCI Search Service with OpenSearch cluster for dedicated OCI Audit and VCN Flow indices. Disabled by default; Wazuh AIO indexer is the default backend."
+}
+
+variable "oci_opensearch_software_version" {
+  type        = string
+  default     = "2.19.0"
+  description = "OCI OpenSearch software version used only when create_oci_opensearch is true. Confirm supported versions in your region with the OCI CLI before enabling."
+}
+
+variable "oci_opensearch_security_mode" {
+  type        = string
+  default     = "ENFORCING"
+  description = "Security mode for the optional OCI OpenSearch cluster."
+
+  validation {
+    condition     = contains(["DISABLED", "PERMISSIVE", "ENFORCING"], var.oci_opensearch_security_mode)
+    error_message = "oci_opensearch_security_mode must be DISABLED, PERMISSIVE, or ENFORCING."
+  }
+}
+
+variable "oci_opensearch_master_user_name" {
+  type        = string
+  default     = "admin"
+  description = "Master username for the optional OCI OpenSearch cluster."
+}
+
+variable "oci_opensearch_master_password" {
+  type        = string
+  default     = ""
+  description = "Plaintext master password used by make opensearch-oci when configuring templates and dashboards. Keep this in local tfvars, environment variables, or OCI Vault; Terraform does not send this value to OCI."
+  sensitive   = true
+}
+
+variable "oci_opensearch_master_password_hash" {
+  type        = string
+  default     = ""
+  description = "Stable bcrypt hash for the optional OCI OpenSearch master password. Required by OCI OpenSearch when create_oci_opensearch is true and security mode is not DISABLED."
+  sensitive   = true
+}
+
+variable "oci_opensearch_data_node_count" {
+  type        = number
+  default     = 1
+  description = "Data node count for the optional OCI OpenSearch cluster."
+}
+
+variable "oci_opensearch_data_node_ocpus" {
+  type        = number
+  default     = 1
+  description = "OCPUs per data node for the optional OCI OpenSearch cluster."
+}
+
+variable "oci_opensearch_data_node_memory_gb" {
+  type        = number
+  default     = 8
+  description = "Memory per data node for the optional OCI OpenSearch cluster."
+}
+
+variable "oci_opensearch_data_node_storage_gb" {
+  type        = number
+  default     = 50
+  description = "Storage per data node for the optional OCI OpenSearch cluster."
+}
+
+variable "oci_opensearch_master_node_count" {
+  type        = number
+  default     = 1
+  description = "Master node count for the optional OCI OpenSearch cluster."
+}
+
+variable "oci_opensearch_master_node_ocpus" {
+  type        = number
+  default     = 1
+  description = "OCPUs per master node for the optional OCI OpenSearch cluster."
+}
+
+variable "oci_opensearch_master_node_memory_gb" {
+  type        = number
+  default     = 8
+  description = "Memory per master node for the optional OCI OpenSearch cluster."
+}
+
+variable "oci_opensearch_dashboard_node_count" {
+  type        = number
+  default     = 1
+  description = "OpenDashboard node count for the optional OCI OpenSearch cluster."
+}
+
+variable "oci_opensearch_dashboard_node_ocpus" {
+  type        = number
+  default     = 1
+  description = "OCPUs per OpenDashboard node for the optional OCI OpenSearch cluster."
+}
+
+variable "oci_opensearch_dashboard_node_memory_gb" {
+  type        = number
+  default     = 8
+  description = "Memory per OpenDashboard node for the optional OCI OpenSearch cluster."
 }
 
 variable "defined_tags" {

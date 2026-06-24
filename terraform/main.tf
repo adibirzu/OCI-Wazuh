@@ -124,6 +124,29 @@ resource "oci_core_network_security_group_security_rule" "wazuh_agent_enrollment
   }
 }
 
+resource "oci_core_network_security_group_security_rule" "wazuh_goad_agent_enrollment" {
+  for_each = {
+    for pair in setproduct(var.goad_agent_cidrs, ["1514", "1515"]) : "${pair[0]}-${pair[1]}" => {
+      cidr = pair[0]
+      port = tonumber(pair[1])
+    }
+  }
+
+  network_security_group_id = oci_core_network_security_group.wazuh.id
+  direction                 = "INGRESS"
+  protocol                  = "6"
+  source                    = each.value.cidr
+  source_type               = "CIDR_BLOCK"
+  stateless                 = false
+
+  tcp_options {
+    destination_port_range {
+      min = each.value.port
+      max = each.value.port
+    }
+  }
+}
+
 resource "oci_core_network_security_group_security_rule" "agents_ssh_from_bastion" {
   network_security_group_id = oci_core_network_security_group.agents.id
   direction                 = "INGRESS"
@@ -174,6 +197,35 @@ module "compute" {
   wazuh_manager_ip          = module.wazuh_server.private_ip
   freeform_tags             = local.common_freeform_tags
   defined_tags              = var.defined_tags
+}
+
+resource "oci_opensearch_opensearch_cluster" "oci_logs" {
+  count = var.create_oci_opensearch ? 1 : 0
+
+  compartment_id                     = var.compartment_id
+  display_name                       = "${var.project_name}-oci-logs-opensearch"
+  software_version                   = var.oci_opensearch_software_version
+  vcn_id                             = data.oci_core_subnet.workload.vcn_id
+  vcn_compartment_id                 = data.oci_core_subnet.workload.compartment_id
+  subnet_id                          = var.agent_subnet_id
+  subnet_compartment_id              = data.oci_core_subnet.workload.compartment_id
+  master_node_count                  = var.oci_opensearch_master_node_count
+  master_node_host_type              = "FLEX"
+  master_node_host_ocpu_count        = var.oci_opensearch_master_node_ocpus
+  master_node_host_memory_gb         = var.oci_opensearch_master_node_memory_gb
+  data_node_count                    = var.oci_opensearch_data_node_count
+  data_node_host_type                = "FLEX"
+  data_node_host_ocpu_count          = var.oci_opensearch_data_node_ocpus
+  data_node_host_memory_gb           = var.oci_opensearch_data_node_memory_gb
+  data_node_storage_gb               = var.oci_opensearch_data_node_storage_gb
+  opendashboard_node_count           = var.oci_opensearch_dashboard_node_count
+  opendashboard_node_host_ocpu_count = var.oci_opensearch_dashboard_node_ocpus
+  opendashboard_node_host_memory_gb  = var.oci_opensearch_dashboard_node_memory_gb
+  security_mode                      = var.oci_opensearch_security_mode
+  security_master_user_name          = var.oci_opensearch_master_user_name
+  security_master_user_password_hash = var.oci_opensearch_master_password_hash == "" ? null : var.oci_opensearch_master_password_hash
+  freeform_tags                      = merge(local.common_freeform_tags, { role = "oci-opensearch-logs" })
+  defined_tags                       = var.defined_tags
 }
 
 module "streaming" {

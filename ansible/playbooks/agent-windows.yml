@@ -1,7 +1,6 @@
 ---
 - name: Configure Windows Wazuh agent with Sysmon
-  hosts: windows_agents
+  hosts: windows_agents:goad_hosts
   roles:
     - wazuh_agent
     - sysmon
-    - socfortress_rules

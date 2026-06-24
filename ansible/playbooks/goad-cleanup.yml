@@ -1,0 +1,46 @@
+---
+- name: Remove Wazuh and Sysmon from reused GOAD hosts
+  hosts: goad_hosts
+  gather_facts: false
+  tasks:
+    - name: Stop Wazuh Windows agent
+      ansible.windows.win_service:
+        name: WazuhSvc
+        state: stopped
+      failed_when: false
+
+    - name: Find Wazuh Windows agent package
+      ansible.windows.win_powershell:
+        script: |
+          $paths = @(
+            'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*',
+            'HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*'
+          )
+          Get-ItemProperty $paths -ErrorAction SilentlyContinue |
+            Where-Object { $_.DisplayName -like 'Wazuh Agent*' } |
+            Select-Object -First 1 -ExpandProperty PSChildName
+      register: wazuh_product
+      changed_when: false
+
+    - name: Uninstall Wazuh Windows agent
+      ansible.windows.win_package:
+        product_id: "{{ wazuh_product.output[0] | trim }}"
+        state: absent
+      when:
+        - wazuh_product.output is defined
+        - wazuh_product.output | length > 0
+        - wazuh_product.output[0] | trim | length > 0
+
+    - name: Uninstall Sysmon service
+      ansible.windows.win_command: C:\Agents\Sysmon\Sysmon64.exe -u force
+      register: sysmon_uninstall
+      changed_when: sysmon_uninstall.rc == 0
+      failed_when: false
+
+    - name: Remove demo staging directories
+      ansible.windows.win_file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - C:\Agents\Wazuh
+        - C:\Agents\Sysmon

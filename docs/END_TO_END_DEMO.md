@@ -136,7 +136,8 @@ When GOAD is ready, run the Ansible reuse path with an inventory containing:
 Playbook:
 
 ```bash
-ansible-playbook -i ansible/inventory/<inventory>.yml ansible/playbooks/goad-reuse.yml
+make goad-up
+make goad-validate
 ```
 
 This installs or updates:
@@ -144,6 +145,19 @@ This installs or updates:
 - Wazuh Windows agent
 - Sysmon using pinned `olafhartong/sysmon-modular`
 - SOC Fortress Wazuh rules on the Wazuh manager
+
+Expected validation:
+
+```text
+host.kingslanding=Active
+host.winterfell=Active
+host.castelblack=Active
+host.meereen=Active
+host.braavos=Active
+goad_sysmon_socfortress_alerts=green
+```
+
+The GOAD path uses a single SSH tunnel for WinRM to avoid repeated SSH handshakes during deployment. In CAP development the default tunnel path is through the Wazuh host; set `GOAD_TUNNEL_MODE=jumpbox` only when the GOAD jumpbox key is available.
 
 ## 5. Configure Wazuh Alerts into Log Analytics
 
@@ -278,7 +292,46 @@ The real path is:
 
 Allow several minutes for OCI Logging, SCH, Streaming, and Wazuh rule processing. The synthetic gate remains useful for parser/rule regressions, but `make validate-real-oci-logs` is the end-to-end ingestion proof.
 
-## 9. Build OCI Log Analytics Dashboard
+## 9. Configure Dedicated OpenSearch Indices and Wazuh Dashboard Objects
+
+The Wazuh detection path still writes normalized OCI telemetry to local files so Wazuh rules can fire. The same consumer can also index those records into dedicated OpenSearch indices:
+
+- `oci-audit-YYYY.MM.dd`
+- `oci-flow-YYYY.MM.dd`
+
+Default AIO backend:
+
+```bash
+make opensearch-oci
+make validate-opensearch-oci
+```
+
+Expected green output:
+
+```text
+opensearch_oci=green
+oci_audit_count=<nonzero>
+oci_flow_count=<nonzero>
+oci_audit_template=ready
+oci_flow_template=ready
+dashboard.oci_logs_overview=ready
+```
+
+The command creates:
+
+- index templates for `oci-audit-*` and `oci-flow-*`
+- OpenSearch Dashboards data views for `oci-audit-*` and `oci-flow-*`
+- saved searches `OCI Audit - Latest Events` and `OCI Flow - Denied Traffic`
+- dashboard `OCI Logs Overview`
+
+For OCI Search Service with OpenSearch, choose one of two paths:
+
+- Existing cluster: export `OCI_WAZUH_OPENSEARCH_BACKEND=oci_opensearch`, `OCI_WAZUH_OPENSEARCH_URL`, `OCI_WAZUH_DASHBOARD_URL`, `OCI_WAZUH_OPENSEARCH_USERNAME`, and `OCI_WAZUH_OPENSEARCH_PASSWORD`, then run `make opensearch-oci`.
+- Managed by this repo: set `create_oci_opensearch = true`, a stable `oci_opensearch_master_password_hash`, and the runtime `oci_opensearch_master_password` in local `terraform/terraform.tfvars`, run `make up`, then run `OCI_WAZUH_OPENSEARCH_BACKEND=oci_opensearch make opensearch-oci`.
+
+Do not use `wazuh-alerts-*` for raw OCI Audit and Flow exploration. Use `wazuh-alerts-*` for Wazuh detections and `oci-audit-*` / `oci-flow-*` for the normalized OCI source records.
+
+## 10. Build OCI Log Analytics Dashboard
 
 Open OCI Console:
 
@@ -315,17 +368,27 @@ Recommended dashboard panels:
 
 If Wazuh alert queries return zero rows immediately after configuration, wait for OCI Unified Agent and SCH propagation, then generate a Wazuh alert with `make e2e`.
 
-## 10. Build Wazuh Dashboard Views
+## 11. Build Wazuh Dashboard Views
 
 Open Wazuh Dashboard through the SSH tunnel.
 
-Create data view:
+Use these data views:
 
 ```text
 Name: OCI Wazuh Alerts
 Index pattern: wazuh-alerts-*
 Time field: timestamp
+
+Name: OCI Audit Raw
+Index pattern: oci-audit-*
+Time field: @timestamp
+
+Name: OCI Flow Raw
+Index pattern: oci-flow-*
+Time field: @timestamp
 ```
+
+If `make opensearch-oci` has already run, the `oci-audit-*` and `oci-flow-*` data views and `OCI Logs Overview` dashboard are created automatically.
 
 Create saved searches and dashboard panels from:
 
@@ -341,7 +404,7 @@ Required Wazuh views:
 - GOAD Windows and Sysmon
 - MITRE technique rollup
 
-## 11. Generate Demo Events
+## 12. Generate Demo Events
 
 Linux FIM:
 
@@ -388,19 +451,20 @@ make validate-real-oci-logs
 
 Use this for the live demo proof that the deployment is ingesting real OCI telemetry from the target tenancy.
 
-## 12. Demo Flow
+## 13. Demo Flow
 
 1. Show Wazuh manager status and active Linux agents.
 2. Show Linux FIM alert from `make e2e`.
-3. Show GOAD hosts running with `make goad-discover`.
+3. Show GOAD hosts active and Sysmon/SOC Fortress alerting with `make goad-validate`.
 4. Show Log Analytics bridge green with `make log-analytics-bridge`.
 5. Show OCI parser/rule content green with `make simulate-detections`.
 6. Show real OCI ingestion green with `make validate-real-oci-logs`.
-7. In OCI Log Analytics, open the source inventory and dashboard panels.
-8. In Wazuh Dashboard, open OCI Audit, VCN Flow, Linux FIM, and GOAD/Sysmon views.
-9. Trigger one benign event per telemetry family and show it in both systems where applicable.
+7. Show dedicated OpenSearch indices green with `make validate-opensearch-oci`.
+8. In OCI Log Analytics, open the source inventory and dashboard panels.
+9. In Wazuh Dashboard, open `OCI Logs Overview`, OCI Audit, VCN Flow, Linux FIM, and GOAD/Sysmon views.
+10. Trigger one benign event per telemetry family and show it in both systems where applicable.
 
-## 13. Teardown
+## 14. Teardown
 
 Destroy standalone lab resources:
 
@@ -408,7 +472,7 @@ Destroy standalone lab resources:
 make down
 ```
 
-For shared GOAD and OCI-DEMO resources, do not destroy the shared GOAD VCN or shared OCI-DEMO Log Analytics content unless the parent deployment owns them. The Wazuh-specific resources created by this repo are tagged or named with the project prefix.
+`make down` first runs GOAD cleanup. For reused GOAD hosts it removes Wazuh Windows agents, Sysmon, staging directories, and Wazuh manager agent records, then Terraform destroys demo-owned resources. For shared GOAD and OCI-DEMO resources, do not destroy the shared GOAD VCN or shared OCI-DEMO Log Analytics content unless the parent deployment owns them. The Wazuh-specific resources created by this repo are tagged or named with the project prefix.
 
 Post-destroy check:
 

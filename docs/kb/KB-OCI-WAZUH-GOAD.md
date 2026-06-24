@@ -28,6 +28,20 @@ When GOAD reuse is ready, run `ansible/playbooks/goad-reuse.yml` with:
 
 The playbook imports SOC Fortress rules once on the Wazuh manager, then installs or updates the Wazuh Windows agent and Sysmon on each GOAD host.
 
+The preferred wrapper is:
+
+```bash
+make goad-up
+make goad-validate
+```
+
+`make goad-up` builds a temporary WinRM inventory in `artifacts/validation/`, creates or reuses a single SSH tunnel, installs the Wazuh agent and Sysmon on all five hosts, and imports SOC Fortress rules on the Wazuh manager. The default tunnel path is through the Wazuh host because it avoids repeated SSH handshakes to the GOAD jumpbox during CAP development. If the jumpbox key is available, set `GOAD_TUNNEL_MODE=jumpbox`.
+
+`make goad-validate` requires both:
+
+- all five GOAD agents are `Active` in Wazuh
+- at least one GOAD Sysmon/SOC Fortress-style alert is present in `/var/ossec/logs/alerts/alerts.json`
+
 ## Pinned Content
 
 - Wazuh Windows agent: `4.14.5-1`
@@ -43,3 +57,7 @@ The implementation follows OCI-DEMO C5/C16 patterns:
 - reuse the shared GOAD OCI Logging group and Unified Agent configurations instead of creating a Service Connector from a Log Analytics log group
 
 If `make goad-discover` reports `goad_reuse=not_ready`, use the GOADv3 OCI provider path and re-run discovery after deployment.
+
+## Cleanup
+
+`make down` runs `make goad-down` before Terraform destroy. The cleanup playbook removes WazuhSvc, the Wazuh Windows package, Sysmon service, and staging directories from reused GOAD hosts, then removes the GOAD agent records from the Wazuh manager.

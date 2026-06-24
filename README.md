@@ -16,8 +16,12 @@ make goad-discover
 make wazuh-log-analytics
 make log-analytics-bridge
 make wazuh-content
+make opensearch-oci
+make goad-up
+make goad-validate
 make simulate-detections
 make validate-real-oci-logs
+make validate-opensearch-oci
 ```
 
 If the development tenant rate-limits repeated SSH probes, prefer the default SSH ControlMaster path and wait 2-5 minutes before retrying. Use `WAZUH_SSH_CONTROL=none` only for isolated debugging.
@@ -36,6 +40,8 @@ make wazuh-demo-up
 make down
 ```
 
+`make down` runs `make goad-down` first. For reused GOAD hosts this removes the Wazuh Windows agent, Sysmon service, staging files, and Wazuh manager agent records before Terraform destroys demo-owned OCI resources.
+
 ## Ingestion Modes
 
 - `streaming`: VCN Flow Logs from OCI Logging through Service Connector Hub to OCI Streaming, consumed by the Wazuh node. OCI Audit is collected from the real OCI Audit API by the Wazuh node.
@@ -44,6 +50,30 @@ make down
 - `log_analytics_bridge`: OS/EDR/Wazuh alerts also sent to OCI Log Analytics for correlation dashboards.
 
 The default development path is `streaming`.
+
+## OpenSearch Backend
+
+The default backend is the Wazuh all-in-one OpenSearch indexer. Run:
+
+```bash
+make opensearch-oci
+make validate-opensearch-oci
+```
+
+This creates index templates, data views, saved searches, and the `OCI Logs Overview` dashboard for dedicated `oci-audit-*` and `oci-flow-*` indices.
+
+To use OCI Search Service with OpenSearch instead of the AIO indexer, either provide an existing endpoint:
+
+```bash
+OCI_WAZUH_OPENSEARCH_BACKEND=oci_opensearch \
+OCI_WAZUH_OPENSEARCH_URL=https://<OPENSEARCH_ENDPOINT>:9200 \
+OCI_WAZUH_DASHBOARD_URL=https://<OPENSEARCH_DASHBOARD_ENDPOINT>:5601 \
+OCI_WAZUH_OPENSEARCH_USERNAME=<USER> \
+OCI_WAZUH_OPENSEARCH_PASSWORD=<PASSWORD> \
+make opensearch-oci
+```
+
+or set `create_oci_opensearch = true` in local `terraform/terraform.tfvars` and keep the master password/hash only in local tfvars, environment variables, or OCI Vault.
 
 ## Dashboards
 

@@ -31,8 +31,58 @@
       WAZUH_MANAGER="{{ wazuh_manager_ip }}"
       WAZUH_REGISTRATION_SERVER="{{ wazuh_manager_ip }}"
       WAZUH_AGENT_GROUP="{{ wazuh_agent_group }}"
+      WAZUH_AGENT_NAME="{{ wazuh_agent_name | default(inventory_hostname) }}"
     state: present
+  register: wazuh_windows_install
   when: wazuh_windows_service.exists is not defined or not wazuh_windows_service.exists
+
+- name: Configure Windows event channels for Wazuh
+  ansible.windows.win_powershell:
+    script: |
+      $conf = 'C:\Program Files (x86)\ossec-agent\ossec.conf'
+      [xml]$xml = Get-Content -Path $conf
+      $root = $xml.ossec_config
+      $channels = @(
+        'Application',
+        'Security',
+        'System',
+        'Microsoft-Windows-Sysmon/Operational'
+      )
+      $changed = $false
+      foreach ($channel in $channels) {
+        $exists = $false
+        foreach ($localfile in $root.localfile) {
+          if ($localfile.location -eq $channel) {
+            $exists = $true
+            break
+          }
+        }
+        if (-not $exists) {
+          $localfile = $xml.CreateElement('localfile')
+          $format = $xml.CreateElement('log_format')
+          $format.InnerText = 'eventchannel'
+          $location = $xml.CreateElement('location')
+          $location.InnerText = $channel
+          [void]$localfile.AppendChild($format)
+          [void]$localfile.AppendChild($location)
+          [void]$root.AppendChild($localfile)
+          $changed = $true
+        }
+      }
+      if ($changed) {
+        $xml.Save($conf)
+        Write-Output 'changed'
+      } else {
+        Write-Output 'ok'
+      }
+  register: wazuh_windows_eventchannels
+  changed_when: "'changed' in wazuh_windows_eventchannels.output"
+
+- name: Restart Wazuh Windows agent after install or config change
+  ansible.windows.win_service:
+    name: WazuhSvc
+    state: restarted
+  when: (wazuh_windows_install.changed | default(false)) or wazuh_windows_eventchannels.changed
 
 - name: Ensure Wazuh Windows agent is running
   ansible.windows.win_service:

@@ -13,3 +13,5 @@
 - Added end-to-end demo runbook and dashboard query packs for OCI Log Analytics and Wazuh Dashboard.
 - Added Wazuh OCI content deployment and synthetic OCI Audit/VCN Flow validation gates for rules `100000` and `100100`.
 - Added real OCI ingestion validation: Audit API consumer, VCN Flow Log SCH-to-Streaming consumer, existing Flow Log reuse, SCH IAM policies, and `make validate-real-oci-logs`.
+- Added optional OCI OpenSearch backend support plus dedicated `oci-audit-*` and `oci-flow-*` templates, data views, saved searches, and `OCI Logs Overview` dashboard creation.
+- Added repeatable GOAD Wazuh install/cleanup targets and strengthened GOAD validation to require Sysmon/SOC Fortress alerts, not only active Windows agents.

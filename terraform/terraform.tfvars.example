@@ -16,4 +16,25 @@ flow_log_category = "subnet"
 existing_flow_logs = [] # [{ compartment_id = "<SOURCE_COMPARTMENT_OCID>", log_group_id = "<EXISTING_FLOW_LOG_GROUP_OCID>", log_id = "<EXISTING_FLOW_LOG_OCID>" }]
 oci_log_retention_days = 30
 windows_mode   = "auto"
+goad_agent_cidrs = [] # e.g. ["192.168.56.0/24"] when reusing GOAD in another VCN/subnet.
 enable_log_analytics_bridge = true
+
+# OpenSearch backend choice:
+# - default AIO: leave create_oci_opensearch=false and run make opensearch-oci
+# - existing OCI OpenSearch: leave false, then export OCI_WAZUH_OPENSEARCH_URL/USERNAME/PASSWORD before make opensearch-oci
+# - managed OCI OpenSearch: set true and provide a stable bcrypt hash plus runtime password locally, never in committed files
+create_oci_opensearch = false
+oci_opensearch_software_version = "2.19.0"
+oci_opensearch_master_user_name = "admin"
+oci_opensearch_master_password = "" # consumed by make opensearch-oci only
+oci_opensearch_master_password_hash = "" # consumed by Terraform when create_oci_opensearch=true
+oci_opensearch_data_node_count = 1
+oci_opensearch_data_node_ocpus = 1
+oci_opensearch_data_node_memory_gb = 8
+oci_opensearch_data_node_storage_gb = 50
+oci_opensearch_master_node_count = 1
+oci_opensearch_master_node_ocpus = 1
+oci_opensearch_master_node_memory_gb = 8
+oci_opensearch_dashboard_node_count = 1
+oci_opensearch_dashboard_node_ocpus = 1
+oci_opensearch_dashboard_node_memory_gb = 8

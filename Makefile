@@ -1,4 +1,4 @@
-.PHONY: bootstrap lint validate e2e cost up down plan cap-preflight goad-discover log-analytics-bridge wazuh-log-analytics wazuh-content simulate-detections validate-real-oci-logs
+.PHONY: bootstrap lint validate e2e cost up down plan cap-preflight goad-discover goad-up goad-down goad-validate log-analytics-bridge wazuh-log-analytics wazuh-content opensearch-oci validate-opensearch-oci simulate-detections validate-real-oci-logs
 
 bootstrap:
 	bash scripts/bootstrap.sh
@@ -9,6 +9,15 @@ cap-preflight:
 goad-discover:
 	bash scripts/goad-discover.sh
 
+goad-up:
+	bash scripts/goad-wazuh.sh install
+
+goad-down:
+	bash scripts/goad-wazuh.sh cleanup
+
+goad-validate:
+	bash scripts/goad-wazuh.sh validate
+
 log-analytics-bridge:
 	bash scripts/log-analytics-bridge.sh
 
@@ -17,6 +26,12 @@ wazuh-log-analytics:
 
 wazuh-content:
 	bash scripts/deploy-wazuh-content.sh
+
+opensearch-oci:
+	bash scripts/configure-opensearch-oci.sh
+
+validate-opensearch-oci:
+	bash scripts/validate-opensearch-oci.sh
 
 simulate-detections:
 	bash scripts/simulate-detections.sh
@@ -35,7 +50,7 @@ plan:
 up: cost
 	bash scripts/cap-up.sh
 
-down:
+down: goad-down
 	terraform -chdir=terraform destroy
 
 validate:

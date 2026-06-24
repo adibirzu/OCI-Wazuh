@@ -21,6 +21,22 @@ Use this KB to select and operate OCI Audit, VCN Flow Log, OS, EDR, and Wazuh al
 
 OCI Audit is not modeled as an OCI Logging service source in the active OCI catalog used by this lab. The reusable implementation therefore treats Audit as an API source and VCN Flow as a Logging/SCH source.
 
+## OpenSearch Backend Choice
+
+Wazuh uses OpenSearch for storage and OpenSearch Dashboards for saved objects. The lab supports two backend choices for raw OCI source records:
+
+- `aio`: default. The OCI consumer writes to the Wazuh all-in-one indexer at `https://127.0.0.1:9200`.
+- `oci_opensearch`: external or Terraform-managed OCI Search Service with OpenSearch. Set `create_oci_opensearch = true` for a managed cluster, or export an existing endpoint through `OCI_WAZUH_OPENSEARCH_URL`.
+
+In both modes the consumer keeps writing `/var/ossec/logs/oci/audit.json` and `/var/ossec/logs/oci/flow.json` so Wazuh decoders and rules continue to fire. The OpenSearch sink adds raw source indices:
+
+- `oci-audit-YYYY.MM.dd`
+- `oci-flow-YYYY.MM.dd`
+
+Run `make opensearch-oci` to create index templates, data views, saved searches, and the `OCI Logs Overview` dashboard. Run `make validate-opensearch-oci` to confirm both dedicated indices contain real records.
+
+Use `wazuh-alerts-*` for Wazuh detections and MITRE-mapped alert exploration. Use `oci-audit-*` and `oci-flow-*` for normalized raw OCI telemetry exploration.
+
 ## Existing Flow Log Reuse
 
 OCI allows one active Flow Log configuration per resource/category combination. If a subnet, VCN, or VNIC already has Flow Logs enabled, set `existing_flow_logs` in local `terraform.tfvars` with the source compartment, log group, and log OCID. Terraform then skips Flow Log creation and creates the SCH permissions/connector to reuse that source.

@@ -95,3 +95,18 @@ output "oci_log_ingestion_mode" {
   value       = module.service_connector.selected_mode
   description = "Selected OCI log ingestion mode."
 }
+
+output "oci_opensearch_cluster_id" {
+  value       = try(oci_opensearch_opensearch_cluster.oci_logs[0].id, null)
+  description = "Optional OCI OpenSearch cluster OCID when create_oci_opensearch is true."
+}
+
+output "oci_opensearch_url" {
+  value       = try("https://${oci_opensearch_opensearch_cluster.oci_logs[0].opensearch_fqdn}:9200", null)
+  description = "Optional OCI OpenSearch API URL for OCI Audit and VCN Flow dedicated indices."
+}
+
+output "oci_opensearch_dashboard_url" {
+  value       = try("https://${oci_opensearch_opensearch_cluster.oci_logs[0].opendashboard_fqdn}:5601", null)
+  description = "Optional OCI OpenSearch Dashboard URL."
+}

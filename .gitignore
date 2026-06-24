@@ -6,5 +6,6 @@ terraform/terraform.tfvars
 artifacts/validation/*.json
 artifacts/validation/cap-context.txt
 artifacts/validation/
+.ansible/
 __pycache__/
 *.pyc

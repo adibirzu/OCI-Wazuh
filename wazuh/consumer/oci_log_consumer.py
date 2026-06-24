@@ -8,8 +8,11 @@ import base64
 import gzip
 import json
 import os
+import ssl
 import sys
 import time
+import urllib.error
+import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Iterable
@@ -26,6 +29,118 @@ def load_oci_config(profile: str | None, use_instance_principal: bool) -> tuple[
 
 def compact_json(data: dict[str, Any]) -> str:
     return json.dumps(data, separators=(",", ":"), sort_keys=True)
+
+
+def env_bool(name: str, default: bool = False) -> bool:
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def parse_event_time(value: Any) -> str:
+    if value is None:
+        return datetime.now(timezone.utc).isoformat()
+    text = str(value)
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        return datetime.fromisoformat(text).astimezone(timezone.utc).isoformat()
+    except ValueError:
+        return datetime.now(timezone.utc).isoformat()
+
+
+class OpenSearchSink:
+    def __init__(
+        self,
+        url: str,
+        username: str,
+        password: str,
+        verify_ssl: bool,
+        audit_index_prefix: str,
+        flow_index_prefix: str,
+    ) -> None:
+        self.url = url.rstrip("/")
+        self.username = username
+        self.password = password
+        self.audit_index_prefix = audit_index_prefix
+        self.flow_index_prefix = flow_index_prefix
+        self.ssl_context = None if verify_ssl else ssl._create_unverified_context()
+        password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+        password_mgr.add_password(None, self.url, self.username, self.password)
+        handlers: list[urllib.request.BaseHandler] = [urllib.request.HTTPBasicAuthHandler(password_mgr)]
+        if self.ssl_context is not None:
+            handlers.append(urllib.request.HTTPSHandler(context=self.ssl_context))
+        self.opener = urllib.request.build_opener(*handlers)
+
+    @classmethod
+    def from_args(cls, args: argparse.Namespace) -> "OpenSearchSink | None":
+        enabled = args.opensearch_enabled or env_bool("OCI_WAZUH_OPENSEARCH_ENABLED")
+        if not enabled:
+            return None
+        url = args.opensearch_url or os.environ.get("OCI_WAZUH_OPENSEARCH_URL", "")
+        username = args.opensearch_username or os.environ.get("OCI_WAZUH_OPENSEARCH_USERNAME", "")
+        password = args.opensearch_password or os.environ.get("OCI_WAZUH_OPENSEARCH_PASSWORD", "")
+        if not url or not username or not password:
+            print("OpenSearch sink enabled but URL/username/password are incomplete", file=sys.stderr)
+            return None
+        return cls(
+            url=url,
+            username=username,
+            password=password,
+            verify_ssl=args.opensearch_verify_ssl if args.opensearch_verify_ssl is not None else env_bool("OCI_WAZUH_OPENSEARCH_VERIFY_SSL"),
+            audit_index_prefix=args.opensearch_audit_index_prefix
+            or os.environ.get("OCI_WAZUH_OPENSEARCH_AUDIT_INDEX_PREFIX", "oci-audit"),
+            flow_index_prefix=args.opensearch_flow_index_prefix
+            or os.environ.get("OCI_WAZUH_OPENSEARCH_FLOW_INDEX_PREFIX", "oci-flow"),
+        )
+
+    def index_name(self, normalized: dict[str, Any]) -> str:
+        prefix = self.audit_index_prefix if normalized["source"] == "audit" else self.flow_index_prefix
+        timestamp = parse_event_time(normalized.get("time"))
+        day = timestamp[:10].replace("-", ".")
+        return f"{prefix}-{day}"
+
+    def document(self, normalized: dict[str, Any]) -> dict[str, Any]:
+        doc = dict(normalized)
+        doc["@timestamp"] = parse_event_time(doc.get("time"))
+        doc["event"] = {
+            "dataset": f"oci.{doc['source']}",
+            "module": "oci",
+            "kind": "event",
+        }
+        doc["cloud"] = {"provider": "oci"}
+        return doc
+
+    def post_bulk(self, lines: list[str]) -> None:
+        if not lines:
+            return
+        payload = ("\n".join(lines) + "\n").encode("utf-8")
+        request = urllib.request.Request(
+            f"{self.url}/_bulk",
+            data=payload,
+            headers={"Content-Type": "application/x-ndjson"},
+            method="POST",
+        )
+        try:
+            with self.opener.open(request, timeout=30) as response:
+                result = json.loads(response.read().decode("utf-8"))
+        except urllib.error.URLError as exc:
+            print(f"OpenSearch bulk indexing failed: {exc}", file=sys.stderr)
+            return
+        if result.get("errors"):
+            print("OpenSearch bulk indexing returned item errors", file=sys.stderr)
+
+    def index(self, normalized_records: Iterable[dict[str, Any]]) -> int:
+        lines: list[str] = []
+        count = 0
+        for record in normalized_records:
+            doc = self.document(record)
+            lines.append(compact_json({"index": {"_index": self.index_name(record)}}))
+            lines.append(compact_json(doc))
+            count += 1
+        self.post_bulk(lines)
+        return count
 
 
 def parse_json_payload(payload: bytes | str) -> Any:
@@ -116,9 +231,15 @@ def normalize_event(raw: dict[str, Any], source: str | None = None) -> dict[str,
     return {key: value for key, value in normalized.items() if value is not None}
 
 
-def write_normalized(records: Iterable[dict[str, Any]], output_dir: Path, forced_source: str | None = None) -> int:
+def write_normalized(
+    records: Iterable[dict[str, Any]],
+    output_dir: Path,
+    forced_source: str | None = None,
+    opensearch_sink: OpenSearchSink | None = None,
+) -> int:
     output_dir.mkdir(parents=True, exist_ok=True)
     handles: dict[str, Any] = {}
+    normalized_batch: list[dict[str, Any]] = []
     count = 0
     try:
         for raw in records:
@@ -130,14 +251,17 @@ def write_normalized(records: Iterable[dict[str, Any]], output_dir: Path, forced
                 handles[source] = (output_dir / f"{source}.json").open("a", encoding="utf-8")
             handles[source].write(compact_json(normalized) + "\n")
             handles[source].flush()
+            normalized_batch.append(normalized)
             count += 1
     finally:
         for handle in handles.values():
             handle.close()
+    if opensearch_sink is not None and normalized_batch:
+        opensearch_sink.index(normalized_batch)
     return count
 
 
-def normalize_file(input_path: Path, output_dir: Path, source: str | None) -> int:
+def normalize_file(input_path: Path, output_dir: Path, source: str | None, opensearch_sink: OpenSearchSink | None = None) -> int:
     def records() -> Iterable[dict[str, Any]]:
         with input_path.open("rb") as source_file:
             for line in source_file:
@@ -145,7 +269,7 @@ def normalize_file(input_path: Path, output_dir: Path, source: str | None) -> in
                     continue
                 yield from iter_json_records(parse_json_payload(line))
 
-    return write_normalized(records(), output_dir, source)
+    return write_normalized(records(), output_dir, source, opensearch_sink)
 
 
 def stream_records(args: argparse.Namespace) -> Iterable[dict[str, Any]]:
@@ -297,15 +421,23 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--compartment-id")
     parser.add_argument("--compartment-id-in-subtree", action=argparse.BooleanOptionalAction, default=False)
     parser.add_argument("--direct-api-lookback-minutes", type=int, default=15)
+    parser.add_argument("--opensearch-enabled", action="store_true")
+    parser.add_argument("--opensearch-url")
+    parser.add_argument("--opensearch-username")
+    parser.add_argument("--opensearch-password")
+    parser.add_argument("--opensearch-verify-ssl", action=argparse.BooleanOptionalAction, default=None)
+    parser.add_argument("--opensearch-audit-index-prefix")
+    parser.add_argument("--opensearch-flow-index-prefix")
     return parser.parse_args()
 
 
 def main() -> int:
     args = parse_args()
     forced_source = None if args.source == "auto" else args.source
+    opensearch_sink = OpenSearchSink.from_args(args)
 
     if args.input_file:
-        count = normalize_file(args.input_file, args.output_dir, forced_source)
+        count = normalize_file(args.input_file, args.output_dir, forced_source, opensearch_sink)
         print(f"normalized={count}")
         return 0
 
@@ -330,7 +462,7 @@ def main() -> int:
 
     total = 0
     for record in records:
-        total += write_normalized([record], args.output_dir, forced_source)
+        total += write_normalized([record], args.output_dir, forced_source, opensearch_sink)
     return 0 if total >= 0 else 1
 
 
