@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 0002: Build Wazuh and Log Analytics Security Dashboards</title>
+  <link rel="stylesheet" href="../assets/teach.css">
+</head>
+<body>
+  <h1>Lesson 0002: Build Wazuh and Log Analytics Security Dashboards</h1>
+
+  <p>This lesson turns a working deployment into two dashboard sets: Wazuh for detections and OCI Log Analytics for cross-source correlation.</p>
+
+  <section class="module">
+    <h2>Module 1: Wazuh Detection Views</h2>
+    <p>Create or open these Wazuh data views:</p>
+    <pre><code>wazuh-alerts-*
+oci-audit-*
+oci-flow-*</code></pre>
+    <p>Use <code>wazuh-alerts-*</code> for rule-driven detections. Use the raw OCI indices only when you need source-record context.</p>
+  </section>
+
+  <section class="module">
+    <h2>Module 2: Wazuh Filters</h2>
+    <pre><code>rule.id &gt;= 100000 and rule.id &lt;= 100099
+rule.id &gt;= 100100 and rule.id &lt;= 100199
+rule.groups: syscheck or rule.groups: sca
+agent.name: (braavos or castelblack or kingslanding or meereen or winterfell) or rule.groups: windows</code></pre>
+    <p>Save each filter as a saved search before adding charts. This keeps the dashboard explainable.</p>
+  </section>
+
+  <section class="module">
+    <h2>Module 3: Log Analytics Source Discovery</h2>
+    <pre><code>* | stats count by "Log Source" | sort -count</code></pre>
+    <p>Source discovery is the first panel and the first troubleshooting step. Do not build a dashboard from assumed source names.</p>
+  </section>
+
+  <section class="module">
+    <h2>Module 4: Correlation Row</h2>
+    <p>Build one row that answers a single security question: <em>What denied network activity happened, which Wazuh alerts occurred in the same window, and which host or identity should be investigated?</em></p>
+  </section>
+
+  <section class="check">
+    <h2>Exercise</h2>
+    <p>Use <code>dashboards/log-analytics/oci-wazuh-dashboard-queries.json</code> to create four saved searches: source inventory, VCN rejects by pair, OCI Audit by user/source, and Wazuh alert volume. Write a one-sentence dashboard title that states the investigation goal.</p>
+  </section>
+
+  <section class="quiz" data-quiz>
+    <h2>Check Understanding</h2>
+    <p>Which index pattern should hold normalized raw OCI Flow records?</p>
+    <label><input type="radio" name="q1" data-correct="false"> <code>wazuh-alerts-*</code></label><br>
+    <label><input type="radio" name="q1" data-correct="true"> <code>oci-flow-*</code></label><br>
+    <label><input type="radio" name="q1" data-correct="false"> <code>wazuh-monitoring-*</code></label><br>
+    <button type="button">Check</button>
+    <div class="answer" aria-live="polite"></div>
+  </section>
+
+  <script src="../assets/quiz.js"></script>
+</body>
+</html>

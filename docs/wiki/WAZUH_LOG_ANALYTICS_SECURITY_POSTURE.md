@@ -14,6 +14,22 @@ This page is the teaching entry point for using Wazuh and OCI Log Analytics toge
 | 6. Posture improvement | Convert detections into hardening actions and ATT&CK coverage. | Posture backlog |
 | 7. Operations and teardown | Validate, operate, upgrade, and remove the lab safely. | End-to-end runbook |
 
+For the operator-level walkthrough, use [Wazuh and OCI Log Analytics Hands-On Walkthrough](WAZUH_LOG_ANALYTICS_HANDS_ON.md).
+
+## Screenshot Tour
+
+![Wazuh login through the local SSH tunnel](assets/wazuh-login.png)
+
+Wazuh should be reached through the local SSH tunnel rather than a public dashboard listener.
+
+![Lesson 0001 correlation workflow](assets/lesson-0001-correlation-loop.png)
+
+The first lesson teaches the end-to-end correlation loop: choose signal, confirm source, validate detection, dashboard, then decide on a posture action.
+
+![Lesson 0002 dashboard workflow](assets/lesson-0002-security-dashboards.png)
+
+The second lesson teaches how to split Wazuh detection views from OCI Log Analytics correlation dashboards.
+
 ## Architecture Mental Model
 
 Wazuh is the detection workbench for endpoint and SIEM-style rules. It owns agent enrollment, log collection, FIM, SCA, syscollector, vulnerability detection, Windows/Sysmon detections, custom decoders, and rule IDs. In this lab, Wazuh also writes normalized OCI Audit and VCN Flow records into dedicated OpenSearch indices:
@@ -46,6 +62,12 @@ Expected source families for this demo:
 - Windows Application Events
 - Windows Sysmon Events
 
+Validation command:
+
+```bash
+make log-analytics-bridge
+```
+
 ## Module 2: Wazuh Endpoint Posture
 
 Use Wazuh for endpoint-centered questions:
@@ -57,6 +79,19 @@ Use Wazuh for endpoint-centered questions:
 - Which detections map to ATT&CK techniques? Pivot on `rule.mitre.id`.
 
 Required Wazuh views are documented in [OCI Wazuh Dashboard Views](../../dashboards/wazuh/oci-wazuh-views.md).
+
+Hands-on command:
+
+```bash
+make e2e
+```
+
+Core Wazuh filters:
+
+```text
+rule.groups: syscheck or rule.groups: sca
+agent.name: (braavos or castelblack or kingslanding or meereen or winterfell) or rule.groups: windows
+```
 
 ## Module 3: OCI Cloud Telemetry in Wazuh
 
@@ -78,6 +113,16 @@ VCN Flow -> oci-flow-YYYY.MM.dd
 
 Use `wazuh-alerts-*` to investigate detections. Use `oci-audit-*` and `oci-flow-*` to inspect normalized source records.
 
+Hands-on commands:
+
+```bash
+make wazuh-content
+make simulate-detections
+make validate-real-oci-logs
+make opensearch-oci
+make validate-opensearch-oci
+```
+
 ## Module 4: Wazuh Alerts in OCI Log Analytics
 
 Run the bridge path when you want enterprise correlation outside Wazuh:
@@ -90,6 +135,13 @@ make log-analytics-bridge
 The bridge creates or reconciles the Wazuh alert custom log, Unified Agent tail configuration for `/var/ossec/logs/alerts/alerts.json`, OCI Logging resources, Connector Hub delivery to Log Analytics, and Log Analytics entities/source readiness checks.
 
 Use the query pack in [OCI Wazuh Log Analytics Queries](../../dashboards/log-analytics/oci-wazuh-dashboard-queries.json). The first dashboard row should always be source inventory so operators can see whether the expected source families are present.
+
+Hands-on commands:
+
+```bash
+make wazuh-log-analytics
+make log-analytics-bridge
+```
 
 ## Module 5: Correlation Patterns
 
@@ -172,6 +224,8 @@ The teardown path removes demo-owned cloud resources and cleans Wazuh/Sysmon age
 - [Curated resources](../../RESOURCES.md)
 - [Printable reference](../../reference/0001-wazuh-log-analytics-security-posture.html)
 - [Lesson 0001: SIEM correlation loop](../../lessons/0001-siem-correlation-loop.html)
+- [Lesson 0002: build security dashboards](../../lessons/0002-build-security-dashboards.html)
+- [Hands-on walkthrough](WAZUH_LOG_ANALYTICS_HANDS_ON.md)
 - [End-to-end demo runbook](../END_TO_END_DEMO.md)
 - [Ingestion KB](../kb/KB-OCI-WAZUH-INGESTION.md)
 - [Detection KB](../kb/KB-OCI-WAZUH-DETECTIONS.md)
