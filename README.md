@@ -85,8 +85,10 @@ or set `create_oci_opensearch = true` in local `terraform/terraform.tfvars` and 
 Use the course pack when presenting Wazuh and OCI Log Analytics as a company security-posture demo:
 
 - Module index: [docs/wiki/WAZUH_LOG_ANALYTICS_MODULE_INDEX.md](docs/wiki/WAZUH_LOG_ANALYTICS_MODULE_INDEX.md)
+- Browser landing page: [docs/wiki/index.html](docs/wiki/index.html)
 - Hands-on walkthrough: [docs/wiki/WAZUH_LOG_ANALYTICS_HANDS_ON.md](docs/wiki/WAZUH_LOG_ANALYTICS_HANDS_ON.md)
 - Facilitator guide: [docs/wiki/WAZUH_LOG_ANALYTICS_FACILITATOR_GUIDE.md](docs/wiki/WAZUH_LOG_ANALYTICS_FACILITATOR_GUIDE.md)
+- Participant handout: [docs/wiki/WAZUH_LOG_ANALYTICS_PARTICIPANT_HANDOUT.md](docs/wiki/WAZUH_LOG_ANALYTICS_PARTICIPANT_HANDOUT.md)
 - Query cookbook: [docs/wiki/WAZUH_LOG_ANALYTICS_QUERY_COOKBOOK.md](docs/wiki/WAZUH_LOG_ANALYTICS_QUERY_COOKBOOK.md)
 - Assessment: [docs/wiki/WAZUH_LOG_ANALYTICS_ASSESSMENT.md](docs/wiki/WAZUH_LOG_ANALYTICS_ASSESSMENT.md)
 

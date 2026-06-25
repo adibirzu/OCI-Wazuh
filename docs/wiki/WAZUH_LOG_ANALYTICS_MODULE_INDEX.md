@@ -4,9 +4,11 @@ This index links the reusable teaching modules, screenshots, guides, and validat
 
 ## Core Docs
 
+- [Course landing page](index.html)
 - [Security posture wiki](WAZUH_LOG_ANALYTICS_SECURITY_POSTURE.md)
 - [Hands-on walkthrough](WAZUH_LOG_ANALYTICS_HANDS_ON.md)
 - [Facilitator guide](WAZUH_LOG_ANALYTICS_FACILITATOR_GUIDE.md)
+- [Participant handout](WAZUH_LOG_ANALYTICS_PARTICIPANT_HANDOUT.md)
 - [Assessment](WAZUH_LOG_ANALYTICS_ASSESSMENT.md)
 - [Query cookbook](WAZUH_LOG_ANALYTICS_QUERY_COOKBOOK.md)
 - [Posture backlog template](WAZUH_LOG_ANALYTICS_POSTURE_BACKLOG_TEMPLATE.md)
@@ -67,6 +69,7 @@ make teach-validate
 ```
 
 This checks the required lesson pages, wiki pages, screenshot assets, ignored raw-auth directories, and redaction-sensitive patterns.
+It also validates local Markdown and HTML links used by the teaching pack.
 
 ## Screenshot Commands
 

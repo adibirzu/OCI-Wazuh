@@ -12,6 +12,9 @@ required_files=(
   "docs/wiki/WAZUH_LOG_ANALYTICS_ASSESSMENT.md"
   "docs/wiki/WAZUH_LOG_ANALYTICS_QUERY_COOKBOOK.md"
   "docs/wiki/WAZUH_LOG_ANALYTICS_POSTURE_BACKLOG_TEMPLATE.md"
+  "docs/wiki/WAZUH_LOG_ANALYTICS_PARTICIPANT_HANDOUT.md"
+  "docs/wiki/WAZUH_LOG_ANALYTICS_SCREENSHOT_RUNBOOK.md"
+  "docs/wiki/index.html"
   "docs/wiki/assets/wazuh-authenticated-overview-sanitized.png"
   "docs/wiki/assets/oci-log-analytics-explorer-sanitized.png"
   "docs/wiki/assets/wazuh-login.png"
@@ -55,6 +58,8 @@ if rg -n "${redaction_pattern}" \
   exit 1
 fi
 
+python3 scripts/validate-teaching-links.py
+
 echo "teaching_assets=ready"
 echo "lessons=8"
-echo "wiki_docs=7"
+echo "wiki_docs=10"

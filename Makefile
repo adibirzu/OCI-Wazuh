@@ -49,6 +49,7 @@ lint:
 	terraform -chdir=terraform fmt -check -recursive
 	python3 -m py_compile wazuh/consumer/oci_log_consumer.py
 	python3 -m py_compile scripts/sanitize-dashboard-screenshots.py
+	python3 -m py_compile scripts/validate-teaching-links.py
 
 plan:
 	terraform -chdir=terraform init -backend=false
