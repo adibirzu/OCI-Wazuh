@@ -1,0 +1,27 @@
+name: Documentation issue
+description: Report missing, unclear, or incorrect documentation
+title: "[Docs]: "
+labels:
+  - documentation
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include tenant-specific values. Use placeholders for any environment examples.
+  - type: input
+    id: page
+    attributes:
+      label: Page or file
+      placeholder: docs/END_TO_END_DEMO.md
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is unclear or missing?
+    validations:
+      required: true
+  - type: textarea
+    id: suggested
+    attributes:
+      label: Suggested improvement

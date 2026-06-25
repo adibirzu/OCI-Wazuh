@@ -1,0 +1,73 @@
+name: Bug report
+description: Report a reproducible issue with the OCI Wazuh lab
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not paste real OCIDs, IP addresses, credentials, Terraform state, API key fingerprints, Vault values, raw screenshots, or live tenant logs. Use placeholders.
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Release tag or commit SHA.
+      placeholder: v0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - Terraform
+        - Ansible
+        - Wazuh manager
+        - Linux agents
+        - GOAD or Windows agents
+        - OCI Audit ingestion
+        - VCN Flow ingestion
+        - OpenSearch views
+        - OCI Log Analytics
+        - Documentation
+        - Teardown
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Redact all tenant-specific values.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction steps
+      description: Include commands and sanitized output.
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: Validation already run
+      description: List relevant `make` targets and results.
+      placeholder: |
+        make lint: passed
+        make teach-validate: passed
+        make validate-real-oci-logs: failed with <REDACTED_ERROR>
+  - type: checkboxes
+    id: redaction
+    attributes:
+      label: Redaction confirmation
+      options:
+        - label: I removed real OCIDs, IP addresses, credentials, Terraform state, API key fingerprints, Vault values, raw screenshots, and live tenant logs.
+          required: true
