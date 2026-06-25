@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 0001: Build a Wazuh and Log Analytics Correlation Loop</title>
+  <link rel="stylesheet" href="../assets/teach.css">
+</head>
+<body>
+  <h1>Lesson 0001: Build a Wazuh and Log Analytics Correlation Loop</h1>
+
+  <p>This lesson teaches one repeatable loop: choose a signal, normalize it, detect it in Wazuh, correlate it in OCI Log Analytics, and turn the result into a posture action.</p>
+
+  <section class="module">
+    <h2>Module 1: Pick the Signal</h2>
+    <p>Start with one behavior that matters. For this demo, use denied network traffic. Wazuh receives normalized VCN Flow records and raises rule <code>100100</code>. OCI Log Analytics shows the same network behavior beside Wazuh alert volume, host logs, and Windows/Sysmon events.</p>
+  </section>
+
+  <section class="module">
+    <h2>Module 2: Confirm the Sources</h2>
+    <p>In Log Analytics, run source inventory first:</p>
+    <pre><code>* | stats count by "Log Source" | sort -count</code></pre>
+    <p>Do not assume source names from another tenancy. Confirm names such as <code>OCI VCN Flow Unified Schema Logs</code>, <code>OCI Audit Logs</code>, <code>Windows Sysmon Events</code>, and the custom Wazuh alert source before building widgets.</p>
+  </section>
+
+  <section class="module">
+    <h2>Module 3: Validate the Wazuh Detection</h2>
+    <p>Run the live validation gate from the repository:</p>
+    <pre><code>make validate-real-oci-logs</code></pre>
+    <p>The gate creates real OCI Audit activity, generates denied network traffic, and waits for Wazuh rules <code>100000</code> and <code>100100</code>. This proves the detection path before you build dashboard interpretation around it.</p>
+  </section>
+
+  <section class="module">
+    <h2>Module 4: Build the Correlation Widget</h2>
+    <p>Use the query pack in <code>dashboards/log-analytics/oci-wazuh-dashboard-queries.json</code>. Start with the source inventory widget, then add VCN rejects, OCI Audit events by user/source, Wazuh alert volume, and Windows Sysmon network connections.</p>
+  </section>
+
+  <section class="check">
+    <h2>Exercise</h2>
+    <p>Create one dashboard row with four panels: VCN rejects, Wazuh alert count, OCI Audit events by principal, and top affected entity. Write one sentence that answers: <em>What hardening action would reduce this pattern?</em></p>
+  </section>
+
+  <section class="quiz" data-quiz>
+    <h2>Check Understanding</h2>
+    <p>What should you do before copying a saved Log Analytics query into a new tenancy?</p>
+    <label><input type="radio" name="q1" data-correct="false"> Assume source names are identical across tenancies.</label><br>
+    <label><input type="radio" name="q1" data-correct="true"> Run source inventory and confirm fields for the target tenancy.</label><br>
+    <label><input type="radio" name="q1" data-correct="false"> Disable Wazuh rules until Log Analytics dashboards are complete.</label><br>
+    <button type="button">Check</button>
+    <div class="answer" aria-live="polite"></div>
+  </section>
+
+  <script src="../assets/quiz.js"></script>
+</body>
+</html>

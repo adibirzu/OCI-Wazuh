@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wazuh + OCI Log Analytics Security Posture Reference</title>
+  <link rel="stylesheet" href="../assets/teach.css">
+</head>
+<body>
+  <h1>Wazuh + OCI Log Analytics Security Posture Reference</h1>
+
+  <section class="module">
+    <h2>Core Model</h2>
+    <p>Use Wazuh for endpoint agent telemetry, local detections, custom decoders/rules, FIM, SCA, vulnerability detection, Sysmon, and alert triage. Use OCI Log Analytics for cross-source search, entity-aware dashboards, OCI service logs, OS logs, Wazuh alert ingestion, and broader correlation views.</p>
+  </section>
+
+  <section class="module">
+    <h2>Telemetry Map</h2>
+    <ul>
+      <li><strong>Wazuh alerts:</strong> Wazuh detections, rule IDs, agents, MITRE technique IDs, alert severity.</li>
+      <li><strong>OCI Audit:</strong> API activity, principal, source IP, request target, response result.</li>
+      <li><strong>VCN Flow Logs:</strong> source/destination IP, ports, protocol, action, bytes, packets.</li>
+      <li><strong>Linux logs:</strong> syslog, secure logs, FIM, SCA, package inventory, vulnerability records.</li>
+      <li><strong>Windows and GOAD:</strong> Security events, Sysmon events, Wazuh Windows agent alerts, SOC Fortress rule hits.</li>
+    </ul>
+  </section>
+
+  <section class="module">
+    <h2>Correlation Keys</h2>
+    <ul>
+      <li><strong>Entity:</strong> host name, agent name, instance OCID placeholder, or Log Analytics entity.</li>
+      <li><strong>Identity:</strong> OCI principal, Windows account, Linux user, Wazuh alert user fields.</li>
+      <li><strong>Network:</strong> source IP, destination IP, source port, destination port, action.</li>
+      <li><strong>Time:</strong> align to a small window first, then widen only when source delivery latency requires it.</li>
+      <li><strong>Technique:</strong> map detections to ATT&CK technique IDs for posture coverage and executive reporting.</li>
+    </ul>
+  </section>
+
+  <section class="module">
+    <h2>Dashboard Pattern</h2>
+    <ol>
+      <li>Run source discovery: <code>* | stats count by "Log Source" | sort -count</code>.</li>
+      <li>Confirm field names for each source before saving widgets.</li>
+      <li>Create source-family widgets: Wazuh alerts, OCI Audit, VCN Flow, Linux, Windows/Sysmon.</li>
+      <li>Add correlation widgets: rejected flow plus Wazuh alert, privileged OCI action plus host change, Sysmon process plus network egress.</li>
+      <li>Close with posture widgets: top ATT&CK techniques, top failing SCA checks, vulnerable hosts, unresolved high-severity alerts.</li>
+    </ol>
+  </section>
+
+  <section class="module">
+    <h2>Operating Checks</h2>
+    <ul>
+      <li><code>make log-analytics-bridge</code> validates source families and entities.</li>
+      <li><code>make validate-real-oci-logs</code> proves real OCI Audit and VCN Flow records reach Wazuh.</li>
+      <li><code>make validate-opensearch-oci</code> proves dedicated <code>oci-audit-*</code> and <code>oci-flow-*</code> indices contain records.</li>
+      <li><code>make goad-validate</code> proves Windows/GOAD agents and Sysmon detections are active.</li>
+      <li><code>make down</code> removes Wazuh demo resources and cleans Wazuh/Sysmon agents from reused GOAD hosts.</li>
+    </ul>
+  </section>
+
+  <section class="module">
+    <h2>Sources</h2>
+    <ul>
+      <li><a href="https://documentation.wazuh.com/current/user-manual/capabilities/log-data-collection/index.html">Wazuh log data collection</a></li>
+      <li><a href="https://documentation.wazuh.com/current/user-manual/ruleset/index.html">Wazuh decoders and rules</a></li>
+      <li><a href="https://docs.oracle.com/en-us/iaas/log-analytics/home.htm">Oracle Log Analytics</a></li>
+      <li><a href="https://docs.oracle.com/en-us/iaas/Content/Audit/Concepts/auditoverview.htm">OCI Audit</a></li>
+      <li><a href="https://docs.oracle.com/en-us/iaas/Content/Network/Concepts/vcn_flow_logs.htm">OCI VCN Flow Logs</a></li>
+      <li><a href="https://attack.mitre.org/matrices/enterprise/">MITRE ATT&CK Enterprise Matrix</a></li>
+    </ul>
+  </section>
+</body>
+</html>
