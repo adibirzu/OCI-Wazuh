@@ -30,6 +30,8 @@ This index links the reusable teaching modules, screenshots, guides, and validat
 | Screenshot | Use |
 |---|---|
 | [Wazuh login](assets/wazuh-login.png) | Show tunnel-only dashboard access |
+| [Authenticated Wazuh overview](assets/wazuh-authenticated-overview-sanitized.png) | Show active Wazuh modules with live volumes redacted |
+| [OCI Log Analytics Explorer](assets/oci-log-analytics-explorer-sanitized.png) | Show source inventory with live volumes redacted |
 | [Wazuh data views](assets/wazuh-discover-data-views.png) | Explain alert versus raw source records |
 | [Wazuh visualization chooser](assets/wazuh-new-visualization-types.png) | Choose chart types for Wazuh dashboards |
 | [Lesson 0001](assets/lesson-0001-correlation-loop.png) | Teach one correlation loop |

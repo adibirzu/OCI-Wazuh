@@ -6,6 +6,9 @@ terraform/terraform.tfvars
 artifacts/validation/*.json
 artifacts/validation/cap-context.txt
 artifacts/validation/
+docs/wiki/assets/live/
+.tmp-chrome-auth-profile/
+.tmp-playwright-auth-profile/
 .ansible/
 __pycache__/
 *.pyc

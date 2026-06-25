@@ -10,6 +10,14 @@ The screenshots below are intentionally public-safe.
 
 The Wazuh dashboard is reached through a local tunnel. The screenshot proves the web app is reachable without exposing the public bastion address or credentials.
 
+![Authenticated Wazuh overview](assets/wazuh-authenticated-overview-sanitized.png)
+
+Use the authenticated overview to show active agents and Wazuh security modules. Do not publish live alert volumes or user/account details.
+
+![OCI Log Analytics Log Explorer](assets/oci-log-analytics-explorer-sanitized.png)
+
+Use Log Explorer to show source inventory and visualization setup. Do not publish live log volumes, job IDs, or user/account details.
+
 ![Wazuh Discover data views](assets/wazuh-discover-data-views.png)
 
 Use the data-view selector to separate alert exploration from raw OCI Audit and VCN Flow exploration.
@@ -352,6 +360,13 @@ npx playwright screenshot --ignore-https-errors --wait-for-timeout=8000 \
   --viewport-size=1440,900 \
   https://127.0.0.1:8443/app/login \
   docs/wiki/assets/wazuh-login.png
+```
+
+Authenticated Wazuh and OCI screenshots should be captured into `docs/wiki/assets/live/`, sanitized, and only then copied or generated into public-safe assets:
+
+```text
+docs/wiki/assets/wazuh-authenticated-overview-sanitized.png
+docs/wiki/assets/oci-log-analytics-explorer-sanitized.png
 ```
 
 Before committing, inspect images and run a redaction scan:

@@ -32,6 +32,14 @@ For post-workshop validation, use [Wazuh and OCI Log Analytics Assessment](WAZUH
 
 Wazuh should be reached through the local SSH tunnel rather than a public dashboard listener.
 
+![Authenticated Wazuh overview](assets/wazuh-authenticated-overview-sanitized.png)
+
+The authenticated Wazuh overview confirms active agents and security modules. Live alert volumes and user identity are redacted for public-safe reuse.
+
+![OCI Log Analytics Log Explorer](assets/oci-log-analytics-explorer-sanitized.png)
+
+The Log Analytics screenshot shows source inventory and visualization setup. Live counts, job details, and user identity are redacted.
+
 ![Wazuh Discover data views](assets/wazuh-discover-data-views.png)
 
 Use separate data views for Wazuh alerts, raw OCI Audit records, and raw VCN Flow records.
