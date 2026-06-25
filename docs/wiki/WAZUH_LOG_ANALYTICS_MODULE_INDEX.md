@@ -5,6 +5,8 @@ This index links the reusable teaching modules, screenshots, guides, and validat
 ## Core Docs
 
 - [Course landing page](index.html)
+- [Product capabilities](WAZUH_LOG_ANALYTICS_PRODUCT_CAPABILITIES.md)
+- [Learning curve and role paths](WAZUH_LOG_ANALYTICS_LEARNING_CURVE.md)
 - [Architecture and workflows](WAZUH_LOG_ANALYTICS_ARCHITECTURE.md)
 - [Security posture wiki](WAZUH_LOG_ANALYTICS_SECURITY_POSTURE.md)
 - [Hands-on walkthrough](WAZUH_LOG_ANALYTICS_HANDS_ON.md)
@@ -17,6 +19,8 @@ This index links the reusable teaching modules, screenshots, guides, and validat
 - [End-to-end demo runbook](../END_TO_END_DEMO.md)
 
 ## Lessons
+
+Use [Learning Curve and Role Paths](WAZUH_LOG_ANALYTICS_LEARNING_CURVE.md) to choose the right route for SOC analysts, cloud security engineers, detection engineers, platform owners, and security leaders.
 
 | Lesson | Topic | Primary output |
 |---|---|---|

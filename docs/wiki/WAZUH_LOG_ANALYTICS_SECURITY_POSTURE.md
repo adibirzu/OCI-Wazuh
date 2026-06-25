@@ -20,6 +20,10 @@ This page is the teaching entry point for using Wazuh and OCI Log Analytics toge
 
 For the full course map, use [Wazuh and OCI Log Analytics Module Index](WAZUH_LOG_ANALYTICS_MODULE_INDEX.md).
 
+For the capability view, use [OCI Wazuh Product Capabilities](WAZUH_LOG_ANALYTICS_PRODUCT_CAPABILITIES.md).
+
+For role-specific learning paths, use [Wazuh and OCI Log Analytics Learning Curve](WAZUH_LOG_ANALYTICS_LEARNING_CURVE.md).
+
 For the operator-level walkthrough, use [Wazuh and OCI Log Analytics Hands-On Walkthrough](WAZUH_LOG_ANALYTICS_HANDS_ON.md).
 
 For a workshop delivery script, use [Wazuh and OCI Log Analytics Facilitator Guide](WAZUH_LOG_ANALYTICS_FACILITATOR_GUIDE.md).
