@@ -7,9 +7,42 @@
   <link rel="stylesheet" href="../assets/teach.css">
 </head>
 <body>
+  <p class="kicker">Detection Engineering</p>
   <h1>Lesson 0007: Detection Engineering Lifecycle</h1>
 
-  <p>This lesson turns one useful signal into a managed detection. The lifecycle is source, normalize, detect, correlate, tune, measure, and retire or promote.</p>
+  <p class="lead">This lesson turns one useful signal into a managed detection. The lifecycle is source, normalize, detect, correlate, tune, measure, and retire or promote.</p>
+
+  <div class="lesson-meta">
+    <div class="meta-item"><strong>Audience</strong><span>Detection engineer, SOC lead</span></div>
+    <div class="meta-item"><strong>Time</strong><span>35 minutes</span></div>
+    <div class="meta-item"><strong>Primary tools</strong><span>Wazuh rules, Log Analytics queries, backlog cards</span></div>
+    <div class="meta-item"><strong>Output</strong><span>Detection lifecycle card</span></div>
+  </div>
+
+  <section class="module">
+    <h2>Lifecycle Map</h2>
+    <div class="flow">
+      <div class="flow-step"><strong>Hypothesis</strong><span>What behavior matters?</span></div>
+      <div class="flow-step"><strong>Field contract</strong><span>Which fields are required?</span></div>
+      <div class="flow-step"><strong>Rule</strong><span>How does Wazuh fire?</span></div>
+      <div class="flow-step"><strong>Correlation</strong><span>Which sources support it?</span></div>
+      <div class="flow-step"><strong>Operate</strong><span>Owner, tuning, retirement</span></div>
+    </div>
+  </section>
+
+  <section class="module">
+    <h2>Detection Asset Card</h2>
+    <div class="two-column">
+      <div class="evidence-card">
+        <h3>Engineering fields</h3>
+        <p>Hypothesis, source, required fields, Wazuh rule, test command, false-positive notes.</p>
+      </div>
+      <div class="evidence-card">
+        <h3>Operational fields</h3>
+        <p>Owner, severity, dashboard, response action, verification query, review cadence.</p>
+      </div>
+    </div>
+  </section>
 
   <section class="module">
     <h2>Module 1: Start with a Detection Hypothesis</h2>
@@ -38,11 +71,17 @@ eventType, principalName, sourceIp, compartmentId</code></pre>
   <section class="module">
     <h2>Module 4: Promote the Detection</h2>
     <p>A detection is production-ready when the source is reliable, the rule fires on real data, the dashboard has an owner, and the response action is known.</p>
+    <div class="callout">
+      <strong>Promotion gate:</strong> synthetic tests prove rule shape; real OCI telemetry proves operational value.
+    </div>
   </section>
 
   <section class="check">
     <h2>Exercise</h2>
     <p>Pick one detection from the demo and write its lifecycle card: hypothesis, required fields, Wazuh rule/view, Log Analytics query, owner, tuning rule, and retirement condition.</p>
+    <div class="deliverable">
+      <strong>Deliverable:</strong> one detection card that another engineer could maintain without asking you for context.
+    </div>
   </section>
 
   <section class="quiz" data-quiz>

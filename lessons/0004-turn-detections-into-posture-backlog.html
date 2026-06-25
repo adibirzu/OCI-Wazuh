@@ -7,9 +7,46 @@
   <link rel="stylesheet" href="../assets/teach.css">
 </head>
 <body>
+  <p class="kicker">Posture Management</p>
   <h1>Lesson 0004: Turn Detections into a Security Posture Backlog</h1>
 
-  <p>This lesson converts detection output into a practical improvement backlog. The goal is not more alerts; the goal is fewer unresolved control gaps.</p>
+  <p class="lead">This lesson converts detection output into a practical improvement backlog. The goal is not more alerts; the goal is fewer unresolved control gaps.</p>
+
+  <div class="lesson-meta">
+    <div class="meta-item"><strong>Audience</strong><span>Security lead, control owner</span></div>
+    <div class="meta-item"><strong>Time</strong><span>30 minutes</span></div>
+    <div class="meta-item"><strong>Primary tools</strong><span>Wazuh views, Log Analytics queries, backlog tracker</span></div>
+    <div class="meta-item"><strong>Output</strong><span>Three verified posture backlog items</span></div>
+  </div>
+
+  <section class="module">
+    <h2>Backlog Pipeline</h2>
+    <div class="flow">
+      <div class="flow-step"><strong>Signal</strong><span>Alert or dashboard pattern</span></div>
+      <div class="flow-step"><strong>Evidence</strong><span>Wazuh and Log Analytics proof</span></div>
+      <div class="flow-step"><strong>Control gap</strong><span>Identity, endpoint, network, vulnerability</span></div>
+      <div class="flow-step"><strong>Owner</strong><span>Named team or role</span></div>
+      <div class="flow-step"><strong>Verify</strong><span>Repeatable query confirms change</span></div>
+    </div>
+  </section>
+
+  <section class="module">
+    <h2>Backlog Quality Bar</h2>
+    <div class="objective-grid">
+      <div class="objective">
+        <h3>Evidence-backed</h3>
+        <p>Every item points to a Wazuh rule, raw event, or Log Analytics query.</p>
+      </div>
+      <div class="objective">
+        <h3>Owned</h3>
+        <p>Every action has a team that can change policy, endpoint state, or network control.</p>
+      </div>
+      <div class="objective">
+        <h3>Verifiable</h3>
+        <p>Closure requires a query result, not only a meeting note or ticket comment.</p>
+      </div>
+    </div>
+  </section>
 
   <section class="module">
     <h2>Module 1: Classify the Gap</h2>
@@ -42,11 +79,17 @@ Verification: reject spike no longer appears after change</code></pre>
   <section class="module">
     <h2>Module 4: Close with a Query</h2>
     <p>Do not close a posture item with a meeting note. Close it with a repeatable query or Wazuh view that proves the gap changed.</p>
+    <div class="callout">
+      <strong>Anti-pattern:</strong> "Reviewed by security" is not closure. "VCN rejects by pair no longer shows the unexpected source after NSG change" is closure.
+    </div>
   </section>
 
   <section class="check">
     <h2>Exercise</h2>
-    <p>Create three backlog items: one for OCI Audit, one for VCN Flow, and one for Sysmon or Linux FIM. Each item must include evidence, owner, action, and verification query.</p>
+    <p>Create three backlog items: one for OCI Audit, one for VCN Flow, and one for Sysmon or Linux FIM.</p>
+    <div class="deliverable">
+      <strong>Deliverable:</strong> each item must include control category, evidence, owner, action, verification query, and closure evidence.
+    </div>
   </section>
 
   <section class="quiz" data-quiz>

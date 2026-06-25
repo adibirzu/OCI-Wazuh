@@ -7,9 +7,46 @@
   <link rel="stylesheet" href="../assets/teach.css">
 </head>
 <body>
+  <p class="kicker">Enterprise Rollout</p>
   <h1>Lesson 0006: Roll Out Wazuh and Log Analytics in an Enterprise</h1>
 
-  <p>This lesson turns the demo into a reusable rollout plan. The company objective is to improve security posture without creating unmanaged logging cost, uncontrolled access, or dashboards nobody owns.</p>
+  <p class="lead">This lesson turns the demo into a reusable rollout plan. The company objective is to improve security posture without creating unmanaged logging cost, uncontrolled access, or dashboards nobody owns.</p>
+
+  <div class="lesson-meta">
+    <div class="meta-item"><strong>Audience</strong><span>Security program owner, platform lead</span></div>
+    <div class="meta-item"><strong>Time</strong><span>35 minutes</span></div>
+    <div class="meta-item"><strong>Primary tools</strong><span>Rollout charter, source inventory, validation gates</span></div>
+    <div class="meta-item"><strong>Output</strong><span>One-page rollout charter</span></div>
+  </div>
+
+  <section class="module">
+    <h2>Rollout Stages</h2>
+    <div class="flow">
+      <div class="flow-step"><strong>Pilot</strong><span>Demo lab and scoped hosts</span></div>
+      <div class="flow-step"><strong>Coverage</strong><span>Agents, Audit, Flow, Sysmon</span></div>
+      <div class="flow-step"><strong>Govern</strong><span>Retention, access, cost owner</span></div>
+      <div class="flow-step"><strong>Operate</strong><span>Dashboards and response paths</span></div>
+      <div class="flow-step"><strong>Measure</strong><span>Posture backlog closure</span></div>
+    </div>
+  </section>
+
+  <section class="module">
+    <h2>Decision Areas</h2>
+    <div class="objective-grid">
+      <div class="objective">
+        <h3>Data scope</h3>
+        <p>Which compartments, VCNs, host groups, and Windows domains are included first?</p>
+      </div>
+      <div class="objective">
+        <h3>Access</h3>
+        <p>Who can view raw logs, Wazuh alerts, dashboards, and exported evidence?</p>
+      </div>
+      <div class="objective">
+        <h3>Cost</h3>
+        <p>Who owns retention, volume growth, and scheduled teardown for demo environments?</p>
+      </div>
+    </div>
+  </section>
 
   <section class="module">
     <h2>Module 1: Define Ownership</h2>
@@ -45,11 +82,17 @@ Dashboards: source inventory plus correlation panels reviewed
 Security: no hardcoded secrets or public dashboard exposure
 Operations: owner, runbook, retention, teardown, and upgrade path documented
 Posture: at least three verified backlog remediations</code></pre>
+    <div class="callout">
+      <strong>Production rule:</strong> a dashboard without an owner is demo content, not an operational control.
+    </div>
   </section>
 
   <section class="check">
     <h2>Exercise</h2>
     <p>Write a one-page rollout charter for one business unit. Include sources, owners, access controls, dashboard consumers, and the first three posture backlog items.</p>
+    <div class="deliverable">
+      <strong>Deliverable:</strong> a rollout charter that names the detection families, data owners, access model, retention decision, and production exit criteria.
+    </div>
   </section>
 
   <section class="quiz" data-quiz>

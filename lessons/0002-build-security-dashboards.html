@@ -7,9 +7,50 @@
   <link rel="stylesheet" href="../assets/teach.css">
 </head>
 <body>
+  <p class="kicker">Dashboard Building</p>
   <h1>Lesson 0002: Build Wazuh and Log Analytics Security Dashboards</h1>
 
-  <p>This lesson turns a working deployment into two dashboard sets: Wazuh for detections and OCI Log Analytics for cross-source correlation.</p>
+  <p class="lead">This lesson turns a working deployment into two dashboard sets: Wazuh for detections and OCI Log Analytics for cross-source correlation.</p>
+
+  <div class="lesson-meta">
+    <div class="meta-item"><strong>Audience</strong><span>SOC analyst, dashboard owner</span></div>
+    <div class="meta-item"><strong>Time</strong><span>30 minutes</span></div>
+    <div class="meta-item"><strong>Primary tools</strong><span>Wazuh Dashboard, OCI Log Explorer</span></div>
+    <div class="meta-item"><strong>Output</strong><span>Saved searches and dashboard row</span></div>
+  </div>
+
+  <section class="module">
+    <h2>Dashboard Design Principle</h2>
+    <p>Use Wazuh for alert triage and Log Analytics for cross-source correlation. Do not force one dashboard to answer every question. Each row should have a named investigation goal.</p>
+    <div class="dashboard-grid">
+      <div class="evidence-card">
+        <h3>Wazuh dashboard</h3>
+        <p>Best for rule IDs, agents, MITRE mappings, FIM/SCA, Windows/Sysmon, and alert severity.</p>
+      </div>
+      <div class="evidence-card">
+        <h3>Log Analytics dashboard</h3>
+        <p>Best for source inventory, VCN Flow, OCI Audit, OS logs, Sysmon, and Wazuh alert correlation.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="module">
+    <h2>Widget Blueprint</h2>
+    <div class="objective-grid">
+      <div class="objective">
+        <h3>Inventory</h3>
+        <p>Shows whether expected log sources exist and whether source names match the target tenancy.</p>
+      </div>
+      <div class="objective">
+        <h3>Triage</h3>
+        <p>Shows top rules, top agents, rejected traffic, and latest high-severity alerts.</p>
+      </div>
+      <div class="objective">
+        <h3>Correlation</h3>
+        <p>Places Wazuh alerts beside Audit, Flow, Linux, Windows, and Sysmon context.</p>
+      </div>
+    </div>
+  </section>
 
   <section class="module">
     <h2>Module 1: Wazuh Detection Views</h2>
@@ -38,11 +79,17 @@ agent.name: (braavos or castelblack or kingslanding or meereen or winterfell) or
   <section class="module">
     <h2>Module 4: Correlation Row</h2>
     <p>Build one row that answers a single security question: <em>What denied network activity happened, which Wazuh alerts occurred in the same window, and which host or identity should be investigated?</em></p>
+    <div class="callout">
+      <strong>Facilitator note:</strong> ask participants to rename the row after the question, not the data source. A useful title is "Denied traffic with supporting endpoint alerts," not "VCN Flow chart."
+    </div>
   </section>
 
   <section class="check">
     <h2>Exercise</h2>
-    <p>Use <code>dashboards/log-analytics/oci-wazuh-dashboard-queries.json</code> to create four saved searches: source inventory, VCN rejects by pair, OCI Audit by user/source, and Wazuh alert volume. Write a one-sentence dashboard title that states the investigation goal.</p>
+    <p>Use <code>dashboards/log-analytics/oci-wazuh-dashboard-queries.json</code> to create four saved searches: source inventory, VCN rejects by pair, OCI Audit by user/source, and Wazuh alert volume.</p>
+    <div class="deliverable">
+      <strong>Deliverable:</strong> one dashboard row, four widgets, and a one-sentence title that states the investigation goal.
+    </div>
   </section>
 
   <section class="quiz" data-quiz>

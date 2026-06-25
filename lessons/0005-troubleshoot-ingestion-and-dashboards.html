@@ -7,9 +7,42 @@
   <link rel="stylesheet" href="../assets/teach.css">
 </head>
 <body>
+  <p class="kicker">Troubleshooting</p>
   <h1>Lesson 0005: Troubleshoot Wazuh and Log Analytics Ingestion</h1>
 
-  <p>This lesson teaches a deterministic troubleshooting path. The goal is to isolate whether a missing signal is a source problem, delivery problem, parser problem, dashboard problem, or expectation problem.</p>
+  <p class="lead">This lesson teaches a deterministic troubleshooting path. The goal is to isolate whether a missing signal is a source problem, delivery problem, parser problem, dashboard problem, or expectation problem.</p>
+
+  <div class="lesson-meta">
+    <div class="meta-item"><strong>Audience</strong><span>Platform engineer, detection engineer</span></div>
+    <div class="meta-item"><strong>Time</strong><span>30 minutes</span></div>
+    <div class="meta-item"><strong>Primary tools</strong><span>Make gates, Wazuh alerts, Log Analytics inventory</span></div>
+    <div class="meta-item"><strong>Output</strong><span>Failure note with first red gate</span></div>
+  </div>
+
+  <section class="module">
+    <h2>Failure Isolation Map</h2>
+    <div class="flow">
+      <div class="flow-step"><strong>Source</strong><span>Audit, Flow, OS, Sysmon exists?</span></div>
+      <div class="flow-step"><strong>Delivery</strong><span>SCH, Streaming, agent, API path?</span></div>
+      <div class="flow-step"><strong>Parser</strong><span>Decoder and field map?</span></div>
+      <div class="flow-step"><strong>Index</strong><span>Wazuh alert or raw OpenSearch data?</span></div>
+      <div class="flow-step"><strong>Widget</strong><span>Source name, field, time range?</span></div>
+    </div>
+  </section>
+
+  <section class="module">
+    <h2>Symptom Triage</h2>
+    <div class="dashboard-grid">
+      <div class="evidence-card">
+        <h3>Alert missing</h3>
+        <p>Start with <code>make simulate-detections</code> and decoder/rule deployment.</p>
+      </div>
+      <div class="evidence-card">
+        <h3>Dashboard empty</h3>
+        <p>Start with source inventory, field names, and time range before changing detection logic.</p>
+      </div>
+    </div>
+  </section>
 
   <section class="module">
     <h2>Module 1: Start with the Gate</h2>
@@ -50,11 +83,17 @@ Suspected break:
 Fix attempted:
 Verification command:</code></pre>
     <p>This prevents random dashboard editing and makes the next failure faster to diagnose.</p>
+    <div class="callout">
+      <strong>Discipline:</strong> a good failure note names the first red gate. Anything after that is speculation until the gate turns green.
+    </div>
   </section>
 
   <section class="check">
     <h2>Exercise</h2>
     <p>Pick one empty dashboard widget. Identify the gate that should prove its data source, run or inspect that gate, then write the failure note above.</p>
+    <div class="deliverable">
+      <strong>Deliverable:</strong> one failure note plus the exact command or query you will rerun after the fix.
+    </div>
   </section>
 
   <section class="quiz" data-quiz>

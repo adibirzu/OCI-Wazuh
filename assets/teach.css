@@ -1,10 +1,17 @@
+* {
+  box-sizing: border-box;
+}
+
 body {
+  background:
+    linear-gradient(180deg, #f8fbfd 0%, #ffffff 280px),
+    #ffffff;
   color: #17202a;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   line-height: 1.55;
   margin: 0 auto;
-  max-width: 960px;
-  padding: 32px 20px 56px;
+  max-width: 1120px;
+  padding: 36px 24px 64px;
 }
 
 h1,
@@ -14,8 +21,12 @@ h3 {
 }
 
 h1 {
-  border-bottom: 2px solid #d9e2ec;
-  padding-bottom: 12px;
+  border-bottom: 0;
+  font-size: 2.35rem;
+  letter-spacing: 0;
+  margin: 0 0 14px;
+  max-width: 980px;
+  padding-bottom: 0;
 }
 
 a {
@@ -33,8 +44,186 @@ code {
 }
 
 pre {
+  border: 1px solid #d9e2ec;
   overflow-x: auto;
   padding: 14px;
+}
+
+table {
+  border-collapse: collapse;
+  margin: 16px 0;
+  width: 100%;
+}
+
+td,
+th {
+  border-bottom: 1px solid #d9e2ec;
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+}
+
+th {
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.9rem;
+}
+
+img {
+  border: 1px solid #d9e2ec;
+  border-radius: 8px;
+  max-width: 100%;
+}
+
+.lead {
+  color: #334155;
+  font-size: 1.14rem;
+  max-width: 900px;
+}
+
+.kicker {
+  color: #0f766e;
+  font-size: 0.78rem;
+  font-weight: 750;
+  letter-spacing: 0.08em;
+  margin: 0 0 10px;
+  text-transform: uppercase;
+}
+
+.lesson-hero {
+  background: #ffffff;
+  border: 1px solid #d9e2ec;
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+  margin: 0 0 24px;
+  padding: 24px;
+}
+
+.lesson-meta,
+.objective-grid,
+.dashboard-grid,
+.two-column {
+  display: grid;
+  gap: 14px;
+}
+
+.lesson-meta {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 18px 0 0;
+}
+
+.meta-item,
+.objective,
+.metric,
+.evidence-card {
+  background: #f8fafc;
+  border: 1px solid #d9e2ec;
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.meta-item strong,
+.metric strong {
+  color: #0f172a;
+  display: block;
+  font-size: 0.82rem;
+  margin-bottom: 4px;
+}
+
+.meta-item span,
+.metric span {
+  color: #475569;
+}
+
+.objective-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.dashboard-grid,
+.two-column {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.objective,
+.evidence-card {
+  min-height: 112px;
+}
+
+.objective h3,
+.evidence-card h3 {
+  margin: 0 0 8px;
+}
+
+.flow {
+  align-items: stretch;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  margin: 16px 0;
+}
+
+.flow-step {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  min-height: 96px;
+  padding: 12px;
+  position: relative;
+}
+
+.flow-step::after {
+  color: #0f766e;
+  content: "->";
+  font-weight: 800;
+  position: absolute;
+  right: -14px;
+  top: 34px;
+}
+
+.flow-step:last-child::after {
+  content: "";
+}
+
+.flow-step strong {
+  color: #0f172a;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.badge-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.badge {
+  background: #ecfeff;
+  border: 1px solid #a5f3fc;
+  border-radius: 999px;
+  color: #155e75;
+  font-size: 0.84rem;
+  font-weight: 650;
+  padding: 5px 10px;
+}
+
+.callout {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  margin: 16px 0;
+  padding: 14px 16px;
+}
+
+.callout strong {
+  color: #9a3412;
+}
+
+.deliverable {
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  padding: 14px 16px;
 }
 
 .module,
@@ -42,14 +231,26 @@ pre {
 .quiz {
   border: 1px solid #d9e2ec;
   border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
   margin: 20px 0;
-  padding: 16px;
+  padding: 18px;
 }
 
 .module h2,
 .check h2,
 .quiz h2 {
   margin-top: 0;
+}
+
+.check {
+  border-color: #93c5fd;
+  background: #eff6ff;
+}
+
+.quiz {
+  border-color: #99f6e4;
+  background: #f0fdfa;
 }
 
 .quiz button {
@@ -65,6 +266,33 @@ pre {
 
 .answer {
   margin-top: 10px;
+}
+
+.small {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 800px) {
+  body {
+    padding: 22px 14px 42px;
+  }
+
+  h1 {
+    font-size: 1.75rem;
+  }
+
+  .lesson-meta,
+  .objective-grid,
+  .dashboard-grid,
+  .two-column,
+  .flow {
+    grid-template-columns: 1fr;
+  }
+
+  .flow-step::after {
+    content: "";
+  }
 }
 
 @media print {

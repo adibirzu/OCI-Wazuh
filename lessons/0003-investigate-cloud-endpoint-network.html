@@ -7,9 +7,46 @@
   <link rel="stylesheet" href="../assets/teach.css">
 </head>
 <body>
+  <p class="kicker">Analyst Drill</p>
   <h1>Lesson 0003: Investigate Cloud, Endpoint, and Network Signals</h1>
 
-  <p>This lesson teaches a repeatable analyst drill: start from one alert, pivot through cloud and network context, then decide whether the right next action is tuning, investigation, or hardening.</p>
+  <p class="lead">This lesson teaches a repeatable analyst drill: start from one alert, pivot through cloud and network context, then decide whether the right next action is tuning, investigation, or hardening.</p>
+
+  <div class="lesson-meta">
+    <div class="meta-item"><strong>Audience</strong><span>SOC analyst, incident responder</span></div>
+    <div class="meta-item"><strong>Time</strong><span>35 minutes</span></div>
+    <div class="meta-item"><strong>Primary tools</strong><span>Wazuh alert view, raw OCI indices, Log Explorer</span></div>
+    <div class="meta-item"><strong>Output</strong><span>Three-line investigation note</span></div>
+  </div>
+
+  <section class="module">
+    <h2>Investigation Storyboard</h2>
+    <div class="flow">
+      <div class="flow-step"><strong>Alert</strong><span>Rule, severity, agent, MITRE</span></div>
+      <div class="flow-step"><strong>Raw source</strong><span>Audit or Flow event fields</span></div>
+      <div class="flow-step"><strong>Context</strong><span>OS, Sysmon, identity, network</span></div>
+      <div class="flow-step"><strong>Decision</strong><span>Tune, investigate, harden, accept</span></div>
+      <div class="flow-step"><strong>Proof</strong><span>Verification query or dashboard row</span></div>
+    </div>
+  </section>
+
+  <section class="module">
+    <h2>Evidence Checklist</h2>
+    <div class="objective-grid">
+      <div class="objective">
+        <h3>Identity</h3>
+        <p>Principal, user, source IP, domain account, or service identity.</p>
+      </div>
+      <div class="objective">
+        <h3>Entity</h3>
+        <p>Agent, host, VNIC, subnet, compartment, or Log Analytics entity.</p>
+      </div>
+      <div class="objective">
+        <h3>Network</h3>
+        <p>Source/destination IPs, ports, protocol, action, bytes, and packets.</p>
+      </div>
+    </div>
+  </section>
 
   <section class="module">
     <h2>Module 1: Start from Wazuh</h2>
@@ -38,11 +75,17 @@ oci-flow-* fields: srcaddr, dstaddr, srcport, dstport, protocol, action, bytes, 
       <li><strong>Investigate:</strong> identity, endpoint, or network context is inconsistent with normal behavior.</li>
       <li><strong>Harden:</strong> the alert reveals a durable control gap such as excessive IAM rights, weak segmentation, or vulnerable software.</li>
     </ul>
+    <div class="callout">
+      <strong>Rule of thumb:</strong> if you cannot name the owner or verification query, you do not yet have a posture action.
+    </div>
   </section>
 
   <section class="check">
     <h2>Exercise</h2>
-    <p>Take one VCN Flow rejection alert and produce a three-line investigation note: what happened, which other source confirms or contradicts it, and what hardening action should be tested.</p>
+    <p>Take one VCN Flow rejection alert and produce a three-line investigation note.</p>
+    <pre><code>What happened:
+Supporting or contradicting source:
+Next decision and verification query:</code></pre>
   </section>
 
   <section class="quiz" data-quiz>

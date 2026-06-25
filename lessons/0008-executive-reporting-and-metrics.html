@@ -7,9 +7,37 @@
   <link rel="stylesheet" href="../assets/teach.css">
 </head>
 <body>
+  <p class="kicker">Executive Reporting</p>
   <h1>Lesson 0008: Executive Reporting and Security Metrics</h1>
 
-  <p>This lesson translates Wazuh and Log Analytics telemetry into leadership-ready posture metrics without losing the ability to drill into evidence.</p>
+  <p class="lead">This lesson translates Wazuh and Log Analytics telemetry into leadership-ready posture metrics without losing the ability to drill into evidence.</p>
+
+  <div class="lesson-meta">
+    <div class="meta-item"><strong>Audience</strong><span>Security leader, platform owner</span></div>
+    <div class="meta-item"><strong>Time</strong><span>25 minutes</span></div>
+    <div class="meta-item"><strong>Primary tools</strong><span>Dashboards, assessment, posture backlog</span></div>
+    <div class="meta-item"><strong>Output</strong><span>One-slide executive summary</span></div>
+  </div>
+
+  <section class="module">
+    <h2>Reporting Stack</h2>
+    <div class="flow">
+      <div class="flow-step"><strong>Evidence</strong><span>Alerts and raw events</span></div>
+      <div class="flow-step"><strong>Metrics</strong><span>Coverage and trend</span></div>
+      <div class="flow-step"><strong>Risk</strong><span>Control gaps and exposure</span></div>
+      <div class="flow-step"><strong>Action</strong><span>Backlog and owners</span></div>
+      <div class="flow-step"><strong>Decision</strong><span>Funding, policy, priority</span></div>
+    </div>
+  </section>
+
+  <section class="module">
+    <h2>Metric Cards</h2>
+    <div class="objective-grid">
+      <div class="metric"><strong>Coverage</strong><span>Active agents and onboarded source families.</span></div>
+      <div class="metric"><strong>Detection health</strong><span>Rules with owners, dashboards, and tests.</span></div>
+      <div class="metric"><strong>Remediation</strong><span>Open, aged, and closed posture backlog items.</span></div>
+    </div>
+  </section>
 
   <section class="module">
     <h2>Module 1: Separate Evidence from Metrics</h2>
@@ -39,11 +67,17 @@ What decision or investment is needed?</code></pre>
   <section class="module">
     <h2>Module 4: Keep Drilldown Nearby</h2>
     <p>Every executive metric should link back to a Wazuh view, a Log Analytics query, or a posture backlog item. Otherwise the metric cannot be audited.</p>
+    <div class="callout">
+      <strong>Reporting rule:</strong> if a leader asks "show me the evidence," the dashboard owner should be one click away from the query or alert view.
+    </div>
   </section>
 
   <section class="check">
     <h2>Exercise</h2>
     <p>Create a one-slide executive summary for this demo: three metrics, two risks reduced, one remaining gap, and one decision request.</p>
+    <div class="deliverable">
+      <strong>Deliverable:</strong> a leadership slide with metrics, evidence links, posture backlog movement, and the next decision needed.
+    </div>
   </section>
 
   <section class="quiz" data-quiz>

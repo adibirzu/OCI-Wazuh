@@ -7,9 +7,57 @@
   <link rel="stylesheet" href="../assets/teach.css">
 </head>
 <body>
+  <p class="kicker">OCI Wazuh Detection Lab</p>
   <h1>Lesson 0001: Build a Wazuh and Log Analytics Correlation Loop</h1>
 
-  <p>This lesson teaches one repeatable loop: choose a signal, normalize it, detect it in Wazuh, correlate it in OCI Log Analytics, and turn the result into a posture action.</p>
+  <p class="lead">This lesson teaches one repeatable loop: choose a signal, normalize it, detect it in Wazuh, correlate it in OCI Log Analytics, and turn the result into a posture action.</p>
+
+  <div class="lesson-meta">
+    <div class="meta-item"><strong>Audience</strong><span>SOC analyst, cloud security engineer</span></div>
+    <div class="meta-item"><strong>Time</strong><span>25 minutes</span></div>
+    <div class="meta-item"><strong>Primary tools</strong><span>Wazuh Discover, Log Analytics Explorer</span></div>
+    <div class="meta-item"><strong>Output</strong><span>One correlation row and one hardening decision</span></div>
+  </div>
+
+  <section class="module">
+    <h2>Scenario</h2>
+    <p>A workload subnet shows rejected traffic. The team needs to decide whether it is expected scanning, a misconfigured workload, or discovery activity that should trigger hardening.</p>
+    <div class="badge-row">
+      <span class="badge">VCN Flow</span>
+      <span class="badge">Wazuh rule 100100</span>
+      <span class="badge">Log Analytics source inventory</span>
+      <span class="badge">Posture action</span>
+    </div>
+  </section>
+
+  <section class="module">
+    <h2>What You Will Learn</h2>
+    <div class="objective-grid">
+      <div class="objective">
+        <h3>Trace the signal</h3>
+        <p>Follow denied traffic from OCI Flow records into Wazuh alerts and Log Analytics dashboard widgets.</p>
+      </div>
+      <div class="objective">
+        <h3>Preserve context</h3>
+        <p>Keep source, destination, action, principal, and entity fields visible through the whole investigation.</p>
+      </div>
+      <div class="objective">
+        <h3>Decide the action</h3>
+        <p>End the loop with a concrete decision: tune, investigate, harden, or accept.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="module">
+    <h2>Correlation Loop</h2>
+    <div class="flow">
+      <div class="flow-step"><strong>Choose</strong><span>Denied network traffic</span></div>
+      <div class="flow-step"><strong>Normalize</strong><span>Flow JSON fields</span></div>
+      <div class="flow-step"><strong>Detect</strong><span>Wazuh rule 100100</span></div>
+      <div class="flow-step"><strong>Correlate</strong><span>Log Analytics widgets</span></div>
+      <div class="flow-step"><strong>Harden</strong><span>NSG, scanner, or service owner action</span></div>
+    </div>
+  </section>
 
   <section class="module">
     <h2>Module 1: Pick the Signal</h2>
@@ -37,7 +85,10 @@
 
   <section class="check">
     <h2>Exercise</h2>
-    <p>Create one dashboard row with four panels: VCN rejects, Wazuh alert count, OCI Audit events by principal, and top affected entity. Write one sentence that answers: <em>What hardening action would reduce this pattern?</em></p>
+    <p>Create one dashboard row with four panels: VCN rejects, Wazuh alert count, OCI Audit events by principal, and top affected entity.</p>
+    <div class="deliverable">
+      <strong>Deliverable:</strong> write one sentence that answers: <em>What hardening action would reduce this pattern?</em> Include the query or Wazuh filter you would rerun to prove the action worked.
+    </div>
   </section>
 
   <section class="quiz" data-quiz>
