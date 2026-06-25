@@ -5,6 +5,7 @@ This index links the reusable teaching modules, screenshots, guides, and validat
 ## Core Docs
 
 - [Course landing page](index.html)
+- [Architecture and workflows](WAZUH_LOG_ANALYTICS_ARCHITECTURE.md)
 - [Security posture wiki](WAZUH_LOG_ANALYTICS_SECURITY_POSTURE.md)
 - [Hands-on walkthrough](WAZUH_LOG_ANALYTICS_HANDS_ON.md)
 - [Facilitator guide](WAZUH_LOG_ANALYTICS_FACILITATOR_GUIDE.md)

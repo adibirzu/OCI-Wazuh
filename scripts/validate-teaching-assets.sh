@@ -6,6 +6,7 @@ cd "${ROOT_DIR}"
 
 required_files=(
   "docs/wiki/WAZUH_LOG_ANALYTICS_MODULE_INDEX.md"
+  "docs/wiki/WAZUH_LOG_ANALYTICS_ARCHITECTURE.md"
   "docs/wiki/WAZUH_LOG_ANALYTICS_SECURITY_POSTURE.md"
   "docs/wiki/WAZUH_LOG_ANALYTICS_HANDS_ON.md"
   "docs/wiki/WAZUH_LOG_ANALYTICS_FACILITATOR_GUIDE.md"
@@ -62,4 +63,4 @@ python3 scripts/validate-teaching-links.py
 
 echo "teaching_assets=ready"
 echo "lessons=8"
-echo "wiki_docs=10"
+echo "wiki_docs=11"
