@@ -86,7 +86,9 @@ Use the course pack when presenting Wazuh and OCI Log Analytics as a company sec
 
 - Hosted documentation: https://adibirzu.github.io/OCI-Wazuh/
 - Product capabilities: [docs/wiki/WAZUH_LOG_ANALYTICS_PRODUCT_CAPABILITIES.md](docs/wiki/WAZUH_LOG_ANALYTICS_PRODUCT_CAPABILITIES.md)
+- Product roadmap and use cases: [docs/wiki/WAZUH_LOG_ANALYTICS_PRODUCT_ROADMAP.md](docs/wiki/WAZUH_LOG_ANALYTICS_PRODUCT_ROADMAP.md)
 - Learning curve and role paths: [docs/wiki/WAZUH_LOG_ANALYTICS_LEARNING_CURVE.md](docs/wiki/WAZUH_LOG_ANALYTICS_LEARNING_CURVE.md)
+- Learner workbook: [docs/wiki/WAZUH_LOG_ANALYTICS_LEARNER_WORKBOOK.md](docs/wiki/WAZUH_LOG_ANALYTICS_LEARNER_WORKBOOK.md)
 - Module index: [docs/wiki/WAZUH_LOG_ANALYTICS_MODULE_INDEX.md](docs/wiki/WAZUH_LOG_ANALYTICS_MODULE_INDEX.md)
 - Architecture and workflows: [docs/wiki/WAZUH_LOG_ANALYTICS_ARCHITECTURE.md](docs/wiki/WAZUH_LOG_ANALYTICS_ARCHITECTURE.md)
 - Browser landing page: [docs/wiki/index.html](docs/wiki/index.html)

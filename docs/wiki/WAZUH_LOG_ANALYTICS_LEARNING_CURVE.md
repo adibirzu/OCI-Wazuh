@@ -166,6 +166,8 @@ I can connect the demo to measurable posture outcomes and accountable remediatio
 ## Related Pages
 
 - [Product capabilities](WAZUH_LOG_ANALYTICS_PRODUCT_CAPABILITIES.md)
+- [Product roadmap and use cases](WAZUH_LOG_ANALYTICS_PRODUCT_ROADMAP.md)
+- [Learner workbook](WAZUH_LOG_ANALYTICS_LEARNER_WORKBOOK.md)
 - [Module index](WAZUH_LOG_ANALYTICS_MODULE_INDEX.md)
 - [Hands-on walkthrough](WAZUH_LOG_ANALYTICS_HANDS_ON.md)
 - [Facilitator guide](WAZUH_LOG_ANALYTICS_FACILITATOR_GUIDE.md)

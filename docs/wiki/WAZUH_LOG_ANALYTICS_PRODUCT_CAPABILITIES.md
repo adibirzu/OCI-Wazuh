@@ -150,7 +150,9 @@ The product has deterministic gates instead of only manual screenshots.
 
 ## Related Pages
 
+- [Product roadmap and use cases](WAZUH_LOG_ANALYTICS_PRODUCT_ROADMAP.md)
 - [Learning Curve and Role Paths](WAZUH_LOG_ANALYTICS_LEARNING_CURVE.md)
+- [Learner workbook](WAZUH_LOG_ANALYTICS_LEARNER_WORKBOOK.md)
 - [Architecture and workflows](WAZUH_LOG_ANALYTICS_ARCHITECTURE.md)
 - [Security posture wiki](WAZUH_LOG_ANALYTICS_SECURITY_POSTURE.md)
 - [Hands-on walkthrough](WAZUH_LOG_ANALYTICS_HANDS_ON.md)
