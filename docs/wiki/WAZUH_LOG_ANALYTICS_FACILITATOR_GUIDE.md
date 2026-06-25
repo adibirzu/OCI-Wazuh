@@ -21,6 +21,8 @@ Use this guide to run a workshop or customer demo on Wazuh plus OCI Log Analytic
 | Log Analytics dashboards | 30 min | Build source inventory and correlation panels |
 | Investigation drill | 20 min | Pivot from Wazuh alert to Log Analytics context |
 | Posture backlog | 20 min | Convert detections into security improvements |
+| Troubleshooting drill | 15 min | Find the first red gate for a missing signal |
+| Enterprise rollout | 15 min | Assign owners and production exit criteria |
 | Teardown and questions | 10 min | Confirm cleanup expectations |
 
 ## Pre-Workshop Checklist
@@ -63,7 +65,9 @@ Confirm:
 
 9. Build or show dashboard panels from `dashboards/log-analytics/oci-wazuh-dashboard-queries.json`.
 10. Run the investigation drill from [Lesson 0003](../../lessons/0003-investigate-cloud-endpoint-network.html).
-11. Finish by creating three posture backlog items from [Lesson 0004](../../lessons/0004-turn-detections-into-posture-backlog.html).
+11. Create three posture backlog items from [Lesson 0004](../../lessons/0004-turn-detections-into-posture-backlog.html).
+12. Run the troubleshooting drill from [Lesson 0005](../../lessons/0005-troubleshoot-ingestion-and-dashboards.html).
+13. Close with the rollout charter from [Lesson 0006](../../lessons/0006-enterprise-rollout-and-governance.html).
 
 ## Participant Exercises
 
@@ -74,6 +78,8 @@ Confirm:
 | Raw source pivot | What raw OCI record explains the alert? | Audit or Flow fields copied into notes |
 | Correlation | What other source supports the same event? | OS, Sysmon, Audit, Flow, or Wazuh alert context |
 | Posture backlog | What should the company improve? | Evidence, owner, action, verification query |
+| Troubleshooting | Where is the first red gate? | Failure note with first red gate and verification command |
+| Rollout | Who owns each detection family? | Rollout charter with owners and production exit criteria |
 
 ## Common Failure Points
 
@@ -86,6 +92,8 @@ Confirm:
 | Dashboard has raw logs but no posture outcome | Analyst stopped at visibility | Force the backlog-item exercise |
 
 ## Closeout
+
+Run the [assessment](WAZUH_LOG_ANALYTICS_ASSESSMENT.md) before teardown if this is a training session.
 
 End every session with:
 

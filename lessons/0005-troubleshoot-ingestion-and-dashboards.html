@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 0005: Troubleshoot Wazuh and Log Analytics Ingestion</title>
+  <link rel="stylesheet" href="../assets/teach.css">
+</head>
+<body>
+  <h1>Lesson 0005: Troubleshoot Wazuh and Log Analytics Ingestion</h1>
+
+  <p>This lesson teaches a deterministic troubleshooting path. The goal is to isolate whether a missing signal is a source problem, delivery problem, parser problem, dashboard problem, or expectation problem.</p>
+
+  <section class="module">
+    <h2>Module 1: Start with the Gate</h2>
+    <p>Run the smallest validation that covers the missing signal:</p>
+    <pre><code>make e2e
+make goad-validate
+make simulate-detections
+make validate-real-oci-logs
+make validate-opensearch-oci
+make log-analytics-bridge</code></pre>
+    <p>Do not debug dashboards until the ingestion gate proves the data exists.</p>
+  </section>
+
+  <section class="module">
+    <h2>Module 2: Locate the Break</h2>
+    <ul>
+      <li><strong>No Wazuh alert:</strong> check decoder/rule deployment and logcollector inputs.</li>
+      <li><strong>Wazuh alert exists, no raw OCI index:</strong> check OpenSearch sink configuration.</li>
+      <li><strong>Raw index exists, no Log Analytics result:</strong> check OCI Logging, Unified Agent, Connector Hub, and Log Analytics propagation.</li>
+      <li><strong>Log Analytics result exists, dashboard empty:</strong> check source names, quoted fields, filters, and time range.</li>
+    </ul>
+  </section>
+
+  <section class="module">
+    <h2>Module 3: Use Source Inventory</h2>
+    <p>When a Log Analytics dashboard is empty, run this before changing the query:</p>
+    <pre><code>* | stats count by "Log Source" | sort -count</code></pre>
+    <p>If the source name differs from the saved query pack, update the saved search for that tenancy.</p>
+  </section>
+
+  <section class="module">
+    <h2>Module 4: Keep a Failure Note</h2>
+    <pre><code>Symptom:
+Expected signal:
+Last green gate:
+First red gate:
+Suspected break:
+Fix attempted:
+Verification command:</code></pre>
+    <p>This prevents random dashboard editing and makes the next failure faster to diagnose.</p>
+  </section>
+
+  <section class="check">
+    <h2>Exercise</h2>
+    <p>Pick one empty dashboard widget. Identify the gate that should prove its data source, run or inspect that gate, then write the failure note above.</p>
+  </section>
+
+  <section class="quiz" data-quiz>
+    <h2>Check Understanding</h2>
+    <p>What should you do first when a Log Analytics dashboard widget returns zero rows?</p>
+    <label><input type="radio" name="q1" data-correct="false"> Rewrite all dashboard queries.</label><br>
+    <label><input type="radio" name="q1" data-correct="true"> Run source inventory and confirm the ingestion gate for that signal.</label><br>
+    <label><input type="radio" name="q1" data-correct="false"> Disable Wazuh decoders.</label><br>
+    <button type="button">Check</button>
+    <div class="answer" aria-live="polite"></div>
+  </section>
+
+  <script src="../assets/quiz.js"></script>
+</body>
+</html>

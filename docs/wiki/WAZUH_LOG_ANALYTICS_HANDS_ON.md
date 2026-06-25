@@ -34,6 +34,14 @@ This lesson shows the analyst drill from Wazuh alert to raw OCI record to Log An
 
 This lesson turns detection evidence into a hardening backlog item.
 
+![Lesson 0005 troubleshooting workflow](assets/lesson-0005-troubleshooting.png)
+
+This lesson isolates missing telemetry by finding the first red gate.
+
+![Lesson 0006 enterprise rollout workflow](assets/lesson-0006-enterprise-rollout.png)
+
+This lesson converts the demo into a company rollout plan with ownership and production criteria.
+
 ![Printable posture reference](assets/reference-security-posture.png)
 
 The printable reference compresses the telemetry map, correlation keys, dashboard pattern, and operating checks for classroom or workshop use.
@@ -317,6 +325,12 @@ npx playwright screenshot --viewport-size=1440,1100 --full-page \
 npx playwright screenshot --viewport-size=1440,1100 --full-page \
   http://127.0.0.1:8765/lessons/0004-turn-detections-into-posture-backlog.html \
   docs/wiki/assets/lesson-0004-posture-backlog.png
+npx playwright screenshot --viewport-size=1440,1100 --full-page \
+  http://127.0.0.1:8765/lessons/0005-troubleshoot-ingestion-and-dashboards.html \
+  docs/wiki/assets/lesson-0005-troubleshooting.png
+npx playwright screenshot --viewport-size=1440,1100 --full-page \
+  http://127.0.0.1:8765/lessons/0006-enterprise-rollout-and-governance.html \
+  docs/wiki/assets/lesson-0006-enterprise-rollout.png
 npx playwright screenshot --viewport-size=1440,1100 --full-page \
   http://127.0.0.1:8765/reference/0001-wazuh-log-analytics-security-posture.html \
   docs/wiki/assets/reference-security-posture.png

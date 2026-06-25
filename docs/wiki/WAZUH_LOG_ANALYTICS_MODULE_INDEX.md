@@ -1,0 +1,52 @@
+# Wazuh and OCI Log Analytics Module Index
+
+This index links the reusable teaching modules, screenshots, guides, and validation artifacts.
+
+## Core Docs
+
+- [Security posture wiki](WAZUH_LOG_ANALYTICS_SECURITY_POSTURE.md)
+- [Hands-on walkthrough](WAZUH_LOG_ANALYTICS_HANDS_ON.md)
+- [Facilitator guide](WAZUH_LOG_ANALYTICS_FACILITATOR_GUIDE.md)
+- [Assessment](WAZUH_LOG_ANALYTICS_ASSESSMENT.md)
+- [End-to-end demo runbook](../END_TO_END_DEMO.md)
+
+## Lessons
+
+| Lesson | Topic | Primary output |
+|---|---|---|
+| [0001](../../lessons/0001-siem-correlation-loop.html) | SIEM correlation loop | One dashboard row tied to one security question |
+| [0002](../../lessons/0002-build-security-dashboards.html) | Wazuh and Log Analytics dashboards | Saved searches and dashboard panels |
+| [0003](../../lessons/0003-investigate-cloud-endpoint-network.html) | Investigation drill | Three-line investigation note |
+| [0004](../../lessons/0004-turn-detections-into-posture-backlog.html) | Posture backlog | Three remediation items with verification |
+| [0005](../../lessons/0005-troubleshoot-ingestion-and-dashboards.html) | Troubleshooting ingestion | Failure note and first red gate |
+| [0006](../../lessons/0006-enterprise-rollout-and-governance.html) | Enterprise rollout | One-page rollout charter |
+
+## Screenshots
+
+| Screenshot | Use |
+|---|---|
+| [Wazuh login](assets/wazuh-login.png) | Show tunnel-only dashboard access |
+| [Wazuh data views](assets/wazuh-discover-data-views.png) | Explain alert versus raw source records |
+| [Wazuh visualization chooser](assets/wazuh-new-visualization-types.png) | Choose chart types for Wazuh dashboards |
+| [Lesson 0001](assets/lesson-0001-correlation-loop.png) | Teach one correlation loop |
+| [Lesson 0002](assets/lesson-0002-security-dashboards.png) | Teach dashboard construction |
+| [Lesson 0003](assets/lesson-0003-investigation-drill.png) | Teach investigation pivots |
+| [Lesson 0004](assets/lesson-0004-posture-backlog.png) | Teach posture backlog creation |
+| [Lesson 0005](assets/lesson-0005-troubleshooting.png) | Teach ingestion troubleshooting |
+| [Lesson 0006](assets/lesson-0006-enterprise-rollout.png) | Teach enterprise rollout |
+
+## Validation Commands
+
+```bash
+make cap-preflight
+make e2e
+make goad-validate
+make wazuh-content
+make simulate-detections
+make validate-real-oci-logs
+make opensearch-oci
+make validate-opensearch-oci
+make wazuh-log-analytics
+make log-analytics-bridge
+make down
+```

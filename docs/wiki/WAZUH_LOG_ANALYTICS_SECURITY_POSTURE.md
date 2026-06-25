@@ -13,10 +13,16 @@ This page is the teaching entry point for using Wazuh and OCI Log Analytics toge
 | 5. Correlation patterns | Correlate endpoint, cloud control-plane, and network signals. | Cross-source dashboard row |
 | 6. Posture improvement | Convert detections into hardening actions and ATT&CK coverage. | Posture backlog |
 | 7. Operations and teardown | Validate, operate, upgrade, and remove the lab safely. | End-to-end runbook |
+| 8. Troubleshooting | Isolate source, delivery, parser, and dashboard failures. | Failure note |
+| 9. Enterprise rollout | Assign owners, govern data, and define production exit criteria. | Rollout charter |
+
+For the full course map, use [Wazuh and OCI Log Analytics Module Index](WAZUH_LOG_ANALYTICS_MODULE_INDEX.md).
 
 For the operator-level walkthrough, use [Wazuh and OCI Log Analytics Hands-On Walkthrough](WAZUH_LOG_ANALYTICS_HANDS_ON.md).
 
 For a workshop delivery script, use [Wazuh and OCI Log Analytics Facilitator Guide](WAZUH_LOG_ANALYTICS_FACILITATOR_GUIDE.md).
+
+For post-workshop validation, use [Wazuh and OCI Log Analytics Assessment](WAZUH_LOG_ANALYTICS_ASSESSMENT.md).
 
 ## Screenshot Tour
 
@@ -47,6 +53,14 @@ The third lesson walks an analyst from Wazuh alert to raw OCI record to Log Anal
 ![Lesson 0004 posture backlog workflow](assets/lesson-0004-posture-backlog.png)
 
 The fourth lesson turns detections into hardening work with evidence, owner, action, and verification query.
+
+![Lesson 0005 troubleshooting workflow](assets/lesson-0005-troubleshooting.png)
+
+The fifth lesson teaches how to isolate missing telemetry without randomly editing dashboards.
+
+![Lesson 0006 enterprise rollout workflow](assets/lesson-0006-enterprise-rollout.png)
+
+The sixth lesson turns the demo into a company rollout model with ownership, data governance, and production exit criteria.
 
 ## Architecture Mental Model
 
@@ -245,8 +259,12 @@ The teardown path removes demo-owned cloud resources and cleans Wazuh/Sysmon age
 - [Lesson 0002: build security dashboards](../../lessons/0002-build-security-dashboards.html)
 - [Lesson 0003: investigate cloud, endpoint, and network signals](../../lessons/0003-investigate-cloud-endpoint-network.html)
 - [Lesson 0004: turn detections into a posture backlog](../../lessons/0004-turn-detections-into-posture-backlog.html)
+- [Lesson 0005: troubleshoot ingestion and dashboards](../../lessons/0005-troubleshoot-ingestion-and-dashboards.html)
+- [Lesson 0006: enterprise rollout and governance](../../lessons/0006-enterprise-rollout-and-governance.html)
+- [Module index](WAZUH_LOG_ANALYTICS_MODULE_INDEX.md)
 - [Hands-on walkthrough](WAZUH_LOG_ANALYTICS_HANDS_ON.md)
 - [Facilitator guide](WAZUH_LOG_ANALYTICS_FACILITATOR_GUIDE.md)
+- [Assessment](WAZUH_LOG_ANALYTICS_ASSESSMENT.md)
 - [End-to-end demo runbook](../END_TO_END_DEMO.md)
 - [Ingestion KB](../kb/KB-OCI-WAZUH-INGESTION.md)
 - [Detection KB](../kb/KB-OCI-WAZUH-DETECTIONS.md)

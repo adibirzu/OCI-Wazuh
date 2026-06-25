@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 0006: Roll Out Wazuh and Log Analytics in an Enterprise</title>
+  <link rel="stylesheet" href="../assets/teach.css">
+</head>
+<body>
+  <h1>Lesson 0006: Roll Out Wazuh and Log Analytics in an Enterprise</h1>
+
+  <p>This lesson turns the demo into a reusable rollout plan. The company objective is to improve security posture without creating unmanaged logging cost, uncontrolled access, or dashboards nobody owns.</p>
+
+  <section class="module">
+    <h2>Module 1: Define Ownership</h2>
+    <ul>
+      <li><strong>Security engineering:</strong> Wazuh rules, ATT&CK mapping, severity, and response playbooks.</li>
+      <li><strong>Cloud platform:</strong> OCI Logging, Connector Hub, Streaming, Log Analytics onboarding, and IAM.</li>
+      <li><strong>Endpoint team:</strong> Wazuh agents, Sysmon, SCA baselines, and patching workflow.</li>
+      <li><strong>SOC:</strong> dashboards, triage, investigation notes, and escalation thresholds.</li>
+    </ul>
+  </section>
+
+  <section class="module">
+    <h2>Module 2: Govern the Data</h2>
+    <p>Before adding sources, decide retention, masking, access, cost owner, and allowed export paths. A useful dashboard that exposes sensitive identity or endpoint details still needs access control.</p>
+  </section>
+
+  <section class="module">
+    <h2>Module 3: Onboard by Detection Family</h2>
+    <ol>
+      <li>Start with Wazuh alert health and Linux FIM/SCA.</li>
+      <li>Add OCI Audit and VCN Flow ingestion.</li>
+      <li>Add Windows and Sysmon for critical domains or labs.</li>
+      <li>Bridge Wazuh alerts into Log Analytics.</li>
+      <li>Create a posture backlog and review it weekly.</li>
+    </ol>
+  </section>
+
+  <section class="module">
+    <h2>Module 4: Define Production Exit Criteria</h2>
+    <pre><code>Agents active: all scoped hosts
+Ingestion: real Audit and Flow gates green
+Dashboards: source inventory plus correlation panels reviewed
+Security: no hardcoded secrets or public dashboard exposure
+Operations: owner, runbook, retention, teardown, and upgrade path documented
+Posture: at least three verified backlog remediations</code></pre>
+  </section>
+
+  <section class="check">
+    <h2>Exercise</h2>
+    <p>Write a one-page rollout charter for one business unit. Include sources, owners, access controls, dashboard consumers, and the first three posture backlog items.</p>
+  </section>
+
+  <section class="quiz" data-quiz>
+    <h2>Check Understanding</h2>
+    <p>Why should rollout be organized by detection family instead of by tool feature?</p>
+    <label><input type="radio" name="q1" data-correct="true"> Detection families connect sources, dashboards, owners, and remediation outcomes.</label><br>
+    <label><input type="radio" name="q1" data-correct="false"> Tool features are never useful.</label><br>
+    <label><input type="radio" name="q1" data-correct="false"> It avoids needing validation gates.</label><br>
+    <button type="button">Check</button>
+    <div class="answer" aria-live="polite"></div>
+  </section>
+
+  <script src="../assets/quiz.js"></script>
+</body>
+</html>
