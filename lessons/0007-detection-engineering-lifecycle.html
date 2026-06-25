@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 0007: Detection Engineering Lifecycle</title>
+  <link rel="stylesheet" href="../assets/teach.css">
+</head>
+<body>
+  <h1>Lesson 0007: Detection Engineering Lifecycle</h1>
+
+  <p>This lesson turns one useful signal into a managed detection. The lifecycle is source, normalize, detect, correlate, tune, measure, and retire or promote.</p>
+
+  <section class="module">
+    <h2>Module 1: Start with a Detection Hypothesis</h2>
+    <pre><code>Behavior: denied traffic spike against a monitored workload
+Source: OCI VCN Flow Logs
+Wazuh rule: 100100
+Correlation: Log Analytics VCN rejects by source and destination
+Posture question: is this approved scanning, misconfiguration, or attack discovery?</code></pre>
+  </section>
+
+  <section class="module">
+    <h2>Module 2: Define Required Fields</h2>
+    <p>Fields are the contract between ingestion, Wazuh rules, and dashboards. Missing fields create weak detections.</p>
+    <pre><code>Minimum flow fields:
+srcaddr, dstaddr, srcport, dstport, protocol, action, bytes, packets
+
+Minimum audit fields:
+eventType, principalName, sourceIp, compartmentId</code></pre>
+  </section>
+
+  <section class="module">
+    <h2>Module 3: Tune with Evidence</h2>
+    <p>Tuning is not hiding alerts. Tuning means adding known-good context, narrowing rule conditions, or changing severity after an evidence review.</p>
+  </section>
+
+  <section class="module">
+    <h2>Module 4: Promote the Detection</h2>
+    <p>A detection is production-ready when the source is reliable, the rule fires on real data, the dashboard has an owner, and the response action is known.</p>
+  </section>
+
+  <section class="check">
+    <h2>Exercise</h2>
+    <p>Pick one detection from the demo and write its lifecycle card: hypothesis, required fields, Wazuh rule/view, Log Analytics query, owner, tuning rule, and retirement condition.</p>
+  </section>
+
+  <section class="quiz" data-quiz>
+    <h2>Check Understanding</h2>
+    <p>What is the most important reason to list required fields before writing a rule?</p>
+    <label><input type="radio" name="q1" data-correct="true"> It creates a contract that ingestion, rules, and dashboards can validate.</label><br>
+    <label><input type="radio" name="q1" data-correct="false"> It removes the need for source inventory.</label><br>
+    <label><input type="radio" name="q1" data-correct="false"> It guarantees every alert is malicious.</label><br>
+    <button type="button">Check</button>
+    <div class="answer" aria-live="polite"></div>
+  </section>
+
+  <script src="../assets/quiz.js"></script>
+</body>
+</html>

@@ -14,6 +14,8 @@ Use this assessment after the workshop to verify that participants can operate t
 | Confirm Log Analytics source inventory | Source inventory query output | Expected source families found or discrepancy documented |
 | Build correlation row | Dashboard row with Wazuh, Audit, Flow, and OS/Windows context | One security question answered by cross-source data |
 | Create posture backlog | Three backlog items | Each item has evidence, owner, action, and verification query |
+| Promote a detection | Detection lifecycle card | Required fields, owner, tuning rule, and retirement condition documented |
+| Report posture | Executive summary | Three metrics, two risks reduced, one gap, and one decision request |
 | Teardown planning | Cleanup command and ownership note | Reused GOAD agents and demo resources have a clear removal path |
 
 ## Rubric

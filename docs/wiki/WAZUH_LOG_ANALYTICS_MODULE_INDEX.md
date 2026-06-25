@@ -8,6 +8,8 @@ This index links the reusable teaching modules, screenshots, guides, and validat
 - [Hands-on walkthrough](WAZUH_LOG_ANALYTICS_HANDS_ON.md)
 - [Facilitator guide](WAZUH_LOG_ANALYTICS_FACILITATOR_GUIDE.md)
 - [Assessment](WAZUH_LOG_ANALYTICS_ASSESSMENT.md)
+- [Query cookbook](WAZUH_LOG_ANALYTICS_QUERY_COOKBOOK.md)
+- [Posture backlog template](WAZUH_LOG_ANALYTICS_POSTURE_BACKLOG_TEMPLATE.md)
 - [End-to-end demo runbook](../END_TO_END_DEMO.md)
 
 ## Lessons
@@ -20,6 +22,8 @@ This index links the reusable teaching modules, screenshots, guides, and validat
 | [0004](../../lessons/0004-turn-detections-into-posture-backlog.html) | Posture backlog | Three remediation items with verification |
 | [0005](../../lessons/0005-troubleshoot-ingestion-and-dashboards.html) | Troubleshooting ingestion | Failure note and first red gate |
 | [0006](../../lessons/0006-enterprise-rollout-and-governance.html) | Enterprise rollout | One-page rollout charter |
+| [0007](../../lessons/0007-detection-engineering-lifecycle.html) | Detection engineering lifecycle | Detection lifecycle card |
+| [0008](../../lessons/0008-executive-reporting-and-metrics.html) | Executive reporting and metrics | One-slide posture summary |
 
 ## Screenshots
 
@@ -34,6 +38,8 @@ This index links the reusable teaching modules, screenshots, guides, and validat
 | [Lesson 0004](assets/lesson-0004-posture-backlog.png) | Teach posture backlog creation |
 | [Lesson 0005](assets/lesson-0005-troubleshooting.png) | Teach ingestion troubleshooting |
 | [Lesson 0006](assets/lesson-0006-enterprise-rollout.png) | Teach enterprise rollout |
+| [Lesson 0007](assets/lesson-0007-detection-lifecycle.png) | Teach detection lifecycle management |
+| [Lesson 0008](assets/lesson-0008-executive-metrics.png) | Teach leadership reporting |
 
 ## Validation Commands
 

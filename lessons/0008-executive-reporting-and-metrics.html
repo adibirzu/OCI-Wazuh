@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 0008: Executive Reporting and Security Metrics</title>
+  <link rel="stylesheet" href="../assets/teach.css">
+</head>
+<body>
+  <h1>Lesson 0008: Executive Reporting and Security Metrics</h1>
+
+  <p>This lesson translates Wazuh and Log Analytics telemetry into leadership-ready posture metrics without losing the ability to drill into evidence.</p>
+
+  <section class="module">
+    <h2>Module 1: Separate Evidence from Metrics</h2>
+    <p>Evidence is a concrete alert, raw event, or query result. A metric is a repeated measurement that shows direction. Do not present alert volume alone as security posture.</p>
+  </section>
+
+  <section class="module">
+    <h2>Module 2: Use a Small Metric Set</h2>
+    <ul>
+      <li>Coverage: percentage of scoped hosts with active Wazuh agents.</li>
+      <li>Cloud visibility: Audit and Flow ingestion gates green in the last review period.</li>
+      <li>Endpoint posture: top failing SCA checks and high-risk vulnerable hosts.</li>
+      <li>Detection health: high-value detections with owners and current dashboards.</li>
+      <li>Remediation: open and closed posture backlog items by control category.</li>
+    </ul>
+  </section>
+
+  <section class="module">
+    <h2>Module 3: Build the Executive Story</h2>
+    <pre><code>What changed?
+Which risks did we reduce?
+Which sources increased coverage?
+Which control gaps remain?
+What decision or investment is needed?</code></pre>
+  </section>
+
+  <section class="module">
+    <h2>Module 4: Keep Drilldown Nearby</h2>
+    <p>Every executive metric should link back to a Wazuh view, a Log Analytics query, or a posture backlog item. Otherwise the metric cannot be audited.</p>
+  </section>
+
+  <section class="check">
+    <h2>Exercise</h2>
+    <p>Create a one-slide executive summary for this demo: three metrics, two risks reduced, one remaining gap, and one decision request.</p>
+  </section>
+
+  <section class="quiz" data-quiz>
+    <h2>Check Understanding</h2>
+    <p>Why is alert volume alone a weak executive metric?</p>
+    <label><input type="radio" name="q1" data-correct="false"> Alerts are never useful.</label><br>
+    <label><input type="radio" name="q1" data-correct="true"> It does not prove coverage, risk reduction, ownership, or remediation.</label><br>
+    <label><input type="radio" name="q1" data-correct="false"> It cannot be displayed in a dashboard.</label><br>
+    <button type="button">Check</button>
+    <div class="answer" aria-live="polite"></div>
+  </section>
+
+  <script src="../assets/quiz.js"></script>
+</body>
+</html>

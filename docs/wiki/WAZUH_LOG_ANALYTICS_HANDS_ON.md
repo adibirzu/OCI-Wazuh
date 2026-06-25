@@ -42,6 +42,14 @@ This lesson isolates missing telemetry by finding the first red gate.
 
 This lesson converts the demo into a company rollout plan with ownership and production criteria.
 
+![Lesson 0007 detection lifecycle workflow](assets/lesson-0007-detection-lifecycle.png)
+
+This lesson turns a signal into a managed detection asset.
+
+![Lesson 0008 executive metrics workflow](assets/lesson-0008-executive-metrics.png)
+
+This lesson turns evidence and backlog movement into leadership-ready reporting.
+
 ![Printable posture reference](assets/reference-security-posture.png)
 
 The printable reference compresses the telemetry map, correlation keys, dashboard pattern, and operating checks for classroom or workshop use.
@@ -331,6 +339,12 @@ npx playwright screenshot --viewport-size=1440,1100 --full-page \
 npx playwright screenshot --viewport-size=1440,1100 --full-page \
   http://127.0.0.1:8765/lessons/0006-enterprise-rollout-and-governance.html \
   docs/wiki/assets/lesson-0006-enterprise-rollout.png
+npx playwright screenshot --viewport-size=1440,1100 --full-page \
+  http://127.0.0.1:8765/lessons/0007-detection-engineering-lifecycle.html \
+  docs/wiki/assets/lesson-0007-detection-lifecycle.png
+npx playwright screenshot --viewport-size=1440,1100 --full-page \
+  http://127.0.0.1:8765/lessons/0008-executive-reporting-and-metrics.html \
+  docs/wiki/assets/lesson-0008-executive-metrics.png
 npx playwright screenshot --viewport-size=1440,1100 --full-page \
   http://127.0.0.1:8765/reference/0001-wazuh-log-analytics-security-posture.html \
   docs/wiki/assets/reference-security-posture.png

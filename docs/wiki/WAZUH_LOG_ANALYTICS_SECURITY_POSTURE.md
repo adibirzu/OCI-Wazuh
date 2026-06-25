@@ -15,6 +15,8 @@ This page is the teaching entry point for using Wazuh and OCI Log Analytics toge
 | 7. Operations and teardown | Validate, operate, upgrade, and remove the lab safely. | End-to-end runbook |
 | 8. Troubleshooting | Isolate source, delivery, parser, and dashboard failures. | Failure note |
 | 9. Enterprise rollout | Assign owners, govern data, and define production exit criteria. | Rollout charter |
+| 10. Detection engineering | Manage detections from hypothesis to retirement. | Detection lifecycle card |
+| 11. Executive reporting | Convert telemetry into security posture metrics. | Executive summary |
 
 For the full course map, use [Wazuh and OCI Log Analytics Module Index](WAZUH_LOG_ANALYTICS_MODULE_INDEX.md).
 
@@ -61,6 +63,14 @@ The fifth lesson teaches how to isolate missing telemetry without randomly editi
 ![Lesson 0006 enterprise rollout workflow](assets/lesson-0006-enterprise-rollout.png)
 
 The sixth lesson turns the demo into a company rollout model with ownership, data governance, and production exit criteria.
+
+![Lesson 0007 detection lifecycle workflow](assets/lesson-0007-detection-lifecycle.png)
+
+The seventh lesson shows how to manage detections as owned engineering assets.
+
+![Lesson 0008 executive metrics workflow](assets/lesson-0008-executive-metrics.png)
+
+The eighth lesson converts technical telemetry into leadership-ready posture reporting.
 
 ## Architecture Mental Model
 
@@ -261,7 +271,11 @@ The teardown path removes demo-owned cloud resources and cleans Wazuh/Sysmon age
 - [Lesson 0004: turn detections into a posture backlog](../../lessons/0004-turn-detections-into-posture-backlog.html)
 - [Lesson 0005: troubleshoot ingestion and dashboards](../../lessons/0005-troubleshoot-ingestion-and-dashboards.html)
 - [Lesson 0006: enterprise rollout and governance](../../lessons/0006-enterprise-rollout-and-governance.html)
+- [Lesson 0007: detection engineering lifecycle](../../lessons/0007-detection-engineering-lifecycle.html)
+- [Lesson 0008: executive reporting and metrics](../../lessons/0008-executive-reporting-and-metrics.html)
 - [Module index](WAZUH_LOG_ANALYTICS_MODULE_INDEX.md)
+- [Query cookbook](WAZUH_LOG_ANALYTICS_QUERY_COOKBOOK.md)
+- [Posture backlog template](WAZUH_LOG_ANALYTICS_POSTURE_BACKLOG_TEMPLATE.md)
 - [Hands-on walkthrough](WAZUH_LOG_ANALYTICS_HANDS_ON.md)
 - [Facilitator guide](WAZUH_LOG_ANALYTICS_FACILITATOR_GUIDE.md)
 - [Assessment](WAZUH_LOG_ANALYTICS_ASSESSMENT.md)

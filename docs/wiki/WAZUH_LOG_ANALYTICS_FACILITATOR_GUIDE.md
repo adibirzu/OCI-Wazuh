@@ -23,6 +23,8 @@ Use this guide to run a workshop or customer demo on Wazuh plus OCI Log Analytic
 | Posture backlog | 20 min | Convert detections into security improvements |
 | Troubleshooting drill | 15 min | Find the first red gate for a missing signal |
 | Enterprise rollout | 15 min | Assign owners and production exit criteria |
+| Detection engineering | 15 min | Promote one useful signal into a managed detection |
+| Executive reporting | 10 min | Translate evidence into posture metrics |
 | Teardown and questions | 10 min | Confirm cleanup expectations |
 
 ## Pre-Workshop Checklist
@@ -68,6 +70,8 @@ Confirm:
 11. Create three posture backlog items from [Lesson 0004](../../lessons/0004-turn-detections-into-posture-backlog.html).
 12. Run the troubleshooting drill from [Lesson 0005](../../lessons/0005-troubleshoot-ingestion-and-dashboards.html).
 13. Close with the rollout charter from [Lesson 0006](../../lessons/0006-enterprise-rollout-and-governance.html).
+14. Promote one signal through [Lesson 0007](../../lessons/0007-detection-engineering-lifecycle.html).
+15. Create a one-slide leadership summary from [Lesson 0008](../../lessons/0008-executive-reporting-and-metrics.html).
 
 ## Participant Exercises
 
@@ -80,6 +84,8 @@ Confirm:
 | Posture backlog | What should the company improve? | Evidence, owner, action, verification query |
 | Troubleshooting | Where is the first red gate? | Failure note with first red gate and verification command |
 | Rollout | Who owns each detection family? | Rollout charter with owners and production exit criteria |
+| Detection lifecycle | Which detection should be promoted? | Detection card with required fields, owner, and tuning rule |
+| Executive reporting | What changed in posture? | Three metrics, two reduced risks, one remaining gap |
 
 ## Common Failure Points
 
