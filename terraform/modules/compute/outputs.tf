@@ -2,6 +2,10 @@ output "bastion_public_ip" {
   value = oci_core_instance.bastion.public_ip
 }
 
+output "bastion_private_ip" {
+  value = oci_core_instance.bastion.private_ip
+}
+
 output "ol9_agent_private_ip" {
   value = oci_core_instance.ol9_agent.private_ip
 }

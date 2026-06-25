@@ -35,7 +35,7 @@ make goad-up
 make goad-validate
 ```
 
-`make goad-up` builds a temporary WinRM inventory in `artifacts/validation/`, creates or reuses a single SSH tunnel, installs the Wazuh agent and Sysmon on all five hosts, and imports SOC Fortress rules on the Wazuh manager. The default tunnel path is through the Wazuh host because it avoids repeated SSH handshakes to the GOAD jumpbox during CAP development. If the jumpbox key is available, set `GOAD_TUNNEL_MODE=jumpbox`.
+`make goad-up` builds a temporary WinRM inventory in `artifacts/validation/`, creates or reuses a single SSH tunnel, installs the Wazuh agent and Sysmon on all five hosts, and imports SOC Fortress rules on the Wazuh manager. In `auto` mode it discovers the running GOAD jumpbox key from OCI metadata when a local matching private key exists. If direct Wazuh-to-GOAD routing is unavailable because OCI LPG routing is non-transitive or the VCNs cannot be directly peered, the script configures the hub bastion as a persistent TCP relay for Wazuh ports `1514` and `1515`; Windows agents then use the bastion private IP as their manager endpoint.
 
 `make goad-validate` requires both:
 

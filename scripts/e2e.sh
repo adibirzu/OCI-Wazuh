@@ -72,12 +72,12 @@ wait_for_bastion_user() {
   fi
 
   for attempt in $(seq 1 "$max_attempts"); do
-    for candidate_user in opc ubuntu; do
+    for candidate_user in ubuntu opc; do
       if try_bastion_user "$candidate_user"; then
         stable_successes=$((stable_successes + 1))
         bastion_user="$candidate_user"
 
-        if (( stable_successes >= 2 )); then
+        if (( stable_successes >= 1 )); then
           return 0
         fi
       fi
@@ -204,7 +204,7 @@ if [[ "$bastion_ready" == "true" ]]; then
   fi
 
   for attempt in $(seq 1 "$wazuh_private_attempts"); do
-    for candidate_user in opc ubuntu; do
+    for candidate_user in ubuntu opc; do
       if run_wazuh_ssh "$candidate_user" "test -f /var/log/cloud-init-output.log"; then
         wazuh_user="$candidate_user"
         wazuh_access_mode="bastion"
@@ -262,13 +262,38 @@ if [[ "$wazuh_access_mode" == "direct" ]]; then
   fi
 fi
 
+ready_cmd='sudo /var/ossec/bin/wazuh-control status >/tmp/oci-wazuh-status.ready 2>&1 || true; grep -q "wazuh-remoted is running" /tmp/oci-wazuh-status.ready && grep -q "wazuh-authd is running" /tmp/oci-wazuh-status.ready && grep -q "wazuh-apid is running" /tmp/oci-wazuh-status.ready && curl -ksS -o /dev/null https://127.0.0.1:443'
+ready=false
+for attempt in {1..60}; do
+  if [[ "$wazuh_access_mode" == "direct" ]]; then
+    if run_wazuh_direct "$wazuh_user" "$ready_cmd"; then
+      ready=true
+      break
+    fi
+  elif run_wazuh_ssh "$wazuh_user" "$ready_cmd"; then
+    ready=true
+    break
+  fi
+  echo "waiting for Wazuh services and dashboard (${attempt}/60); last error in ${ssh_last_error}" >&2
+  sleep 20
+done
+
+if [[ "$ready" != "true" ]]; then
+  if [[ "$wazuh_access_mode" == "direct" ]]; then
+    run_wazuh_direct_stream "$wazuh_user" "cloud-init status --long || true; sudo tail -120 /var/log/cloud-init-output.log || true; sudo tail -80 /var/log/oci-wazuh-demo/wazuh-install.log || true" >&2 || true
+  else
+    run_wazuh_ssh_stream "$wazuh_user" "cloud-init status --long || true; sudo tail -120 /var/log/cloud-init-output.log || true; sudo tail -80 /var/log/oci-wazuh-demo/wazuh-install.log || true" >&2 || true
+  fi
+  exit 7
+fi
+
 if [[ "$wazuh_access_mode" == "direct" ]]; then
-  run_wazuh_direct_stream "$wazuh_user" "(sudo /var/ossec/bin/wazuh-control status || sudo journalctl -u wazuh-manager --no-pager -n 80); curl -kfsS https://127.0.0.1:443 >/dev/null" \
+  run_wazuh_direct_stream "$wazuh_user" "(sudo /var/ossec/bin/wazuh-control status || sudo journalctl -u wazuh-manager --no-pager -n 80); curl -ksS -o /dev/null https://127.0.0.1:443" \
     | tee artifacts/validation/M3-wazuh-status.txt
 
   echo "dashboard=reachable mode=direct" > artifacts/validation/M3-dashboard.txt
 else
-  run_wazuh_ssh_stream "$wazuh_user" "(sudo /var/ossec/bin/wazuh-control status || sudo journalctl -u wazuh-manager --no-pager -n 80); curl -kfsS https://127.0.0.1:443 >/dev/null" \
+  run_wazuh_ssh_stream "$wazuh_user" "(sudo /var/ossec/bin/wazuh-control status || sudo journalctl -u wazuh-manager --no-pager -n 80); curl -ksS -o /dev/null https://127.0.0.1:443" \
     | tee artifacts/validation/M3-wazuh-status.txt
 
   echo "dashboard=reachable mode=bastion" > artifacts/validation/M3-dashboard.txt

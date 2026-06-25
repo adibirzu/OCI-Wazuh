@@ -61,6 +61,7 @@ goad_inventory_path() {
     return 0
   fi
   local base="${GOAD_PATH:-$HOME/dev/GOADv3}"
+  local candidate
   for candidate in \
     "$base/ad/GOAD/providers/oci/inventory" \
     "$base/ad/GOAD/data/inventory"; do
@@ -78,16 +79,54 @@ inventory_var() {
   awk -F= -v k="$key" '$1 ~ "^[[:space:]]*" k "[[:space:]]*$" {gsub(/^[[:space:]]+|[[:space:]]+$/, "", $2); print $2; exit}' "$inventory"
 }
 
+resolve_jumpbox_metadata_key() {
+  local jumpbox_id authorized wanted pub private
+  jumpbox_id="$(instance_id_by_name jumpbox 2>/dev/null || true)"
+  [[ -n "$jumpbox_id" ]] || return 1
+  authorized="$(oci_cli compute instance get \
+    --instance-id "$jumpbox_id" \
+    --query 'data.metadata."ssh_authorized_keys"' \
+    --raw-output 2>/dev/null || true)"
+  wanted="$(printf '%s\n' "$authorized" | awk 'NF >= 2 {print $2; exit}')"
+  [[ -n "$wanted" && "$wanted" != "null" ]] || return 1
+  for pub in "$HOME"/.ssh/*.pub; do
+    [[ -f "$pub" ]] || continue
+    if awk -v wanted="$wanted" 'NF >= 2 && $2 == wanted {found=1} END {exit found ? 0 : 1}' "$pub"; then
+      private="${pub%.pub}"
+      if [[ -f "$private" ]]; then
+        printf '%s\n' "$private"
+        return 0
+      fi
+    fi
+  done
+  return 1
+}
+
 resolve_ssh_key() {
+  local purpose="${1:-wazuh}"
   if [[ -n "${GOAD_JUMPBOX_SSH_KEY:-}" && -f "$GOAD_JUMPBOX_SSH_KEY" ]]; then
     printf '%s\n' "$GOAD_JUMPBOX_SSH_KEY"
     return 0
   fi
   local base="${GOAD_PATH:-$HOME/dev/GOADv3}"
-  for candidate in \
-    "$(tfvar_value ssh_private_key_path)" \
-    "$base/ad/GOAD/providers/oci/ssh_keys/ubuntu-jumpbox.pem" \
-    "$base/template/provider/oci/ssh_keys/ubuntu-jumpbox.pem"; do
+  local -a candidates=()
+  if [[ "$purpose" == "jumpbox" ]]; then
+    if candidate="$(resolve_jumpbox_metadata_key)"; then
+      candidates+=("$candidate")
+    fi
+    candidates+=(
+      "$base/ad/GOAD/providers/oci/ssh_keys/ubuntu-jumpbox.pem"
+      "$base/template/provider/oci/ssh_keys/ubuntu-jumpbox.pem"
+      "$(tfvar_value ssh_private_key_path)"
+    )
+  else
+    candidates+=(
+      "$(tfvar_value ssh_private_key_path)"
+      "$base/ad/GOAD/providers/oci/ssh_keys/ubuntu-jumpbox.pem"
+      "$base/template/provider/oci/ssh_keys/ubuntu-jumpbox.pem"
+    )
+  fi
+  for candidate in "${candidates[@]}"; do
     candidate="${candidate/#\~/$HOME}"
     if [[ -n "$candidate" && -f "$candidate" ]]; then
       printf '%s\n' "$candidate"
@@ -132,29 +171,55 @@ ensure_discovery() {
 write_inventory_and_start_tunnel() {
   ensure_discovery
 
-  local source_inventory ssh_key jumpbox_id jumpbox_ip wazuh_ip winrm_user winrm_password
-  local tunnel_host tunnel_user tunnel_label
+  local source_inventory ssh_key jumpbox_id jumpbox_ip wazuh_ip bastion_ip winrm_user winrm_password
+  local bastion_private_ip wazuh_agent_manager_ip
+  local tunnel_host tunnel_user tunnel_label tunnel_mode requested_tunnel_mode
+  local -a proxy_args=()
   source_inventory="$(goad_inventory_path)"
-  ssh_key="$(resolve_ssh_key)"
   jumpbox_id="$(instance_id_by_name jumpbox)"
   jumpbox_ip="${GOAD_JUMPBOX_PUBLIC_IP:-$(instance_ip "$jumpbox_id" public-ip)}"
   wazuh_ip="${WAZUH_MANAGER_IP:-$(tf_output_value wazuh_private_ip)}"
+  bastion_ip="$(tf_output_value bastion_public_ip)"
+  bastion_private_ip="$(tf_output_value bastion_private_ip)"
   tunnel_user="${GOAD_TUNNEL_USER:-ubuntu}"
   tunnel_host="${GOAD_TUNNEL_HOST:-$(tf_output_value wazuh_public_ip)}"
+  requested_tunnel_mode="${GOAD_TUNNEL_MODE:-auto}"
+  tunnel_mode="$requested_tunnel_mode"
+  if [[ "$requested_tunnel_mode" == "auto" ]]; then
+    if [[ -n "$jumpbox_ip" && "$jumpbox_ip" != "null" ]] && resolve_ssh_key jumpbox >/dev/null 2>&1; then
+      tunnel_mode="jumpbox"
+    else
+      tunnel_mode="wazuh"
+    fi
+  fi
+  ssh_key="$(resolve_ssh_key "$tunnel_mode")"
   tunnel_label="wazuh"
-  if [[ "${GOAD_TUNNEL_MODE:-wazuh}" == "jumpbox" ]]; then
+  if [[ "$tunnel_mode" == "jumpbox" ]]; then
     tunnel_host="$jumpbox_ip"
     tunnel_label="goad-jumpbox"
+  elif [[ -z "$tunnel_host" || "$tunnel_host" == "null" ]]; then
+    if [[ -z "$bastion_ip" || "$bastion_ip" == "null" ]]; then
+      echo "Wazuh has no public IP and bastion_public_ip is unavailable for ProxyJump" >&2
+      exit 2
+    fi
+    tunnel_host="$wazuh_ip"
+    tunnel_label="wazuh-via-bastion"
+    proxy_args=(-o "ProxyCommand=ssh -i $ssh_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -W %h:%p ${tunnel_user}@${bastion_ip}")
   fi
   winrm_user="${GOAD_WINRM_USER:-$(inventory_var "$source_inventory" ansible_user)}"
   winrm_password="${GOAD_WINRM_PASSWORD:-$(inventory_var "$source_inventory" ansible_password)}"
+  wazuh_agent_manager_ip="${GOAD_WAZUH_MANAGER_IP:-$wazuh_ip}"
+  if [[ "${GOAD_AGENT_RELAY_MODE:-auto}" != "skip" && "$tunnel_mode" == "jumpbox" && -n "$bastion_private_ip" ]]; then
+    wazuh_agent_manager_ip="${GOAD_WAZUH_MANAGER_IP:-$bastion_private_ip}"
+  fi
 
-  if [[ -z "$tunnel_host" || "$tunnel_host" == "null" || -z "$wazuh_ip" || -z "$winrm_user" || -z "$winrm_password" ]]; then
+  if [[ -z "$tunnel_host" || "$tunnel_host" == "null" || -z "$wazuh_ip" || -z "$wazuh_agent_manager_ip" || -z "$winrm_user" || -z "$winrm_password" ]]; then
     echo "missing tunnel host, Wazuh IP, or WinRM credentials" >&2
     exit 2
   fi
 
   local -a forwards=()
+  local -a local_ports=()
   local base_port="${GOAD_WINRM_BASE_PORT:-15985}"
   local idx=0
   {
@@ -172,6 +237,7 @@ write_inventory_and_start_tunnel() {
       private_ip="$(instance_ip "$instance_id" private-ip)"
       local_port=$((base_port + idx))
       forwards+=(-L "${local_port}:${private_ip}:5986")
+      local_ports+=("$local_port")
       printf '%s ansible_host=127.0.0.1 ansible_port=%s goad_alias=%s wazuh_agent_name=%s\n' "$host" "$local_port" "$alias" "$host"
       idx=$((idx + 1))
     done
@@ -186,7 +252,7 @@ ansible_winrm_transport=basic
 ansible_winrm_scheme=https
 ansible_winrm_operation_timeout_sec=500
 ansible_winrm_read_timeout_sec=600
-wazuh_manager_ip=$wazuh_ip
+wazuh_manager_ip=$wazuh_agent_manager_ip
 wazuh_agent_group=goad-windows
 EOF
   } > "$inventory_file"
@@ -196,20 +262,95 @@ EOF
     return 0
   fi
 
-  echo "Starting SSH WinRM tunnel via ${tunnel_label} ${tunnel_user}@${tunnel_host} ..."
-  ssh -i "$ssh_key" \
+  local -a ssh_cmd=(
+    ssh -i "$ssh_key" \
     -o StrictHostKeyChecking=no \
     -o UserKnownHostsFile=/dev/null \
     -o ExitOnForwardFailure=yes \
     -o ServerAliveInterval=30 \
-    "${forwards[@]}" \
-    -N "${tunnel_user}@${tunnel_host}" &
-  echo "$!" > "$tunnel_pid_file"
-  sleep 3
-  if ! kill -0 "$(cat "$tunnel_pid_file")" >/dev/null 2>&1; then
-    echo "failed to start GOAD WinRM tunnel through jumpbox" >&2
-    exit 3
+    -n
+  )
+  if [[ ${#proxy_args[@]} -gt 0 ]]; then
+    ssh_cmd+=("${proxy_args[@]}")
   fi
+  ssh_cmd+=("${forwards[@]}" -N "${tunnel_user}@${tunnel_host}")
+
+  echo "Starting SSH WinRM tunnel via ${tunnel_label} ${tunnel_user}@${tunnel_host} ..."
+  "${ssh_cmd[@]}" &
+  echo "$!" > "$tunnel_pid_file"
+  for attempt in {1..20}; do
+    if ! kill -0 "$(cat "$tunnel_pid_file")" >/dev/null 2>&1; then
+      echo "failed to start GOAD WinRM tunnel through ${tunnel_label}" >&2
+      exit 3
+    fi
+    local ready=true
+    for local_port in "${local_ports[@]}"; do
+      if ! nc -z 127.0.0.1 "$local_port" >/dev/null 2>&1; then
+        ready=false
+        break
+      fi
+    done
+    if [[ "$ready" == "true" ]]; then
+      return 0
+    fi
+    sleep 2
+  done
+  echo "GOAD WinRM tunnel started but local forwarded ports did not become ready" >&2
+  exit 3
+}
+
+configure_bastion_agent_relay() {
+  [[ "${GOAD_AGENT_RELAY_MODE:-auto}" != "skip" ]] || return 0
+  local bastion_ip wazuh_ip ssh_key
+  bastion_ip="$(tf_output_value bastion_public_ip)"
+  wazuh_ip="${WAZUH_MANAGER_IP:-$(tf_output_value wazuh_private_ip)}"
+  ssh_key="$(tfvar_value ssh_private_key_path)"
+  ssh_key="${ssh_key/#\~/$HOME}"
+  [[ -n "$bastion_ip" && -n "$wazuh_ip" ]] || return 0
+  ssh -i "$ssh_key" \
+    -o StrictHostKeyChecking=no \
+    -o UserKnownHostsFile=/dev/null \
+    -o BatchMode=yes \
+    "ubuntu@${bastion_ip}" "WAZUH_IP='${wazuh_ip}' bash -s" <<'REMOTE'
+set -euo pipefail
+sudo apt-get update >/dev/null
+sudo DEBIAN_FRONTEND=noninteractive apt-get install -y socat >/dev/null
+for port in 1514 1515; do
+  sudo tee "/etc/systemd/system/oci-wazuh-goad-relay-${port}.service" >/dev/null <<EOF
+[Unit]
+Description=OCI Wazuh GOAD relay ${port}
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=/usr/bin/socat TCP-LISTEN:${port},fork,reuseaddr TCP:${WAZUH_IP}:${port}
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+EOF
+done
+sudo systemctl daemon-reload
+sudo systemctl enable --now oci-wazuh-goad-relay-1514.service oci-wazuh-goad-relay-1515.service
+for port in 1514 1515; do
+  sudo iptables -C INPUT -p tcp --dport "$port" -j ACCEPT 2>/dev/null || sudo iptables -I INPUT 5 -p tcp --dport "$port" -j ACCEPT
+done
+REMOTE
+}
+
+remove_bastion_agent_relay() {
+  [[ "${GOAD_AGENT_RELAY_MODE:-auto}" != "skip" ]] || return 0
+  local bastion_ip ssh_key
+  bastion_ip="$(tf_output_value bastion_public_ip)"
+  ssh_key="$(tfvar_value ssh_private_key_path)"
+  ssh_key="${ssh_key/#\~/$HOME}"
+  [[ -n "$bastion_ip" ]] || return 0
+  ssh -i "$ssh_key" \
+    -o StrictHostKeyChecking=no \
+    -o UserKnownHostsFile=/dev/null \
+    -o BatchMode=yes \
+    "ubuntu@${bastion_ip}" 'sudo systemctl disable --now oci-wazuh-goad-relay-1514.service oci-wazuh-goad-relay-1515.service >/dev/null 2>&1 || true; sudo rm -f /etc/systemd/system/oci-wazuh-goad-relay-1514.service /etc/systemd/system/oci-wazuh-goad-relay-1515.service; for port in 1514 1515; do sudo iptables -D INPUT -p tcp --dport "$port" -j ACCEPT 2>/dev/null || true; done; sudo systemctl daemon-reload' || true
 }
 
 stop_tunnel() {
@@ -291,8 +432,12 @@ validate_agents() {
 
 case "$mode" in
   install|up)
+    if [[ "${GOAD_PEERING_MODE:-skip}" != "skip" ]]; then
+      "$repo_root/scripts/goad-peering.sh" up
+    fi
     write_inventory_and_start_tunnel
     trap stop_tunnel EXIT
+    configure_bastion_agent_relay
     install_socfortress_rules
     run_playbook "$repo_root/ansible/playbooks/agent-windows.yml"
     validate_agents
@@ -302,6 +447,10 @@ case "$mode" in
     trap stop_tunnel EXIT
     run_playbook "$repo_root/ansible/playbooks/goad-cleanup.yml" || true
     remove_wazuh_agent_records || true
+    remove_bastion_agent_relay
+    if [[ "${GOAD_PEERING_MODE:-skip}" != "skip" ]]; then
+      "$repo_root/scripts/goad-peering.sh" down || true
+    fi
     {
       echo "goad_cleanup=attempted"
       echo "wazuh_agent_records=removed"

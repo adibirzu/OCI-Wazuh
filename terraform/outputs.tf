@@ -3,6 +3,11 @@ output "bastion_public_ip" {
   description = "Bastion public IP."
 }
 
+output "bastion_private_ip" {
+  value       = module.compute.bastion_private_ip
+  description = "Bastion private IP used for hub relay paths."
+}
+
 output "project_name" {
   value       = var.project_name
   description = "Project name used for resource naming."

@@ -36,6 +36,79 @@
   register: wazuh_windows_install
   when: wazuh_windows_service.exists is not defined or not wazuh_windows_service.exists
 
+- name: Configure Wazuh manager endpoint
+  ansible.windows.win_powershell:
+    script: |
+      $conf = 'C:\Program Files (x86)\ossec-agent\ossec.conf'
+      [xml]$xml = Get-Content -Path $conf
+      $root = $xml.ossec_config
+      $changed = $false
+      $target = '{{ wazuh_manager_ip }}'
+
+      if ($null -eq $root.client) {
+        $client = $xml.CreateElement('client')
+        [void]$root.AppendChild($client)
+        $changed = $true
+      } else {
+        $client = $root.client
+      }
+
+      $serverNodes = @($xml.SelectNodes('//client/server'))
+      if ($serverNodes.Count -eq 0) {
+        $server = $xml.CreateElement('server')
+        [void]$client.AppendChild($server)
+        $changed = $true
+      } else {
+        $server = $serverNodes[0]
+      }
+
+      $addressNodes = @($xml.SelectNodes('//client/server/address'))
+      if ($addressNodes.Count -eq 0) {
+        $address = $xml.CreateElement('address')
+        [void]$server.AppendChild($address)
+        $addressNodes = @($address)
+        $changed = $true
+      }
+
+      foreach ($node in $addressNodes) {
+        if ($node.InnerText.Trim() -ne $target) {
+          $node.InnerText = $target
+          $changed = $true
+        }
+      }
+
+      $enrollmentNodes = @($xml.SelectNodes('//client/enrollment/manager_address'))
+      foreach ($node in $enrollmentNodes) {
+        if ($node.InnerText.Trim() -ne $target) {
+          $node.InnerText = $target
+          $changed = $true
+        }
+      }
+
+      $protocolNodes = @($xml.SelectNodes('//client/server/protocol'))
+      if ($protocolNodes.Count -eq 0) {
+        $protocol = $xml.CreateElement('protocol')
+        [void]$server.AppendChild($protocol)
+        $protocolNodes = @($protocol)
+        $changed = $true
+      }
+
+      foreach ($node in $protocolNodes) {
+        if ($node.InnerText.Trim() -ne 'tcp') {
+          $node.InnerText = 'tcp'
+          $changed = $true
+        }
+      }
+
+      if ($changed) {
+        $xml.Save($conf)
+        Write-Output 'changed'
+      } else {
+        Write-Output 'ok'
+      }
+  register: wazuh_windows_manager_endpoint
+  changed_when: "'changed' in wazuh_windows_manager_endpoint.output"
+
 - name: Configure Windows event channels for Wazuh
   ansible.windows.win_powershell:
     script: |
@@ -82,7 +155,7 @@
   ansible.windows.win_service:
     name: WazuhSvc
     state: restarted
-  when: (wazuh_windows_install.changed | default(false)) or wazuh_windows_eventchannels.changed
+  when: (wazuh_windows_install.changed | default(false)) or wazuh_windows_manager_endpoint.changed or wazuh_windows_eventchannels.changed
 
 - name: Ensure Wazuh Windows agent is running
   ansible.windows.win_service:

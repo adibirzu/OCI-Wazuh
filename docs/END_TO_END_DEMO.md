@@ -157,7 +157,7 @@ host.braavos=Active
 goad_sysmon_socfortress_alerts=green
 ```
 
-The GOAD path uses a single SSH tunnel for WinRM to avoid repeated SSH handshakes during deployment. In CAP development the default tunnel path is through the Wazuh host; set `GOAD_TUNNEL_MODE=jumpbox` only when the GOAD jumpbox key is available.
+The GOAD path uses a single SSH tunnel for WinRM to avoid repeated SSH handshakes during deployment. In `auto` mode it discovers the running GOAD jumpbox key from OCI metadata when possible. When direct Wazuh-to-GOAD routing is not possible because OCI local peering is non-transitive or VCN CIDRs overlap, `make goad-up` uses the hub bastion as a persistent 1514/1515 relay and configures Windows agents with the bastion private IP as their Wazuh manager endpoint. `make goad-down` removes the Windows agents, Sysmon, Wazuh manager records, and the bastion relay services/firewall rules.
 
 ## 5. Configure Wazuh Alerts into Log Analytics
 

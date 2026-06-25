@@ -12,10 +12,13 @@ locals {
       log_id         = log_id
     }
   ]
-  oci_log_sources                 = length(var.existing_flow_logs) > 0 ? var.existing_flow_logs : local.managed_flow_log_sources
-  oci_log_ids                     = [for source in local.oci_log_sources : source.log_id]
-  oci_log_source_compartment_ids  = distinct([for source in local.oci_log_sources : source.compartment_id])
-  sch_log_source_policy_scope_ids = { for idx, compartment_id in local.oci_log_source_compartment_ids : tostring(idx) => compartment_id }
+  oci_log_sources                = length(var.existing_flow_logs) > 0 ? var.existing_flow_logs : local.managed_flow_log_sources
+  oci_log_ids                    = [for source in local.oci_log_sources : source.log_id]
+  oci_log_source_compartment_ids = distinct([for source in local.oci_log_sources : source.compartment_id])
+  sch_log_source_policy_scope_ids_raw = {
+    for idx, compartment_id in local.oci_log_source_compartment_ids : tostring(idx) => compartment_id
+  }
+  sch_log_source_policy_scope_ids = try(nonsensitive(local.sch_log_source_policy_scope_ids_raw), local.sch_log_source_policy_scope_ids_raw)
   stream_id                       = var.ingestion_mode == "streaming" ? module.streaming[0].stream_id : ""
 }
 
@@ -124,6 +127,23 @@ resource "oci_core_network_security_group_security_rule" "wazuh_agent_enrollment
   }
 }
 
+resource "oci_core_network_security_group_security_rule" "wazuh_agent_enrollment_from_bastion" {
+  for_each                  = toset(["1514", "1515"])
+  network_security_group_id = oci_core_network_security_group.wazuh.id
+  direction                 = "INGRESS"
+  protocol                  = "6"
+  source                    = data.oci_core_subnet.bastion.cidr_block
+  source_type               = "CIDR_BLOCK"
+  stateless                 = false
+
+  tcp_options {
+    destination_port_range {
+      min = tonumber(each.value)
+      max = tonumber(each.value)
+    }
+  }
+}
+
 resource "oci_core_network_security_group_security_rule" "wazuh_goad_agent_enrollment" {
   for_each = {
     for pair in setproduct(var.goad_agent_cidrs, ["1514", "1515"]) : "${pair[0]}-${pair[1]}" => {
@@ -133,6 +153,29 @@ resource "oci_core_network_security_group_security_rule" "wazuh_goad_agent_enrol
   }
 
   network_security_group_id = oci_core_network_security_group.wazuh.id
+  direction                 = "INGRESS"
+  protocol                  = "6"
+  source                    = each.value.cidr
+  source_type               = "CIDR_BLOCK"
+  stateless                 = false
+
+  tcp_options {
+    destination_port_range {
+      min = each.value.port
+      max = each.value.port
+    }
+  }
+}
+
+resource "oci_core_network_security_group_security_rule" "bastion_goad_agent_relay" {
+  for_each = {
+    for pair in setproduct(var.goad_agent_cidrs, ["1514", "1515"]) : "${pair[0]}-${pair[1]}" => {
+      cidr = pair[0]
+      port = tonumber(pair[1])
+    }
+  }
+
+  network_security_group_id = oci_core_network_security_group.bastion.id
   direction                 = "INGRESS"
   protocol                  = "6"
   source                    = each.value.cidr

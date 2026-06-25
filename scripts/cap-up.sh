@@ -123,6 +123,20 @@ if [[ "${USE_BASTION_SUBNET_FOR_WORKLOADS:-false}" == "true" ]]; then
   agent_subnet_id="$bastion_subnet_id"
 fi
 
+preserved_existing_flow_logs=""
+preserved_goad_agent_cidrs=""
+if [[ -f "$TFVARS" ]]; then
+  preserved_existing_flow_logs="$(awk '
+    /^[[:space:]]*existing_flow_logs[[:space:]]*=/ { capture=1 }
+    capture { print }
+    capture && /^[[:space:]]*][[:space:]]*$/ { exit }
+    capture && /^[[:space:]]*}][[:space:]]*$/ { exit }
+  ' "$TFVARS")"
+  preserved_goad_agent_cidrs="$(awk '
+    /^[[:space:]]*goad_agent_cidrs[[:space:]]*=/ { print; exit }
+  ' "$TFVARS")"
+fi
+
 cat > "$TFVARS" <<EOF
 region               = "$REGION"
 oci_config_profile   = "$PROFILE"
@@ -142,6 +156,18 @@ ingestion_mode       = "${INGESTION_MODE:-streaming}"
 windows_mode         = "${WINDOWS_MODE:-auto}"
 enable_log_analytics_bridge = true
 EOF
+
+if [[ -n "${EXISTING_FLOW_LOGS_HCL_FILE:-}" ]]; then
+  cat "$EXISTING_FLOW_LOGS_HCL_FILE" >> "$TFVARS"
+elif [[ -n "$preserved_existing_flow_logs" ]]; then
+  printf '\n%s\n' "$preserved_existing_flow_logs" >> "$TFVARS"
+fi
+
+if [[ -n "${GOAD_AGENT_CIDRS_HCL:-}" ]]; then
+  printf '\ngoad_agent_cidrs = %s\n' "$GOAD_AGENT_CIDRS_HCL" >> "$TFVARS"
+elif [[ -n "$preserved_goad_agent_cidrs" ]]; then
+  printf '\n%s\n' "$preserved_goad_agent_cidrs" >> "$TFVARS"
+fi
 
 cat > artifacts/validation/cap-context.txt <<EOF
 profile=$PROFILE

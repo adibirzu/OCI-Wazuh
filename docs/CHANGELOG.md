@@ -15,3 +15,4 @@
 - Added real OCI ingestion validation: Audit API consumer, VCN Flow Log SCH-to-Streaming consumer, existing Flow Log reuse, SCH IAM policies, and `make validate-real-oci-logs`.
 - Added optional OCI OpenSearch backend support plus dedicated `oci-audit-*` and `oci-flow-*` templates, data views, saved searches, and `OCI Logs Overview` dashboard creation.
 - Added repeatable GOAD Wazuh install/cleanup targets and strengthened GOAD validation to require Sysmon/SOC Fortress alerts, not only active Windows agents.
+- Added GOAD auto jumpbox key discovery and hub bastion relay support for overlapping/non-transitive OCI VCN topologies.

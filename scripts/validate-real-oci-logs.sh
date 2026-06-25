@@ -48,7 +48,7 @@ if [[ -z "$compartment_id" || -z "$target_ip" ]]; then
   exit 2
 fi
 
-read -r before_audit before_flow < <(wazuh_ssh "sudo python3 -c 'from pathlib import Path; text=Path(\"/var/ossec/logs/alerts/alerts.json\").read_text(errors=\"ignore\"); print(text.count(\"\\\"id\\\":\\\"100000\\\"\"), text.count(\"\\\"id\\\":\\\"100100\\\"\"))'")
+read -r before_audit before_flow < <(wazuh_ssh "printf '%s %s\n' \"\$(sudo grep -c '\"'\"'\"id\"'\"'\":\"'\"'\"100000\"'\"'\"' /var/ossec/logs/alerts/alerts.json || true)\" \"\$(sudo grep -c '\"'\"'\"id\"'\"'\":\"'\"'\"100100\"'\"'\"' /var/ossec/logs/alerts/alerts.json || true)\"")
 
 tag_name="wazuhDemo$(date -u +%Y%m%d%H%M%S)"
 tag_namespace_id="$(oci_cli iam tag-namespace create \

@@ -29,15 +29,19 @@ write_files:
 
       path = Path("/var/ossec/etc/ossec.conf")
       text = path.read_text()
-      if "<force>" not in text[text.index("<auth>"):text.index("</auth>", text.index("<auth>"))]:
-          auth_end = text.index("</auth>", text.index("<auth>"))
-          force = """    <force>
-      <enabled>yes</enabled>
-      <key_mismatch>yes</key_mismatch>
-      <disconnected_time enabled="yes">1m</disconnected_time>
-      <after_registration_time>1m</after_registration_time>
-    </force>
-"""
+      auth_start = text.index("<auth>")
+      auth_end = text.index("</auth>", auth_start)
+      auth_block = text[auth_start:auth_end]
+      if "<force>" not in auth_block:
+          force = "\n".join([
+              "    <force>",
+              "      <enabled>yes</enabled>",
+              "      <key_mismatch>yes</key_mismatch>",
+              "      <disconnected_time enabled=\"yes\">1m</disconnected_time>",
+              "      <after_registration_time>1m</after_registration_time>",
+              "    </force>",
+              "",
+          ])
           text = text[:auth_end] + force + text[auth_end:]
           path.write_text(text)
       PY
