@@ -362,7 +362,26 @@ npx playwright screenshot --ignore-https-errors --wait-for-timeout=8000 \
   docs/wiki/assets/wazuh-login.png
 ```
 
-Authenticated Wazuh and OCI screenshots should be captured into `docs/wiki/assets/live/`, sanitized, and only then copied or generated into public-safe assets:
+Authenticated Wazuh and OCI screenshots should be captured into `docs/wiki/assets/live/`, sanitized, and only then copied or generated into public-safe assets.
+
+Open a dedicated Chrome profile for authentication:
+
+```bash
+open -na "Google Chrome" --args \
+  --remote-debugging-port=9223 \
+  --user-data-dir=/Users/abirzu/dev/OCI-Wazuh/.tmp-chrome-auth-profile \
+  --ignore-certificate-errors \
+  https://127.0.0.1:8443/app/login \
+  'https://cloud.oracle.com/loganalytics/explorer?region=eu-frankfurt-1'
+```
+
+After authenticating to Wazuh and OCI Log Analytics, capture and sanitize:
+
+```bash
+make auth-screenshots
+```
+
+The raw authenticated screenshots stay ignored in `docs/wiki/assets/live/`. Only commit these sanitized files:
 
 ```text
 docs/wiki/assets/wazuh-authenticated-overview-sanitized.png

@@ -1,4 +1,4 @@
-.PHONY: bootstrap lint validate e2e cost up down plan cap-preflight goad-discover goad-up goad-down goad-validate log-analytics-bridge wazuh-log-analytics wazuh-content opensearch-oci validate-opensearch-oci simulate-detections validate-real-oci-logs
+.PHONY: bootstrap lint validate e2e cost up down plan cap-preflight goad-discover goad-up goad-down goad-validate log-analytics-bridge wazuh-log-analytics wazuh-content opensearch-oci validate-opensearch-oci simulate-detections validate-real-oci-logs auth-screenshots
 
 bootstrap:
 	bash scripts/bootstrap.sh
@@ -39,9 +39,13 @@ simulate-detections:
 validate-real-oci-logs:
 	bash scripts/validate-real-oci-logs.sh
 
+auth-screenshots:
+	bash scripts/capture-authenticated-screenshots.sh
+
 lint:
 	terraform -chdir=terraform fmt -check -recursive
 	python3 -m py_compile wazuh/consumer/oci_log_consumer.py
+	python3 -m py_compile scripts/sanitize-dashboard-screenshots.py
 
 plan:
 	terraform -chdir=terraform init -backend=false

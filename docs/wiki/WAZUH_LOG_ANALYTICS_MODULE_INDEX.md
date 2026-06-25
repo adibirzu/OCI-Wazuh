@@ -58,3 +58,11 @@ make wazuh-log-analytics
 make log-analytics-bridge
 make down
 ```
+
+## Screenshot Commands
+
+```bash
+make auth-screenshots
+```
+
+`make auth-screenshots` expects an already-authenticated Chrome session with remote debugging on port `9223`. It writes raw screenshots to ignored local storage and committed-safe sanitized copies to `docs/wiki/assets/`.
