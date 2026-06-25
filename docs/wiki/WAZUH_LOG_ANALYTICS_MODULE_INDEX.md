@@ -10,6 +10,7 @@ This index links the reusable teaching modules, screenshots, guides, and validat
 - [Assessment](WAZUH_LOG_ANALYTICS_ASSESSMENT.md)
 - [Query cookbook](WAZUH_LOG_ANALYTICS_QUERY_COOKBOOK.md)
 - [Posture backlog template](WAZUH_LOG_ANALYTICS_POSTURE_BACKLOG_TEMPLATE.md)
+- [Screenshot runbook](WAZUH_LOG_ANALYTICS_SCREENSHOT_RUNBOOK.md)
 - [End-to-end demo runbook](../END_TO_END_DEMO.md)
 
 ## Lessons
@@ -58,6 +59,14 @@ make wazuh-log-analytics
 make log-analytics-bridge
 make down
 ```
+
+## Teaching Validation
+
+```bash
+make teach-validate
+```
+
+This checks the required lesson pages, wiki pages, screenshot assets, ignored raw-auth directories, and redaction-sensitive patterns.
 
 ## Screenshot Commands
 

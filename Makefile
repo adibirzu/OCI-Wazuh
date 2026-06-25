@@ -1,4 +1,4 @@
-.PHONY: bootstrap lint validate e2e cost up down plan cap-preflight goad-discover goad-up goad-down goad-validate log-analytics-bridge wazuh-log-analytics wazuh-content opensearch-oci validate-opensearch-oci simulate-detections validate-real-oci-logs auth-screenshots
+.PHONY: bootstrap lint validate e2e cost up down plan cap-preflight goad-discover goad-up goad-down goad-validate log-analytics-bridge wazuh-log-analytics wazuh-content opensearch-oci validate-opensearch-oci simulate-detections validate-real-oci-logs auth-screenshots teach-validate
 
 bootstrap:
 	bash scripts/bootstrap.sh
@@ -41,6 +41,9 @@ validate-real-oci-logs:
 
 auth-screenshots:
 	bash scripts/capture-authenticated-screenshots.sh
+
+teach-validate:
+	bash scripts/validate-teaching-assets.sh
 
 lint:
 	terraform -chdir=terraform fmt -check -recursive

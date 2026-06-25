@@ -79,3 +79,27 @@ or set `create_oci_opensearch = true` in local `terraform/terraform.tfvars` and 
 
 - OCI Log Analytics query pack: [dashboards/log-analytics/oci-wazuh-dashboard-queries.json](dashboards/log-analytics/oci-wazuh-dashboard-queries.json)
 - Wazuh saved-search/view guide: [dashboards/wazuh/oci-wazuh-views.md](dashboards/wazuh/oci-wazuh-views.md)
+
+## Teaching Wiki
+
+Use the course pack when presenting Wazuh and OCI Log Analytics as a company security-posture demo:
+
+- Module index: [docs/wiki/WAZUH_LOG_ANALYTICS_MODULE_INDEX.md](docs/wiki/WAZUH_LOG_ANALYTICS_MODULE_INDEX.md)
+- Hands-on walkthrough: [docs/wiki/WAZUH_LOG_ANALYTICS_HANDS_ON.md](docs/wiki/WAZUH_LOG_ANALYTICS_HANDS_ON.md)
+- Facilitator guide: [docs/wiki/WAZUH_LOG_ANALYTICS_FACILITATOR_GUIDE.md](docs/wiki/WAZUH_LOG_ANALYTICS_FACILITATOR_GUIDE.md)
+- Query cookbook: [docs/wiki/WAZUH_LOG_ANALYTICS_QUERY_COOKBOOK.md](docs/wiki/WAZUH_LOG_ANALYTICS_QUERY_COOKBOOK.md)
+- Assessment: [docs/wiki/WAZUH_LOG_ANALYTICS_ASSESSMENT.md](docs/wiki/WAZUH_LOG_ANALYTICS_ASSESSMENT.md)
+
+Validate the teaching material:
+
+```bash
+make teach-validate
+```
+
+Refresh authenticated screenshots after logging in to Wazuh and OCI Log Analytics:
+
+```bash
+make auth-screenshots
+```
+
+The raw authenticated screenshots and browser profile stay ignored; only sanitized screenshots under `docs/wiki/assets/` should be committed.
