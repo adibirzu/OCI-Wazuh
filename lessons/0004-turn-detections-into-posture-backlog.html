@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 0004: Turn Detections into a Security Posture Backlog</title>
+  <link rel="stylesheet" href="../assets/teach.css">
+</head>
+<body>
+  <h1>Lesson 0004: Turn Detections into a Security Posture Backlog</h1>
+
+  <p>This lesson converts detection output into a practical improvement backlog. The goal is not more alerts; the goal is fewer unresolved control gaps.</p>
+
+  <section class="module">
+    <h2>Module 1: Classify the Gap</h2>
+    <p>Every useful detection should map to one posture category:</p>
+    <ul>
+      <li>Identity and access</li>
+      <li>Endpoint hardening</li>
+      <li>Network segmentation</li>
+      <li>Vulnerability management</li>
+      <li>Logging and detection coverage</li>
+      <li>Response process</li>
+    </ul>
+  </section>
+
+  <section class="module">
+    <h2>Module 2: Write the Backlog Item</h2>
+    <pre><code>Title: Restrict unexpected rejected traffic to workload subnet
+Evidence: Wazuh rule 100100 and Log Analytics VCN rejects by pair
+Risk: possible scan or unapproved service exposure
+Owner: network/security owner
+Action: tighten NSG rule or validate approved scanner
+Verification: reject spike no longer appears after change</code></pre>
+  </section>
+
+  <section class="module">
+    <h2>Module 3: Attach ATT&CK Coverage</h2>
+    <p>Use ATT&CK IDs when they help explain adversary behavior. Use control categories when they explain the actual remediation. Both are needed: ATT&CK frames the threat; the backlog item drives the fix.</p>
+  </section>
+
+  <section class="module">
+    <h2>Module 4: Close with a Query</h2>
+    <p>Do not close a posture item with a meeting note. Close it with a repeatable query or Wazuh view that proves the gap changed.</p>
+  </section>
+
+  <section class="check">
+    <h2>Exercise</h2>
+    <p>Create three backlog items: one for OCI Audit, one for VCN Flow, and one for Sysmon or Linux FIM. Each item must include evidence, owner, action, and verification query.</p>
+  </section>
+
+  <section class="quiz" data-quiz>
+    <h2>Check Understanding</h2>
+    <p>What makes a posture backlog item complete?</p>
+    <label><input type="radio" name="q1" data-correct="false"> It has a severe-sounding title.</label><br>
+    <label><input type="radio" name="q1" data-correct="false"> It contains every raw log field.</label><br>
+    <label><input type="radio" name="q1" data-correct="true"> It has evidence, owner, action, and a verification query.</label><br>
+    <button type="button">Check</button>
+    <div class="answer" aria-live="polite"></div>
+  </section>
+
+  <script src="../assets/quiz.js"></script>
+</body>
+</html>

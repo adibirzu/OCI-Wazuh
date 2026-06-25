@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lesson 0003: Investigate Cloud, Endpoint, and Network Signals</title>
+  <link rel="stylesheet" href="../assets/teach.css">
+</head>
+<body>
+  <h1>Lesson 0003: Investigate Cloud, Endpoint, and Network Signals</h1>
+
+  <p>This lesson teaches a repeatable analyst drill: start from one alert, pivot through cloud and network context, then decide whether the right next action is tuning, investigation, or hardening.</p>
+
+  <section class="module">
+    <h2>Module 1: Start from Wazuh</h2>
+    <p>Open <code>wazuh-alerts-*</code> and filter to either OCI Audit detections or VCN Flow detections:</p>
+    <pre><code>rule.id &gt;= 100000 and rule.id &lt;= 100199</code></pre>
+    <p>Record the timestamp, rule ID, agent or source, source IP, destination IP, principal, and MITRE technique if present.</p>
+  </section>
+
+  <section class="module">
+    <h2>Module 2: Pivot to Raw OCI Records</h2>
+    <p>Use <code>oci-audit-*</code> for cloud control-plane activity and <code>oci-flow-*</code> for network records. Raw records help distinguish a broad detection from the exact API call or network flow that triggered it.</p>
+    <pre><code>oci-audit-* fields: eventType, principalName, sourceIp, compartmentId
+oci-flow-* fields: srcaddr, dstaddr, srcport, dstport, protocol, action, bytes, packets</code></pre>
+  </section>
+
+  <section class="module">
+    <h2>Module 3: Pivot to Log Analytics</h2>
+    <p>In Log Analytics, confirm whether the same time window has OS, Windows, Sysmon, or OCI service context. Start with source inventory, then run the saved searches from the dashboard query pack.</p>
+    <pre><code>* | stats count by "Log Source" | sort -count</code></pre>
+  </section>
+
+  <section class="module">
+    <h2>Module 4: Decide the Outcome</h2>
+    <ul>
+      <li><strong>Tune:</strong> the event is expected and the rule needs better context.</li>
+      <li><strong>Investigate:</strong> identity, endpoint, or network context is inconsistent with normal behavior.</li>
+      <li><strong>Harden:</strong> the alert reveals a durable control gap such as excessive IAM rights, weak segmentation, or vulnerable software.</li>
+    </ul>
+  </section>
+
+  <section class="check">
+    <h2>Exercise</h2>
+    <p>Take one VCN Flow rejection alert and produce a three-line investigation note: what happened, which other source confirms or contradicts it, and what hardening action should be tested.</p>
+  </section>
+
+  <section class="quiz" data-quiz>
+    <h2>Check Understanding</h2>
+    <p>Where should you look when a Wazuh alert is too summarized and you need the exact OCI network tuple?</p>
+    <label><input type="radio" name="q1" data-correct="false"> Only the Wazuh monitoring index.</label><br>
+    <label><input type="radio" name="q1" data-correct="true"> The raw <code>oci-flow-*</code> records and the Log Analytics VCN Flow source.</label><br>
+    <label><input type="radio" name="q1" data-correct="false"> The SCA policy result.</label><br>
+    <button type="button">Check</button>
+    <div class="answer" aria-live="polite"></div>
+  </section>
+
+  <script src="../assets/quiz.js"></script>
+</body>
+</html>

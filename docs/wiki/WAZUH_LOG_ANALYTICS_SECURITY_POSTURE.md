@@ -16,11 +16,21 @@ This page is the teaching entry point for using Wazuh and OCI Log Analytics toge
 
 For the operator-level walkthrough, use [Wazuh and OCI Log Analytics Hands-On Walkthrough](WAZUH_LOG_ANALYTICS_HANDS_ON.md).
 
+For a workshop delivery script, use [Wazuh and OCI Log Analytics Facilitator Guide](WAZUH_LOG_ANALYTICS_FACILITATOR_GUIDE.md).
+
 ## Screenshot Tour
 
 ![Wazuh login through the local SSH tunnel](assets/wazuh-login.png)
 
 Wazuh should be reached through the local SSH tunnel rather than a public dashboard listener.
+
+![Wazuh Discover data views](assets/wazuh-discover-data-views.png)
+
+Use separate data views for Wazuh alerts, raw OCI Audit records, and raw VCN Flow records.
+
+![Wazuh visualization chooser](assets/wazuh-new-visualization-types.png)
+
+Use tables, bars, metrics, and time-series charts for the demo dashboards. Keep each widget tied to a specific investigation question.
 
 ![Lesson 0001 correlation workflow](assets/lesson-0001-correlation-loop.png)
 
@@ -29,6 +39,14 @@ The first lesson teaches the end-to-end correlation loop: choose signal, confirm
 ![Lesson 0002 dashboard workflow](assets/lesson-0002-security-dashboards.png)
 
 The second lesson teaches how to split Wazuh detection views from OCI Log Analytics correlation dashboards.
+
+![Lesson 0003 investigation workflow](assets/lesson-0003-investigation-drill.png)
+
+The third lesson walks an analyst from Wazuh alert to raw OCI record to Log Analytics context.
+
+![Lesson 0004 posture backlog workflow](assets/lesson-0004-posture-backlog.png)
+
+The fourth lesson turns detections into hardening work with evidence, owner, action, and verification query.
 
 ## Architecture Mental Model
 
@@ -225,7 +243,10 @@ The teardown path removes demo-owned cloud resources and cleans Wazuh/Sysmon age
 - [Printable reference](../../reference/0001-wazuh-log-analytics-security-posture.html)
 - [Lesson 0001: SIEM correlation loop](../../lessons/0001-siem-correlation-loop.html)
 - [Lesson 0002: build security dashboards](../../lessons/0002-build-security-dashboards.html)
+- [Lesson 0003: investigate cloud, endpoint, and network signals](../../lessons/0003-investigate-cloud-endpoint-network.html)
+- [Lesson 0004: turn detections into a posture backlog](../../lessons/0004-turn-detections-into-posture-backlog.html)
 - [Hands-on walkthrough](WAZUH_LOG_ANALYTICS_HANDS_ON.md)
+- [Facilitator guide](WAZUH_LOG_ANALYTICS_FACILITATOR_GUIDE.md)
 - [End-to-end demo runbook](../END_TO_END_DEMO.md)
 - [Ingestion KB](../kb/KB-OCI-WAZUH-INGESTION.md)
 - [Detection KB](../kb/KB-OCI-WAZUH-DETECTIONS.md)

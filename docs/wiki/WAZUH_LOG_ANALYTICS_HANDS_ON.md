@@ -10,9 +10,29 @@ The screenshots below are intentionally public-safe.
 
 The Wazuh dashboard is reached through a local tunnel. The screenshot proves the web app is reachable without exposing the public bastion address or credentials.
 
+![Wazuh Discover data views](assets/wazuh-discover-data-views.png)
+
+Use the data-view selector to separate alert exploration from raw OCI Audit and VCN Flow exploration.
+
+![Wazuh visualization chooser](assets/wazuh-new-visualization-types.png)
+
+Use simple chart types first: data tables for triage, bars for top offenders, metrics for counts, and time-series charts for alert trend.
+
 ![Lesson 0001 correlation workflow](assets/lesson-0001-correlation-loop.png)
 
 This is the first teaching lesson: pick one signal, confirm sources, validate Wazuh detection, and build the Log Analytics correlation widget.
+
+![Lesson 0002 dashboard workflow](assets/lesson-0002-security-dashboards.png)
+
+This lesson shows the split between Wazuh detection dashboards and Log Analytics correlation dashboards.
+
+![Lesson 0003 investigation workflow](assets/lesson-0003-investigation-drill.png)
+
+This lesson shows the analyst drill from Wazuh alert to raw OCI record to Log Analytics context.
+
+![Lesson 0004 posture backlog workflow](assets/lesson-0004-posture-backlog.png)
+
+This lesson turns detection evidence into a hardening backlog item.
 
 ![Printable posture reference](assets/reference-security-posture.png)
 
@@ -288,6 +308,15 @@ python3 -m http.server 8765
 npx playwright screenshot --viewport-size=1440,1100 --full-page \
   http://127.0.0.1:8765/lessons/0001-siem-correlation-loop.html \
   docs/wiki/assets/lesson-0001-correlation-loop.png
+npx playwright screenshot --viewport-size=1440,1100 --full-page \
+  http://127.0.0.1:8765/lessons/0002-build-security-dashboards.html \
+  docs/wiki/assets/lesson-0002-security-dashboards.png
+npx playwright screenshot --viewport-size=1440,1100 --full-page \
+  http://127.0.0.1:8765/lessons/0003-investigate-cloud-endpoint-network.html \
+  docs/wiki/assets/lesson-0003-investigation-drill.png
+npx playwright screenshot --viewport-size=1440,1100 --full-page \
+  http://127.0.0.1:8765/lessons/0004-turn-detections-into-posture-backlog.html \
+  docs/wiki/assets/lesson-0004-posture-backlog.png
 npx playwright screenshot --viewport-size=1440,1100 --full-page \
   http://127.0.0.1:8765/reference/0001-wazuh-log-analytics-security-posture.html \
   docs/wiki/assets/reference-security-posture.png
