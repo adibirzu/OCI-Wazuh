@@ -27,6 +27,9 @@ def sanitize_named_wazuh(source_name, target_name):
     if not source.exists():
         return False
     image = Image.open(source).convert("RGB")
+    if source_name == "wazuh-authenticated-overview" and looks_like_wazuh_login(image):
+        print(f"skip={source.name} reason=wazuh_login_screen")
+        return False
     draw = ImageDraw.Draw(image)
 
     masks = [
@@ -39,6 +42,20 @@ def sanitize_named_wazuh(source_name, target_name):
 
     image.save(target)
     return True
+
+
+def looks_like_wazuh_login(image):
+    width, height = image.size
+    sample_points = [
+        (min(50, width - 1), min(50, height - 1)),
+        (width // 2, height // 2),
+        (width // 2, min(height - 1, int(height * 0.72))),
+    ]
+    pixels = [image.getpixel(point) for point in sample_points]
+    blue_background = pixels[0][2] > 180 and pixels[0][0] < 90 and pixels[0][1] > 100
+    central_form = pixels[1][0] > 200 and pixels[1][1] > 200 and pixels[1][2] > 200
+    lower_blue = pixels[2][2] > 180 and pixels[2][0] < 90 and pixels[2][1] > 100
+    return blue_background and central_form and lower_blue
 
 
 def sanitize_oci():
@@ -54,9 +71,11 @@ def sanitize_named_oci(source_name, target_name):
     draw = ImageDraw.Draw(image)
 
     masks = [
+        ((0, 0, 1440, 92), "account banner redacted"),
         ((1030, 84, 1265, 130), "time/job redacted"),
         ((1388, 0, 1440, 60), "user redacted"),
         ((690, 170, 1000, 430), "chart counts redacted"),
+        ((995, 145, 1362, 930), "live volume counts redacted"),
         ((890, 500, 1370, 1000), "log volumes redacted"),
         ((1235, 478, 1375, 500), "result count redacted"),
     ]
