@@ -118,7 +118,7 @@ Use the course pack when presenting Wazuh and OCI Log Analytics as a company sec
 - Query cookbook: [docs/wiki/WAZUH_LOG_ANALYTICS_QUERY_COOKBOOK.md](docs/wiki/WAZUH_LOG_ANALYTICS_QUERY_COOKBOOK.md)
 - Assessment: [docs/wiki/WAZUH_LOG_ANALYTICS_ASSESSMENT.md](docs/wiki/WAZUH_LOG_ANALYTICS_ASSESSMENT.md)
 
-Screenshots for the live Logan/Wazuh dashboards are in [docs/wiki/assets](docs/wiki/assets), including FIM/threat hunting, inventory/compliance, vulnerability detection, MITRE ATT&CK, and dashboard error states.
+Screenshots for the live Wazuh and Logan dashboards are in [docs/wiki/assets](docs/wiki/assets), including Wazuh Overview, Threat Hunting, MITRE ATT&CK, PCI DSS, GDPR, HIPAA, NIST 800-53, FIM/threat hunting, inventory/compliance, vulnerability detection, and dashboard error states.
 
 Validate the teaching material:
 

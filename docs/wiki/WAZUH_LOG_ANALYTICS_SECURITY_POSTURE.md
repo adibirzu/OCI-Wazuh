@@ -40,6 +40,50 @@ Wazuh should be reached through the local SSH tunnel rather than a public dashbo
 
 The authenticated Wazuh overview confirms active agents and security modules. Live alert volumes and user identity are redacted for public-safe reuse.
 
+![Live Wazuh overview](assets/wazuh-overview-live.png)
+
+Use the live Wazuh overview to confirm active agents and last-24-hour severity distribution before opening individual modules.
+
+![Wazuh threat hunting dashboard](assets/wazuh-threat-hunting-dashboard.png)
+
+The threat hunting dashboard is the analyst starting point for total alert volume, high-severity volume, authentication signals, MITRE distribution, and top agents.
+
+![Wazuh MITRE ATT&CK dashboard](assets/wazuh-mitre-dashboard.png)
+
+The MITRE dashboard turns rule metadata into tactic, technique, and agent coverage for the last 24 hours.
+
+![Wazuh MITRE ATT&CK events](assets/wazuh-mitre-events.png)
+
+The MITRE events table validates that raw alert rows include timestamp, agent, rule ID, MITRE technique, tactic, description, and severity.
+
+![Wazuh PCI DSS dashboard](assets/wazuh-pci-dss-dashboard.png)
+
+PCI DSS views show how the same Wazuh rule corpus can become compliance evidence, not only detection evidence.
+
+![Wazuh PCI DSS controls](assets/wazuh-pci-dss-controls.png)
+
+The PCI DSS controls page is useful for requirement drill-down and for explaining why control-mapped alerts still need analyst interpretation.
+
+![Wazuh PCI DSS events](assets/wazuh-pci-dss-events.png)
+
+PCI DSS events prove that the compliance dashboard can be traced back to individual alert rows.
+
+![Wazuh GDPR dashboard](assets/wazuh-gdpr-dashboard.png)
+
+GDPR views help security and compliance teams discuss control-aligned activity using the same operational telemetry.
+
+![Wazuh HIPAA dashboard](assets/wazuh-hipaa-dashboard.png)
+
+HIPAA views show how Wazuh maps endpoint and Windows activity into healthcare-oriented control families.
+
+![Wazuh HIPAA controls](assets/wazuh-hipaa-controls.png)
+
+The HIPAA controls page provides the drill-down path from a high-level requirement to the supporting alert set.
+
+![Wazuh NIST 800-53 dashboard](assets/wazuh-nist-800-53-dashboard.png)
+
+NIST 800-53 views are the bridge from detection engineering to enterprise control posture and audit conversations.
+
 ![OCI Log Analytics Log Explorer](assets/oci-log-analytics-explorer-sanitized.png)
 
 The Log Analytics screenshot shows source inventory and visualization setup. Live counts, job details, and user identity are redacted.

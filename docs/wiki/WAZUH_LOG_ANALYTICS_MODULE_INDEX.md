@@ -44,6 +44,17 @@ Use [Learner Workbook](WAZUH_LOG_ANALYTICS_LEARNER_WORKBOOK.md) to capture evide
 |---|---|
 | [Wazuh login](assets/wazuh-login.png) | Show tunnel-only dashboard access |
 | [Authenticated Wazuh overview](assets/wazuh-authenticated-overview-sanitized.png) | Show active Wazuh modules with live volumes redacted |
+| [Live Wazuh overview](assets/wazuh-overview-live.png) | Confirm active agents and last-24-hour severity distribution |
+| [Wazuh threat hunting dashboard](assets/wazuh-threat-hunting-dashboard.png) | Show alert volume, severity, authentication, MITRE, and top-agent widgets |
+| [Wazuh MITRE ATT&CK dashboard](assets/wazuh-mitre-dashboard.png) | Show tactic and technique coverage by time and agent |
+| [Wazuh MITRE ATT&CK events](assets/wazuh-mitre-events.png) | Validate MITRE-tagged alert rows and drill-down fields |
+| [Wazuh PCI DSS dashboard](assets/wazuh-pci-dss-dashboard.png) | Show PCI DSS compliance rollups from Wazuh alerts |
+| [Wazuh PCI DSS controls](assets/wazuh-pci-dss-controls.png) | Drill into PCI DSS requirements |
+| [Wazuh PCI DSS events](assets/wazuh-pci-dss-events.png) | Trace PCI DSS dashboard counts to alert rows |
+| [Wazuh GDPR dashboard](assets/wazuh-gdpr-dashboard.png) | Show privacy-control posture from Wazuh telemetry |
+| [Wazuh HIPAA dashboard](assets/wazuh-hipaa-dashboard.png) | Show healthcare-control posture from Wazuh telemetry |
+| [Wazuh HIPAA controls](assets/wazuh-hipaa-controls.png) | Drill into HIPAA requirements |
+| [Wazuh NIST 800-53 dashboard](assets/wazuh-nist-800-53-dashboard.png) | Show enterprise control posture and NIST mappings |
 | [OCI Log Analytics Explorer](assets/oci-log-analytics-explorer-sanitized.png) | Show source inventory with live volumes redacted |
 | [Logan dashboard list](assets/logan-dashboard-list.png) | Show reusable SOC dashboard tracks |
 | [Logan FIM and threat hunting](assets/logan-wazuh-fim-threat-hunting.png) | Show FIM events and top Wazuh rules |

@@ -14,6 +14,50 @@ The Wazuh dashboard is reached through a local tunnel. The screenshot proves the
 
 Use the authenticated overview to show active agents and Wazuh security modules. Do not publish live alert volumes or user/account details.
 
+![Live Wazuh overview](assets/wazuh-overview-live.png)
+
+Use the live overview to confirm last-24-hour activity before drilling into threat hunting, MITRE, and compliance modules.
+
+![Wazuh threat hunting dashboard](assets/wazuh-threat-hunting-dashboard.png)
+
+Use threat hunting to show alert volume, high-severity detections, authentication activity, top MITRE categories, and active GOAD/Linux agents.
+
+![Wazuh MITRE ATT&CK dashboard](assets/wazuh-mitre-dashboard.png)
+
+Use the MITRE dashboard to teach tactic and technique distribution by agent and time.
+
+![Wazuh MITRE ATT&CK events](assets/wazuh-mitre-events.png)
+
+Use MITRE events to prove the charts are backed by alert rows with timestamp, agent, rule, tactic, technique, and severity fields.
+
+![Wazuh PCI DSS dashboard](assets/wazuh-pci-dss-dashboard.png)
+
+Use PCI DSS dashboard views to explain compliance evidence from Wazuh alert metadata.
+
+![Wazuh PCI DSS controls](assets/wazuh-pci-dss-controls.png)
+
+Use PCI DSS controls to drill into requirements with and without supporting alerts.
+
+![Wazuh PCI DSS events](assets/wazuh-pci-dss-events.png)
+
+Use PCI DSS events to trace a control count back to concrete alert rows.
+
+![Wazuh GDPR dashboard](assets/wazuh-gdpr-dashboard.png)
+
+Use GDPR dashboards to show how operational telemetry supports privacy and governance conversations.
+
+![Wazuh HIPAA dashboard](assets/wazuh-hipaa-dashboard.png)
+
+Use HIPAA dashboards to show healthcare-oriented control mappings from the same detection stream.
+
+![Wazuh HIPAA controls](assets/wazuh-hipaa-controls.png)
+
+Use HIPAA controls for requirement drill-down and evidence review.
+
+![Wazuh NIST 800-53 dashboard](assets/wazuh-nist-800-53-dashboard.png)
+
+Use NIST 800-53 dashboards to connect Wazuh detections to enterprise control posture.
+
 ![OCI Log Analytics Log Explorer](assets/oci-log-analytics-explorer-sanitized.png)
 
 Use Log Explorer to show source inventory and visualization setup. Do not publish live log volumes, job IDs, or user/account details.
@@ -170,6 +214,16 @@ rule.groups: syscheck or rule.groups: sca
 ```
 
 4. Add columns for `timestamp`, `agent.name`, `rule.id`, `rule.description`, `syscheck.path`, and `rule.mitre.id`.
+
+Wazuh module teaching path:
+
+1. Open **Overview**, set the time range to **Last 24 hours**, and confirm the active-agent count plus severity distribution.
+2. Open **Threat Hunting > Dashboard**, apply `manager.name: oci-wazuh-demo-wazuh-aio`, and confirm total alerts, high-severity alerts, authentication signals, top MITRE groups, and top agents.
+3. Open **MITRE ATT&CK > Dashboard**, add `rule.mitre.id: exists`, and explain how tactics, techniques, rule levels, and agents are encoded from Wazuh rule metadata.
+4. Open **MITRE ATT&CK > Events** and verify the event table has `timestamp`, `agent.name`, `rule.mitre.id`, `rule.mitre.tactic`, `rule.description`, `rule.level`, and `rule.id`.
+5. Open **PCI DSS > Dashboard**, **Controls**, and **Events** to show the drill path from a compliance requirement to individual alert rows.
+6. Open **GDPR**, **HIPAA**, and **NIST 800-53** dashboards to show how the same detection stream becomes control posture evidence.
+7. Keep the time range narrow during live demos. Use **Last 24 hours** for Wazuh module checks and reserve seven-day views for lower-volume dashboards.
 
 ## Step 5: Reuse or Install GOAD and Enroll Windows Agents
 
