@@ -238,6 +238,8 @@ I can use Wazuh and OCI Log Analytics together to investigate endpoint, cloud, a
 
 - [Learning curve and role paths](WAZUH_LOG_ANALYTICS_LEARNING_CURVE.md)
 - [Product roadmap and use cases](WAZUH_LOG_ANALYTICS_PRODUCT_ROADMAP.md)
+- [Adoption guide](WAZUH_LOG_ANALYTICS_ADOPTION_GUIDE.md)
 - [Product capabilities](WAZUH_LOG_ANALYTICS_PRODUCT_CAPABILITIES.md)
+- [Glossary and FAQ](WAZUH_LOG_ANALYTICS_GLOSSARY_FAQ.md)
 - [Assessment](WAZUH_LOG_ANALYTICS_ASSESSMENT.md)
 - [Participant handout](WAZUH_LOG_ANALYTICS_PARTICIPANT_HANDOUT.md)

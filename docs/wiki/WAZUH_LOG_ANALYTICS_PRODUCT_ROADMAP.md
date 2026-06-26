@@ -127,7 +127,9 @@ Promote backlog items with a score of 24 or higher into the next release candida
 ## Related Pages
 
 - [Product capabilities](WAZUH_LOG_ANALYTICS_PRODUCT_CAPABILITIES.md)
+- [Adoption guide](WAZUH_LOG_ANALYTICS_ADOPTION_GUIDE.md)
 - [Learning curve and role paths](WAZUH_LOG_ANALYTICS_LEARNING_CURVE.md)
 - [Learner workbook](WAZUH_LOG_ANALYTICS_LEARNER_WORKBOOK.md)
+- [Glossary and FAQ](WAZUH_LOG_ANALYTICS_GLOSSARY_FAQ.md)
 - [Architecture and workflows](WAZUH_LOG_ANALYTICS_ARCHITECTURE.md)
 - [End-to-end demo runbook](../END_TO_END_DEMO.md)
