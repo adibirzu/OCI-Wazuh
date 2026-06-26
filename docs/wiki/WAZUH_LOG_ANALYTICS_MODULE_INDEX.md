@@ -45,6 +45,9 @@ Use [Learner Workbook](WAZUH_LOG_ANALYTICS_LEARNER_WORKBOOK.md) to capture evide
 | [Wazuh login](assets/wazuh-login.png) | Show tunnel-only dashboard access |
 | [Authenticated Wazuh overview](assets/wazuh-authenticated-overview-sanitized.png) | Show active Wazuh modules with live volumes redacted |
 | [OCI Log Analytics Explorer](assets/oci-log-analytics-explorer-sanitized.png) | Show source inventory with live volumes redacted |
+| Optional Wazuh Discover capture | Refreshed by `make auth-screenshots` when a Wazuh Discover tab is open |
+| Optional Wazuh dashboard capture | Refreshed by `make auth-screenshots` when a Wazuh dashboard tab is open |
+| Optional OCI Log Analytics dashboard capture | Refreshed by `make auth-screenshots` when an OCI Log Analytics dashboard tab is open |
 | [Wazuh data views](assets/wazuh-discover-data-views.png) | Explain alert versus raw source records |
 | [Wazuh visualization chooser](assets/wazuh-new-visualization-types.png) | Choose chart types for Wazuh dashboards |
 | [Lesson 0001](assets/lesson-0001-correlation-loop.png) | Teach one correlation loop |
@@ -69,6 +72,9 @@ make opensearch-oci
 make validate-opensearch-oci
 make wazuh-log-analytics
 make log-analytics-bridge
+make dashboards-validate
+make teach-validate
+make public-pages
 make down
 ```
 
@@ -76,10 +82,11 @@ make down
 
 ```bash
 make teach-validate
+make dashboards-validate
+make public-pages
 ```
 
-This checks the required lesson pages, wiki pages, screenshot assets, ignored raw-auth directories, and redaction-sensitive patterns.
-It also validates local Markdown and HTML links used by the teaching pack.
+These checks cover lesson pages, wiki pages, screenshot assets, ignored raw-auth directories, redaction-sensitive patterns, local Markdown and HTML links, dashboard query packs, Wazuh view docs, and hosted public pages.
 
 ## Screenshot Commands
 

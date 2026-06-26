@@ -137,7 +137,9 @@ flowchart TB
 flowchart LR
   Start[make down] --> GOADCleanup[Remove Wazuh agent and Sysmon from reused GOAD hosts]
   GOADCleanup --> ManagerCleanup[Remove GOAD agent records from Wazuh manager]
-  ManagerCleanup --> TerraformDestroy[terraform destroy demo-owned OCI resources]
+  ManagerCleanup --> Plan[Terraform destroy plan]
+  Plan --> Guard[Ownership guard: project tag, name, or owned child resource]
+  Guard --> TerraformDestroy[Apply saved destroy plan for demo-owned OCI resources]
   TerraformDestroy --> Search[OCI resource search by project tag]
   Search --> Empty[No residual demo-owned resources]
 ```

@@ -20,6 +20,7 @@ make wazuh-content
 make validate-real-oci-logs
 make validate-opensearch-oci
 make log-analytics-bridge
+make dashboards-validate
 make teach-validate
 make down
 ```
@@ -75,3 +76,4 @@ Closure evidence:
 - I can run source inventory before building dashboards.
 - I can pivot from one alert to at least one supporting source.
 - I can turn a detection into a posture backlog item with verification.
+- I know that `make down` cleans reused-host agents first and deletes only guarded demo-owned resources.

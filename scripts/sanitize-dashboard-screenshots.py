@@ -18,8 +18,14 @@ def label(draw, rect, text):
 
 
 def sanitize_wazuh():
-    source = LIVE_DIR / "wazuh-authenticated-overview.png"
-    target = ASSET_DIR / "wazuh-authenticated-overview-sanitized.png"
+    sanitize_named_wazuh("wazuh-authenticated-overview", "wazuh-authenticated-overview-sanitized")
+
+
+def sanitize_named_wazuh(source_name, target_name):
+    source = LIVE_DIR / f"{source_name}.png"
+    target = ASSET_DIR / f"{target_name}.png"
+    if not source.exists():
+        return False
     image = Image.open(source).convert("RGB")
     draw = ImageDraw.Draw(image)
 
@@ -32,11 +38,18 @@ def sanitize_wazuh():
         label(draw, rect, text)
 
     image.save(target)
+    return True
 
 
 def sanitize_oci():
-    source = LIVE_DIR / "oci-log-analytics-explorer.png"
-    target = ASSET_DIR / "oci-log-analytics-explorer-sanitized.png"
+    sanitize_named_oci("oci-log-analytics-explorer", "oci-log-analytics-explorer-sanitized")
+
+
+def sanitize_named_oci(source_name, target_name):
+    source = LIVE_DIR / f"{source_name}.png"
+    target = ASSET_DIR / f"{target_name}.png"
+    if not source.exists():
+        return False
     image = Image.open(source).convert("RGB")
     draw = ImageDraw.Draw(image)
 
@@ -51,11 +64,15 @@ def sanitize_oci():
         label(draw, rect, text)
 
     image.save(target)
+    return True
 
 
 def main():
     sanitize_wazuh()
     sanitize_oci()
+    sanitize_named_wazuh("wazuh-discover-live", "wazuh-discover-live-sanitized")
+    sanitize_named_wazuh("wazuh-dashboard-live", "wazuh-dashboard-live-sanitized")
+    sanitize_named_oci("oci-log-analytics-dashboard-live", "oci-log-analytics-dashboard-live-sanitized")
 
 
 if __name__ == "__main__":

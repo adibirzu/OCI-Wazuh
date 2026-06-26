@@ -16,3 +16,5 @@
 - Added optional OCI OpenSearch backend support plus dedicated `oci-audit-*` and `oci-flow-*` templates, data views, saved searches, and `OCI Logs Overview` dashboard creation.
 - Added repeatable GOAD Wazuh install/cleanup targets and strengthened GOAD validation to require Sysmon/SOC Fortress alerts, not only active Windows agents.
 - Added GOAD auto jumpbox key discovery and hub bastion relay support for overlapping/non-transitive OCI VCN topologies.
+- Added guarded teardown through `make down`: reused-host cleanup runs first, Terraform destroy plans are checked for project ownership, and non-interactive destroy requires `DESTROY_CONFIRM`.
+- Added dashboard query validation, hosted public-page validation, and optional authenticated screenshot capture for Wazuh Discover, Wazuh dashboards, and OCI Log Analytics dashboards.

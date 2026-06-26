@@ -107,4 +107,4 @@ End every session with:
 make down
 ```
 
-For a long-running demo, explicitly state who owns the running cost, when it will be destroyed, and how reused GOAD agents will be removed.
+`make down` runs the guarded teardown path: reused GOAD/Windows hosts are cleaned first, then the Terraform destroy plan is checked for project ownership before any demo-owned OCI resource is deleted. For a long-running demo, explicitly state who owns the running cost, when it will be destroyed, and how reused GOAD agents will be removed.

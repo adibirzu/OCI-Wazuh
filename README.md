@@ -40,7 +40,15 @@ make wazuh-demo-up
 make down
 ```
 
-`make down` runs `make goad-down` first. For reused GOAD hosts this removes the Wazuh Windows agent, Sysmon service, staging files, and Wazuh manager agent records before Terraform destroys demo-owned OCI resources.
+`make down` is guarded. It first removes only the demo-installed Wazuh agent, Sysmon service, staging files, bastion relays, and Wazuh manager agent records from reused GOAD/Windows hosts. It then creates a Terraform destroy plan, validates that every planned delete is project-owned by tag/name/parent ownership, and only then applies the saved plan.
+
+For non-interactive teardown:
+
+```bash
+DESTROY_CONFIRM=oci-wazuh-demo make down
+```
+
+Use `SKIP_GOAD_CLEANUP=true` only when this lab did not modify reused GOAD/Windows hosts. Use `ALLOW_GOAD_CLEANUP_FAILURE=true` only after manually removing demo-installed agents from reused hosts.
 
 ## Ingestion Modes
 
@@ -80,6 +88,12 @@ or set `create_oci_opensearch = true` in local `terraform/terraform.tfvars` and 
 - OCI Log Analytics query pack: [dashboards/log-analytics/oci-wazuh-dashboard-queries.json](dashboards/log-analytics/oci-wazuh-dashboard-queries.json)
 - Wazuh saved-search/view guide: [dashboards/wazuh/oci-wazuh-views.md](dashboards/wazuh/oci-wazuh-views.md)
 
+Validate the reusable dashboard assets:
+
+```bash
+make dashboards-validate
+```
+
 ## Teaching Wiki
 
 Use the course pack when presenting Wazuh and OCI Log Analytics as a company security-posture demo:
@@ -106,10 +120,16 @@ Validate the teaching material:
 make teach-validate
 ```
 
+Validate the hosted public documentation:
+
+```bash
+make public-pages
+```
+
 Refresh authenticated screenshots after logging in to Wazuh and OCI Log Analytics:
 
 ```bash
 make auth-screenshots
 ```
 
-The raw authenticated screenshots and browser profile stay ignored; only sanitized screenshots under `docs/wiki/assets/` should be committed.
+The raw authenticated screenshots and browser profile stay ignored; only sanitized screenshots under `docs/wiki/assets/` should be committed. Open multiple authenticated tabs before capture to refresh Wazuh overview, Wazuh Discover, Wazuh dashboards, OCI Log Analytics Explorer, and OCI Log Analytics dashboards.

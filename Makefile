@@ -1,4 +1,4 @@
-.PHONY: bootstrap lint validate e2e cost up down plan cap-preflight goad-discover goad-up goad-down goad-validate log-analytics-bridge wazuh-log-analytics wazuh-content opensearch-oci validate-opensearch-oci simulate-detections validate-real-oci-logs auth-screenshots teach-validate
+.PHONY: bootstrap lint validate e2e cost up down plan cap-preflight goad-discover goad-up goad-down goad-validate log-analytics-bridge wazuh-log-analytics wazuh-content opensearch-oci validate-opensearch-oci simulate-detections validate-real-oci-logs auth-screenshots teach-validate dashboards-validate public-pages
 
 bootstrap:
 	bash scripts/bootstrap.sh
@@ -45,11 +45,20 @@ auth-screenshots:
 teach-validate:
 	bash scripts/validate-teaching-assets.sh
 
+dashboards-validate:
+	python3 scripts/validate-dashboard-assets.py
+
+public-pages:
+	python3 scripts/validate-public-pages.py
+
 lint:
 	terraform -chdir=terraform fmt -check -recursive
 	python3 -m py_compile wazuh/consumer/oci_log_consumer.py
 	python3 -m py_compile scripts/sanitize-dashboard-screenshots.py
 	python3 -m py_compile scripts/validate-teaching-links.py
+	python3 -m py_compile scripts/validate-public-pages.py
+	python3 -m py_compile scripts/validate-dashboard-assets.py
+	python3 -m py_compile scripts/guard-destroy-plan.py
 
 plan:
 	terraform -chdir=terraform init -backend=false
@@ -58,8 +67,8 @@ plan:
 up: cost
 	bash scripts/cap-up.sh
 
-down: goad-down
-	terraform -chdir=terraform destroy
+down:
+	bash scripts/down.sh
 
 validate:
 	bash scripts/e2e.sh --dry-run

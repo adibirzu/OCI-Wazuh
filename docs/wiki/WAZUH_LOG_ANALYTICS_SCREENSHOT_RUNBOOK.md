@@ -28,6 +28,14 @@ Authenticate to:
 - Wazuh Dashboard through the local tunnel.
 - OCI Console Log Analytics Explorer.
 
+For a richer lab guide, open these tabs before capture:
+
+- Wazuh overview or modules page.
+- Wazuh Discover with `wazuh-alerts-*`, `oci-audit-*`, or `oci-flow-*`.
+- Wazuh `OCI Logs Overview` dashboard.
+- OCI Log Analytics Log Explorer with source inventory.
+- OCI Log Analytics dashboard for Wazuh and OCI correlation.
+
 ## Capture and Sanitize
 
 ```bash
@@ -39,17 +47,24 @@ The command writes:
 ```text
 docs/wiki/assets/live/wazuh-authenticated-overview.png
 docs/wiki/assets/live/oci-log-analytics-explorer.png
+docs/wiki/assets/live/wazuh-discover-live.png
+docs/wiki/assets/live/wazuh-dashboard-live.png
+docs/wiki/assets/live/oci-log-analytics-dashboard-live.png
 docs/wiki/assets/wazuh-authenticated-overview-sanitized.png
 docs/wiki/assets/oci-log-analytics-explorer-sanitized.png
+docs/wiki/assets/wazuh-discover-live-sanitized.png
+docs/wiki/assets/wazuh-dashboard-live-sanitized.png
+docs/wiki/assets/oci-log-analytics-dashboard-live-sanitized.png
 ```
 
-Only the sanitized files should be committed.
+The optional files are created only when matching authenticated tabs are open. Only sanitized files should be committed.
 
 ## Validate
 
 ```bash
 make teach-validate
 make lint
+make dashboards-validate
 ```
 
 `make teach-validate` checks that required lesson/wiki assets exist, raw screenshot directories are ignored, auth profiles are ignored, and redaction-sensitive text patterns are absent.
@@ -59,6 +74,9 @@ make lint
 ```bash
 git add docs/wiki/assets/wazuh-authenticated-overview-sanitized.png \
   docs/wiki/assets/oci-log-analytics-explorer-sanitized.png \
+  docs/wiki/assets/wazuh-discover-live-sanitized.png \
+  docs/wiki/assets/wazuh-dashboard-live-sanitized.png \
+  docs/wiki/assets/oci-log-analytics-dashboard-live-sanitized.png \
   docs/wiki/WAZUH_LOG_ANALYTICS_*.md \
   scripts/capture-authenticated-screenshots.* \
   scripts/sanitize-dashboard-screenshots.py \

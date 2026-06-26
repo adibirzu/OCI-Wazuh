@@ -366,6 +366,12 @@ Recommended dashboard panels:
 | Wazuh Alert Volume | `wazuh_alert_volume` |
 | Wazuh Alerts Raw Search | `wazuh_alert_raw_search` |
 
+Validate the dashboard query pack before importing or rebuilding panels:
+
+```bash
+make dashboards-validate
+```
+
 If Wazuh alert queries return zero rows immediately after configuration, wait for OCI Unified Agent and SCH propagation, then generate a Wazuh alert with `make e2e`.
 
 ## 11. Build Wazuh Dashboard Views
@@ -472,7 +478,29 @@ Destroy standalone lab resources:
 make down
 ```
 
-`make down` first runs GOAD cleanup. For reused GOAD hosts it removes Wazuh Windows agents, Sysmon, staging directories, and Wazuh manager agent records, then Terraform destroys demo-owned resources. For shared GOAD and OCI-DEMO resources, do not destroy the shared GOAD VCN or shared OCI-DEMO Log Analytics content unless the parent deployment owns them. The Wazuh-specific resources created by this repo are tagged or named with the project prefix.
+`make down` is the only supported teardown entry point. It performs:
+
+1. Reused-host cleanup for GOAD/Windows when enabled: Wazuh agent, Sysmon service, staging directories, bastion relays, firewall relay rules, and Wazuh manager agent records.
+2. Terraform destroy-plan generation.
+3. Destroy-plan ownership guard with `scripts/guard-destroy-plan.py`.
+4. Saved-plan apply only after confirmation.
+
+For non-interactive teardown:
+
+```bash
+DESTROY_CONFIRM=oci-wazuh-demo make down
+```
+
+Artifacts:
+
+```text
+artifacts/validation/destroy-plan.json
+artifacts/validation/destroy-guard.json
+```
+
+The guard blocks planned deletes that are not tagged, named, or child-owned by the current project. For shared GOAD and OCI-DEMO resources, do not destroy the shared GOAD VCN or shared OCI-DEMO Log Analytics content unless the parent deployment owns them. The Wazuh-specific resources created by this repo are tagged or named with the project prefix.
+
+Use `SKIP_GOAD_CLEANUP=true` only when no reused GOAD/Windows host was modified by this lab. Use `ALLOW_GOAD_CLEANUP_FAILURE=true` only after manually removing demo-installed Windows agents and Sysmon from reused hosts.
 
 Post-destroy check:
 
@@ -482,3 +510,29 @@ oci search resource structured-search \
 ```
 
 Expected result: no Wazuh-owned residual resources.
+
+## 15. Documentation and Screenshot Validation
+
+Validate local docs, links, dashboard packs, and hosted public pages:
+
+```bash
+make teach-validate
+make dashboards-validate
+make public-pages
+```
+
+Refresh authenticated screenshots after opening authenticated Wazuh and OCI Log Analytics tabs:
+
+```bash
+make auth-screenshots
+```
+
+Recommended browser tabs before capture:
+
+- Wazuh overview
+- Wazuh Discover filtered to `wazuh-alerts-*`
+- Wazuh `OCI Logs Overview`
+- OCI Log Analytics Log Explorer source inventory
+- OCI Log Analytics dashboard for Wazuh and OCI correlation
+
+Raw screenshots stay under ignored local paths. Commit only sanitized images in `docs/wiki/assets/`.

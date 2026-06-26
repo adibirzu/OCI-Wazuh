@@ -16,3 +16,4 @@ jobs:
       - run: make bootstrap
       - run: make lint
       - run: make teach-validate
+      - run: make dashboards-validate

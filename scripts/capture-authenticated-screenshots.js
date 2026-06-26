@@ -5,6 +5,34 @@ const rootDir = path.resolve(__dirname, "..");
 const port = process.env.CHROME_DEBUG_PORT || "9223";
 const liveDir = path.join(rootDir, "docs/wiki/assets/live");
 
+const captureTargets = [
+  {
+    name: "wazuh-authenticated-overview",
+    match: (tab) => tab.url.includes("127.0.0.1:8443"),
+    required: true,
+  },
+  {
+    name: "wazuh-discover-live",
+    match: (tab) => tab.url.includes("127.0.0.1:8443") && tab.url.toLowerCase().includes("discover"),
+    required: false,
+  },
+  {
+    name: "wazuh-dashboard-live",
+    match: (tab) => tab.url.includes("127.0.0.1:8443") && tab.url.toLowerCase().includes("dashboard"),
+    required: false,
+  },
+  {
+    name: "oci-log-analytics-explorer",
+    match: (tab) => tab.url.includes("cloud.oracle.com/loganalytics") && tab.url.toLowerCase().includes("explorer"),
+    required: true,
+  },
+  {
+    name: "oci-log-analytics-dashboard-live",
+    match: (tab) => tab.url.includes("cloud.oracle.com/loganalytics") && tab.url.toLowerCase().includes("dashboard"),
+    required: false,
+  },
+];
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -69,24 +97,27 @@ async function capturePage(webSocketDebuggerUrl, outputPath) {
 async function main() {
   const tabs = await fetchJson(`http://127.0.0.1:${port}/json/list`);
   const pageTabs = tabs.filter((tab) => tab.type === "page");
-  const wazuh = pageTabs.find((tab) => tab.url.includes("127.0.0.1:8443"));
-  const oci = pageTabs.find((tab) => tab.url.includes("cloud.oracle.com/loganalytics"));
+  const captured = [];
+  const missingRequired = captureTargets
+    .filter((target) => target.required && !pageTabs.find(target.match))
+    .map((target) => target.name);
 
-  if (!wazuh) {
-    throw new Error("No Wazuh page found. Open https://127.0.0.1:8443 and authenticate first.");
-  }
-  if (!oci) {
-    throw new Error("No OCI Log Analytics page found. Open Log Explorer and authenticate first.");
+  if (missingRequired.length > 0) {
+    throw new Error(`Missing required authenticated console tabs: ${missingRequired.join(", ")}`);
   }
 
-  await capturePage(
-    wazuh.webSocketDebuggerUrl,
-    path.join(liveDir, "wazuh-authenticated-overview.png"),
-  );
-  await capturePage(
-    oci.webSocketDebuggerUrl,
-    path.join(liveDir, "oci-log-analytics-explorer.png"),
-  );
+  for (const target of captureTargets) {
+    const tab = pageTabs.find(target.match);
+    if (!tab) {
+      console.log(`screenshot=${target.name} skipped=no_matching_tab`);
+      continue;
+    }
+    await capturePage(tab.webSocketDebuggerUrl, path.join(liveDir, `${target.name}.png`));
+    captured.push(target.name);
+    console.log(`screenshot=${target.name} captured=true`);
+  }
+
+  console.log(`screenshots_captured=${captured.join(",")}`);
 }
 
 main().catch((error) => {
