@@ -1,5 +1,5 @@
 region         = "eu-frankfurt-1"
-oci_config_profile = "cap"
+oci_config_profile = "" # local-only; set to "cap" or another OCI CLI profile outside OCI Resource Manager
 tenancy_id     = "<TENANCY_OCID>"
 compartment_id = "<COMPARTMENT_OCID>"
 availability_domain = "<AD_NAME>"
@@ -8,6 +8,7 @@ ubuntu2404_image_id = "<UBUNTU_2404_IMAGE_OCID>"
 bastion_subnet_id = "<PUBLIC_SUBNET_OCID>"
 agent_subnet_id = "<PRIVATE_OR_REUSED_SUBNET_OCID>"
 operator_cidr  = "<YOUR_PUBLIC_IP>/32"
+ssh_public_key = "<SSH_PUBLIC_KEY_CONTENT_FOR_ORM_OR_EMPTY_FOR_LOCAL_PATH>"
 ingestion_mode = "streaming"
 audit_log_resource_id = "" # empty = tenancy_id. Set a compartment OCID to scope audit narrower.
 audit_log_category = "all"

@@ -21,3 +21,4 @@
 - Added Log Analytics freshness validation for Wazuh alert delivery and updated Logan dashboard queries to use `OCI Unified Schema Logs` plus `wazuh-alerts-json`.
 - Added sanitized Logan dashboard screenshots and documented dashboard query-pressure errors.
 - Added sanitized Wazuh console screenshots and expanded training steps for threat hunting, MITRE ATT&CK, PCI DSS, GDPR, HIPAA, and NIST 800-53 module walkthroughs.
+- Added planning and packaging scaffolding for an OCI Resource Manager deploy button that targets full end-to-end lab deployment.

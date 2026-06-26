@@ -6,7 +6,7 @@ This page turns the demo into a product roadmap. Use it to decide what to build 
 
 | Theme | Goal | Near-term proof | Longer-term expansion |
 |---|---|---|---|
-| Deployable detection lab | Any user can deploy, validate, and destroy the lab. | `make up`, `make e2e`, `make down` | Region packs, marketplace image, Resource Manager stack |
+| Deployable detection lab | Any user can deploy, validate, and destroy the lab. | `make up`, `make e2e`, `make down` | Region packs, marketplace image, Resource Manager stack with one-click deploy button |
 | Real OCI telemetry | OCI Audit and VCN Flow Logs are real, parsed, and searchable. | `make validate-real-oci-logs` | More OCI service log families and service-specific detections |
 | Endpoint and AD coverage | Linux, Windows, Sysmon, and GOAD detections work together. | Active agents and Sysmon/SOC Fortress alert | Attack simulation library and ATT&CK heat map |
 | Correlation dashboards | Wazuh, OpenSearch, and Log Analytics answer the same question. | Shared dashboard row for one investigation | Guided incident workbench and timeline export |
@@ -25,6 +25,7 @@ gantt
   Reusable lab scaffold             :done,    f1, 2026-06-01, 10d
   Public-safe docs and releases      :done,    f2, 2026-06-10, 8d
   Validation gates                   :active,  f3, 2026-06-15, 14d
+  ORM deploy button plan             :active,  f4, 2026-06-26, 8d
 
   section Detection
   OCI Audit and Flow rules           :active,  d1, 2026-06-18, 12d
@@ -64,6 +65,7 @@ The dates are planning placeholders for the public roadmap. Update them when a r
 | P1 | More OCI Audit rules | Cloud control-plane detections need depth. | IAM, network, key, compute, and logging changes have named rules |
 | P1 | ATT&CK coverage page | Security leaders need coverage language. | Rule catalog maps to techniques and demo stories |
 | P1 | Dashboard import automation | Manual dashboard creation slows adoption. | Wazuh and Log Analytics dashboard assets can be applied repeatably |
+| P1 | OCI Resource Manager deploy button | Users need a one-click path for the full lab. | `oci-wazuh-orm-stack.zip` release artifact deploys Wazuh, agents, OCI logs, OpenSearch views, Log Analytics bridge, and safe destroy from Resource Manager |
 | P2 | Multi-tenancy onboarding guide | Public users need to adapt to their tenancy safely. | Prerequisite checklist and common policy examples are documented |
 | P2 | Production pilot guide | Demo users need a path to governed pilot. | RBAC, retention, SSO, logging cost, and owner model are documented |
 | P3 | Certification exercises | Training needs repeatable scoring. | Workbook exercises have scoring keys and expected evidence |
@@ -115,6 +117,7 @@ Promote backlog items with a score of 24 or higher into the next release candida
 
 - [ ] Hosted docs are current.
 - [ ] Release tag exists for the demo version.
+- [ ] Resource Manager button target and ZIP artifact are current when publishing an ORM release.
 - [ ] `make lint` passes.
 - [ ] `make teach-validate` passes.
 - [ ] Secret scan is clean.

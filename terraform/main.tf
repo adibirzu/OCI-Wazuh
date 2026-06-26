@@ -3,6 +3,7 @@ locals {
     project   = var.project_name
     component = "wazuh-detection-lab"
   }
+  ssh_public_key                = var.ssh_public_key != "" ? var.ssh_public_key : file(pathexpand(var.ssh_public_key_path))
   flow_log_resource_ids         = length(var.flow_log_resource_ids) > 0 ? var.flow_log_resource_ids : [var.agent_subnet_id]
   managed_flow_log_resource_ids = length(var.existing_flow_logs) > 0 ? [] : local.flow_log_resource_ids
   managed_flow_log_sources = [
@@ -217,7 +218,7 @@ module "wazuh_server" {
   subnet_id                 = var.agent_subnet_id
   assign_public_ip          = var.workload_assign_public_ip
   wazuh_nsg_ids             = [oci_core_network_security_group.wazuh.id]
-  ssh_public_key            = file(pathexpand(var.ssh_public_key_path))
+  ssh_public_key            = local.ssh_public_key
   freeform_tags             = local.common_freeform_tags
   defined_tags              = var.defined_tags
 }
@@ -236,7 +237,7 @@ module "compute" {
   bastion_nsg_ids           = [oci_core_network_security_group.bastion.id]
   agent_nsg_ids             = [oci_core_network_security_group.agents.id]
   agent_assign_public_ip    = var.workload_assign_public_ip
-  ssh_public_key            = file(pathexpand(var.ssh_public_key_path))
+  ssh_public_key            = local.ssh_public_key
   wazuh_manager_ip          = module.wazuh_server.private_ip
   freeform_tags             = local.common_freeform_tags
   defined_tags              = var.defined_tags

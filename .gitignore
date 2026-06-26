@@ -6,6 +6,7 @@ terraform/terraform.tfvars
 artifacts/validation/*.json
 artifacts/validation/cap-context.txt
 artifacts/validation/
+artifacts/orm/
 docs/wiki/assets/live/
 .tmp-chrome-auth-profile/
 .tmp-playwright-auth-profile/

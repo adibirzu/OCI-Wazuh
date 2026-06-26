@@ -21,6 +21,7 @@ required_files=(
   "docs/wiki/WAZUH_LOG_ANALYTICS_POSTURE_BACKLOG_TEMPLATE.md"
   "docs/wiki/WAZUH_LOG_ANALYTICS_PARTICIPANT_HANDOUT.md"
   "docs/wiki/WAZUH_LOG_ANALYTICS_SCREENSHOT_RUNBOOK.md"
+  "docs/ORM_RESOURCE_MANAGER_DEPLOYMENT.md"
   "docs/wiki/index.html"
   "docs/wiki/assets/wazuh-authenticated-overview-sanitized.png"
   "docs/wiki/assets/wazuh-overview-live.png"

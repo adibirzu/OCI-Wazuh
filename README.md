@@ -6,6 +6,18 @@ Standalone and OCI-DEMO attachable Wazuh 4.14.x detection lab for OCI.
 
 For the complete deploy/demo/teardown path, use [docs/END_TO_END_DEMO.md](docs/END_TO_END_DEMO.md).
 
+## Planned OCI Resource Manager Deploy
+
+The one-click OCI Resource Manager path is tracked in [docs/ORM_RESOURCE_MANAGER_DEPLOYMENT.md](docs/ORM_RESOURCE_MANAGER_DEPLOYMENT.md). The button target is the planned release artifact `oci-wazuh-orm-stack.zip` and becomes production-ready only when the M11 ORM gate is green.
+
+[![Deploy to Oracle Cloud](https://oci-resourcemanager-plugin.plugins.oci.oraclecloud.com/latest/deploy-to-oracle-cloud.svg)](https://cloud.oracle.com/resourcemanager/stacks/create?zipUrl=https://github.com/adibirzu/OCI-Wazuh/releases/latest/download/oci-wazuh-orm-stack.zip)
+
+Local package validation:
+
+```bash
+make orm-package
+```
+
 ```bash
 make bootstrap
 cp terraform/terraform.tfvars.example terraform/terraform.tfvars
@@ -111,6 +123,7 @@ Use the course pack when presenting Wazuh and OCI Log Analytics as a company sec
 - Glossary and FAQ: [docs/wiki/WAZUH_LOG_ANALYTICS_GLOSSARY_FAQ.md](docs/wiki/WAZUH_LOG_ANALYTICS_GLOSSARY_FAQ.md)
 - Module index: [docs/wiki/WAZUH_LOG_ANALYTICS_MODULE_INDEX.md](docs/wiki/WAZUH_LOG_ANALYTICS_MODULE_INDEX.md)
 - Architecture and workflows: [docs/wiki/WAZUH_LOG_ANALYTICS_ARCHITECTURE.md](docs/wiki/WAZUH_LOG_ANALYTICS_ARCHITECTURE.md)
+- OCI Resource Manager deployment plan: [docs/ORM_RESOURCE_MANAGER_DEPLOYMENT.md](docs/ORM_RESOURCE_MANAGER_DEPLOYMENT.md)
 - Browser landing page: [docs/wiki/index.html](docs/wiki/index.html)
 - Hands-on walkthrough: [docs/wiki/WAZUH_LOG_ANALYTICS_HANDS_ON.md](docs/wiki/WAZUH_LOG_ANALYTICS_HANDS_ON.md)
 - Facilitator guide: [docs/wiki/WAZUH_LOG_ANALYTICS_FACILITATOR_GUIDE.md](docs/wiki/WAZUH_LOG_ANALYTICS_FACILITATOR_GUIDE.md)

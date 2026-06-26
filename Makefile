@@ -1,4 +1,4 @@
-.PHONY: bootstrap lint validate e2e cost up down plan cap-preflight goad-discover goad-up goad-down goad-validate log-analytics-bridge log-analytics-freshness wazuh-log-analytics wazuh-content opensearch-oci validate-opensearch-oci simulate-detections validate-real-oci-logs auth-screenshots teach-validate dashboards-validate public-pages
+.PHONY: bootstrap lint validate e2e cost up down plan cap-preflight goad-discover goad-up goad-down goad-validate log-analytics-bridge log-analytics-freshness wazuh-log-analytics wazuh-content opensearch-oci validate-opensearch-oci simulate-detections validate-real-oci-logs auth-screenshots teach-validate dashboards-validate public-pages orm-package
 
 bootstrap:
 	bash scripts/bootstrap.sh
@@ -54,6 +54,9 @@ dashboards-validate:
 public-pages:
 	python3 scripts/validate-public-pages.py
 
+orm-package:
+	bash scripts/package-orm-stack.sh
+
 lint:
 	terraform -chdir=terraform fmt -check -recursive
 	python3 -m py_compile wazuh/consumer/oci_log_consumer.py
@@ -63,6 +66,7 @@ lint:
 	python3 -m py_compile scripts/validate-dashboard-assets.py
 	python3 -m py_compile scripts/guard-destroy-plan.py
 	bash -n scripts/validate-log-analytics-freshness.sh
+	bash -n scripts/package-orm-stack.sh
 
 plan:
 	terraform -chdir=terraform init -backend=false

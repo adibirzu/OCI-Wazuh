@@ -12,6 +12,7 @@ This index links the reusable teaching modules, screenshots, guides, and validat
 - [Learner workbook](WAZUH_LOG_ANALYTICS_LEARNER_WORKBOOK.md)
 - [Glossary and FAQ](WAZUH_LOG_ANALYTICS_GLOSSARY_FAQ.md)
 - [Architecture and workflows](WAZUH_LOG_ANALYTICS_ARCHITECTURE.md)
+- [OCI Resource Manager deployment plan](../ORM_RESOURCE_MANAGER_DEPLOYMENT.md)
 - [Security posture wiki](WAZUH_LOG_ANALYTICS_SECURITY_POSTURE.md)
 - [Hands-on walkthrough](WAZUH_LOG_ANALYTICS_HANDS_ON.md)
 - [Facilitator guide](WAZUH_LOG_ANALYTICS_FACILITATOR_GUIDE.md)

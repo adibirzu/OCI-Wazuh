@@ -6,8 +6,8 @@ variable "region" {
 
 variable "oci_config_profile" {
   type        = string
-  default     = "cap"
-  description = "OCI CLI config profile used by the Terraform provider."
+  default     = ""
+  description = "OCI CLI config profile used by local Terraform. Leave empty for OCI Resource Manager."
 }
 
 variable "compartment_id" {
@@ -38,7 +38,14 @@ variable "operator_cidr" {
 variable "ssh_public_key_path" {
   type        = string
   default     = "~/.ssh/id_rsa.pub"
-  description = "SSH public key path used for bastion and Linux instances."
+  description = "Local SSH public key path used for bastion and Linux instances when ssh_public_key is empty."
+}
+
+variable "ssh_public_key" {
+  type        = string
+  default     = ""
+  description = "SSH public key content. Required for OCI Resource Manager deployments; local deployments can use ssh_public_key_path instead."
+  sensitive   = true
 }
 
 variable "ssh_private_key_path" {
