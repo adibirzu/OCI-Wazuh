@@ -13,6 +13,7 @@ This page explains the product capabilities demonstrated by the OCI Wazuh Detect
 | SIEM correlation | Wazuh detections and OCI Log Analytics dashboards answer the same investigation question. | Shared time window, source inventory, dashboard row | Add cross-source incident timelines |
 | OpenSearch data products | Raw OCI Audit and Flow records can live in dedicated OpenSearch indices. | `oci-audit-*`, `oci-flow-*`, saved searches | Add retention policies and role-specific dashboards |
 | Log Analytics bridge | Wazuh alerts and host logs can be searched beside OCI service logs. | Log Analytics query pack and source inventory | Add executive dashboards and entity enrichment |
+| Freshness validation | Operators can prove Wazuh alerts are still flowing continuously. | `make log-analytics-freshness`, OCI Logging check, Log Analytics `wazuh-alerts-json` check | Add scheduled freshness reports |
 | Teardown safety | Demo-owned resources are removed, and reused hosts are cleaned. | `make down`, GOAD cleanup, resource search | Add scheduled teardown and drift checks |
 | Teaching reuse | The same lab can run as a workshop, internal training path, or customer demo. | Lessons, facilitator guide, handout, assessment | Add role-specific exercises and certification rubrics |
 
@@ -85,6 +86,7 @@ The product has deterministic gates instead of only manual screenshots.
 | `make validate-real-oci-logs` | Real OCI Audit and VCN Flow records reach Wazuh |
 | `make validate-opensearch-oci` | Dedicated OCI indices and views exist |
 | `make log-analytics-bridge` | Wazuh and host telemetry reach OCI Log Analytics |
+| `make log-analytics-freshness` | Recent Wazuh alerts are visible in OCI Logging and Log Analytics |
 | `make down` | Demo-owned resources and reused-host agents are cleaned |
 
 ## Core Personas

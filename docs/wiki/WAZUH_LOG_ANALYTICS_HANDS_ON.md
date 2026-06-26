@@ -18,6 +18,30 @@ Use the authenticated overview to show active agents and Wazuh security modules.
 
 Use Log Explorer to show source inventory and visualization setup. Do not publish live log volumes, job IDs, or user/account details.
 
+![Logan dashboard list](assets/logan-dashboard-list.png)
+
+Use the Logan dashboard list to show the four SOC dashboard tracks: FIM/threat hunting, inventory/compliance, vulnerability detection, and MITRE ATT&CK.
+
+![Logan FIM and threat hunting dashboard](assets/logan-wazuh-fim-threat-hunting.png)
+
+Use this dashboard to explain how FIM events and high-signal Wazuh/SOC Fortress rules become analyst-facing tables.
+
+![Logan inventory and compliance dashboard](assets/logan-wazuh-inventory-compliance-top.png)
+
+Use this dashboard to teach host inventory, installed package visibility, and SCA evidence.
+
+![Logan vulnerability severity dashboard](assets/logan-wazuh-vulnerability-severity.png)
+
+Use this dashboard to teach vulnerability triage by host, package, CVE, and severity.
+
+![Logan MITRE ATT&CK dashboard](assets/logan-wazuh-mitre-techniques.png)
+
+Use this dashboard to explain tactic/technique rollups and recent MITRE-tagged events.
+
+![Log Analytics dashboard error state](assets/logan-dashboard-query-errors.png)
+
+Use this screenshot when teaching dashboard troubleshooting. The correct first response is to run freshness checks and narrow queries, not to rebuild ingestion.
+
 ![Wazuh Discover data views](assets/wazuh-discover-data-views.png)
 
 Use the data-view selector to separate alert exploration from raw OCI Audit and VCN Flow exploration.
@@ -251,6 +275,7 @@ Teaching checkpoint:
 ```bash
 make wazuh-log-analytics
 make log-analytics-bridge
+make log-analytics-freshness
 ```
 
 Expected green output includes:
@@ -261,9 +286,13 @@ source.OCI Audit Logs=ready
 source.OCI VCN Flow Unified Schema Logs=ready
 source.Windows Sysmon Events=ready
 log_analytics_bridge=ready
+wazuh_alerts_oci_logging_last_window=ready
+wazuh_alerts_log_analytics_last_window=ready
 ```
 
 If Log Analytics queries return zero rows immediately after configuration, wait for Unified Agent, Connector Hub, and Log Analytics propagation, then generate another Wazuh alert with `make e2e`.
+
+Wazuh alerts forwarded through this bridge appear as `OCI Unified Schema Logs` in Log Analytics. Filter on `wazuh-alerts-json` for Wazuh alert widgets.
 
 ## Step 10: Build OCI Log Analytics Dashboards
 
@@ -284,6 +313,14 @@ Then build saved searches from:
 ```text
 dashboards/log-analytics/oci-wazuh-dashboard-queries.json
 ```
+
+For high-volume tenancies, avoid broad seven-day queries during demos. Start with 60 minutes or 24 hours and add source-specific filters. If OCI Log Analytics reports that it is busy, temporarily unavailable, or returning incomplete results, capture the error state and run:
+
+```bash
+make log-analytics-freshness
+```
+
+If freshness is green, the delivery path is current and the dashboard needs a narrower query or time range.
 
 Minimum dashboard panels:
 

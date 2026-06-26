@@ -86,6 +86,8 @@ Promote only the parts that have clear owners, stable ingestion, approved retent
 | Symptom | First question | First action |
 |---|---|---|
 | Dashboard is empty | Are the expected sources present? | Run Log Analytics source inventory |
+| Wazuh widgets are empty | Are Wazuh alerts classified as OCI Unified Schema? | Filter `OCI Unified Schema Logs` with `wazuh-alerts-json` |
+| Dashboard reports busy, unavailable, or incomplete results | Is ingestion fresh but the query too broad? | Run `make log-analytics-freshness`, reduce time range, add source filters |
 | Wazuh alert missing | Did the raw record arrive? | Check `oci-audit-*` or `oci-flow-*` |
 | Raw record missing | Did delivery complete? | Check Connector Hub, Streaming, bucket, or API path |
 | Windows host missing | Is agent enrollment complete? | Check Wazuh agent status and GOAD connectivity |

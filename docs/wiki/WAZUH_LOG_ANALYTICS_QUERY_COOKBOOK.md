@@ -22,8 +22,8 @@ Use this before every new dashboard, workshop, or customer deployment.
 | GOAD Sysmon event IDs | Find Windows event mix | `'Log Source' = 'Windows Sysmon Events' | stats count by 'Event ID' | sort -count` |
 | GOAD Sysmon network | Find host/process egress patterns | `'Log Source' = 'Windows Sysmon Events' and 'Event ID' = '3' | stats count by 'Host Name', 'Process Name', 'Destination IP' | sort -count` |
 | Linux host source mix | Confirm Linux source coverage | `'Log Source' in ('Linux Syslog Logs','Linux Secure Logs') | stats count by 'Log Source' | sort -count` |
-| Wazuh alert volume | Confirm Wazuh alerts reached Log Analytics | `'Log Source' = 'oci-wazuh-demo-wazuh-alerts' | stats count as WazuhAlerts` |
-| Wazuh raw alert search | Inspect recent Wazuh alert payloads | `'Log Source' = 'oci-wazuh-demo-wazuh-alerts' | sort -Time | head 50` |
+| Wazuh alert volume | Confirm Wazuh alerts reached Log Analytics | `'Log Source' = 'OCI Unified Schema Logs' and wazuh-alerts-json | stats count as WazuhAlerts` |
+| Wazuh raw alert search | Inspect recent Wazuh alert payloads | `'Log Source' = 'OCI Unified Schema Logs' and wazuh-alerts-json | sort -Time | head 50` |
 
 ## Wazuh KQL Filters
 
@@ -53,3 +53,5 @@ Use this before every new dashboard, workshop, or customer deployment.
 - Save source-family widgets before correlation widgets.
 - Name widgets after the security question they answer.
 - Attach each dashboard row to a runbook or posture backlog process.
+- Use `make log-analytics-freshness` before changing ingestion when a widget is empty.
+- For high-volume tenancies, avoid broad seven-day dashboard queries without source filters.

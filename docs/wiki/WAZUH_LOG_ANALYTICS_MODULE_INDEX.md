@@ -45,6 +45,12 @@ Use [Learner Workbook](WAZUH_LOG_ANALYTICS_LEARNER_WORKBOOK.md) to capture evide
 | [Wazuh login](assets/wazuh-login.png) | Show tunnel-only dashboard access |
 | [Authenticated Wazuh overview](assets/wazuh-authenticated-overview-sanitized.png) | Show active Wazuh modules with live volumes redacted |
 | [OCI Log Analytics Explorer](assets/oci-log-analytics-explorer-sanitized.png) | Show source inventory with live volumes redacted |
+| [Logan dashboard list](assets/logan-dashboard-list.png) | Show reusable SOC dashboard tracks |
+| [Logan FIM and threat hunting](assets/logan-wazuh-fim-threat-hunting.png) | Show FIM events and top Wazuh rules |
+| [Logan inventory and compliance](assets/logan-wazuh-inventory-compliance-top.png) | Show syscollector and SCA dashboard evidence |
+| [Logan vulnerability severity](assets/logan-wazuh-vulnerability-severity.png) | Show vulnerability triage widgets |
+| [Logan MITRE techniques](assets/logan-wazuh-mitre-techniques.png) | Show MITRE ATT&CK coverage |
+| [Log Analytics dashboard errors](assets/logan-dashboard-query-errors.png) | Teach query pressure and service-error troubleshooting |
 | Optional Wazuh Discover capture | Refreshed by `make auth-screenshots` when a Wazuh Discover tab is open |
 | Optional Wazuh dashboard capture | Refreshed by `make auth-screenshots` when a Wazuh dashboard tab is open |
 | Optional OCI Log Analytics dashboard capture | Refreshed by `make auth-screenshots` when an OCI Log Analytics dashboard tab is open |
@@ -72,6 +78,7 @@ make opensearch-oci
 make validate-opensearch-oci
 make wazuh-log-analytics
 make log-analytics-bridge
+make log-analytics-freshness
 make dashboards-validate
 make teach-validate
 make public-pages

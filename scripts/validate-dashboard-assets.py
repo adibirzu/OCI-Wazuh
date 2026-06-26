@@ -27,7 +27,8 @@ REQUIRED_SOURCES = {
     "Windows Sysmon Events",
     "Linux Syslog Logs",
     "Linux Secure Logs",
-    "oci-wazuh-demo-wazuh-alerts",
+    "OCI Unified Schema Logs",
+    "wazuh-alerts-json",
 }
 
 REQUIRED_WAZUH_TERMS = {

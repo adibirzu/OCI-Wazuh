@@ -197,6 +197,7 @@ Run:
 
 ```bash
 make log-analytics-bridge
+make log-analytics-freshness
 ```
 
 Expected green output:
@@ -221,6 +222,23 @@ entity.meereen=ready
 entity.winterfell=ready
 log_analytics_bridge=ready
 ```
+
+Continuous Wazuh alert delivery gate:
+
+```bash
+make log-analytics-freshness
+```
+
+Expected green output:
+
+```text
+wazuh_alerts_oci_logging_last_window=ready
+wazuh_alerts_log_analytics_last_window=ready
+wazuh_alerts_log_analytics_source=OCI Unified Schema Logs
+wazuh_alerts_log_analytics_filter=wazuh-alerts-json
+```
+
+Wazuh alert records forwarded through OCI Logging are classified by Log Analytics as `OCI Unified Schema Logs`, not as a custom source named after the OCI Logging log object. Dashboard widgets should filter on `wazuh-alerts-json` to isolate the Wazuh alert stream.
 
 ## 7. Deploy Wazuh OCI Content and Validate Synthetic OCI Detections
 
@@ -373,6 +391,8 @@ make dashboards-validate
 ```
 
 If Wazuh alert queries return zero rows immediately after configuration, wait for OCI Unified Agent and SCH propagation, then generate a Wazuh alert with `make e2e`.
+
+If dashboards show `Error retrieving query results`, `We're currently busy servicing other requests`, `Log Analytics is temporarily unavailable`, or `Results are not complete`, first run `make log-analytics-freshness`. If freshness is green, reduce the dashboard time range and use source-specific filters before changing ingestion resources. Broad seven-day tenancy-wide queries can return partial results in high-volume tenancies even when the Wazuh stream is current.
 
 ## 11. Build Wazuh Dashboard Views
 

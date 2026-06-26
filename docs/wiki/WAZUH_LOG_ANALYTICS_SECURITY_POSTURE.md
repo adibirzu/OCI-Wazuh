@@ -44,6 +44,30 @@ The authenticated Wazuh overview confirms active agents and security modules. Li
 
 The Log Analytics screenshot shows source inventory and visualization setup. Live counts, job details, and user identity are redacted.
 
+![Logan dashboard list](assets/logan-dashboard-list.png)
+
+The Logan dashboard list shows the reusable SOC dashboard set: FIM/threat hunting, inventory/compliance, vulnerability detection, and MITRE ATT&CK views. Tenant filters and creator identity are redacted.
+
+![Logan Wazuh FIM and threat hunting](assets/logan-wazuh-fim-threat-hunting.png)
+
+The FIM and threat hunting dashboard ties file integrity events to high-signal SOC Fortress/Wazuh rules.
+
+![Logan Wazuh inventory and compliance](assets/logan-wazuh-inventory-compliance-top.png)
+
+The inventory and compliance dashboard shows syscollector inventory and SCA findings as Log Analytics dashboard widgets.
+
+![Logan Wazuh vulnerability detection](assets/logan-wazuh-vulnerability-severity.png)
+
+The vulnerability dashboard converts Wazuh vulnerability data into severity and package views for prioritization.
+
+![Logan Wazuh MITRE ATT&CK coverage](assets/logan-wazuh-mitre-techniques.png)
+
+The MITRE dashboard turns alert rule metadata into technique and tactic coverage views.
+
+![Log Analytics dashboard query errors](assets/logan-dashboard-query-errors.png)
+
+Dashboard errors such as internal server errors, busy-service responses, temporary unavailability, and incomplete results should be captured as operational evidence. Treat them as query/service pressure first: run `make log-analytics-freshness`, reduce the time range, and use source-specific filters before changing ingestion.
+
 ![Wazuh Discover data views](assets/wazuh-discover-data-views.png)
 
 Use separate data views for Wazuh alerts, raw OCI Audit records, and raw VCN Flow records.
@@ -106,7 +130,7 @@ This is not optional. Log Analytics source names and field availability can diff
 
 Expected source families for this demo:
 
-- Wazuh alert custom log
+- Wazuh alert custom log, visible in Log Analytics as `OCI Unified Schema Logs` filtered by `wazuh-alerts-json`
 - OCI Audit Logs
 - OCI VCN Flow Unified Schema Logs
 - Linux Syslog Logs
@@ -120,6 +144,7 @@ Validation command:
 
 ```bash
 make log-analytics-bridge
+make log-analytics-freshness
 ```
 
 ## Module 2: Wazuh Endpoint Posture

@@ -4,7 +4,8 @@
   "notes": [
     "Run the source inventory query first and confirm source names in the target tenancy.",
     "CAP uses Windows System Events, Windows Sysmon Events, OCI Audit Logs, and OCI VCN Flow Unified Schema Logs.",
-    "The Wazuh alert source is created by make wazuh-log-analytics and defaults to oci-wazuh-demo-wazuh-alerts."
+    "Wazuh alerts are published to OCI Logging as a custom log and arrive in Log Analytics as OCI Unified Schema Logs. Filter on wazuh-alerts-json for Wazuh-specific rows.",
+    "Use make log-analytics-freshness to verify last-window Wazuh alert delivery before debugging dashboards."
   ],
   "queries": [
     {
@@ -59,13 +60,13 @@
       "id": "wazuh_alert_volume",
       "title": "Wazuh Alert Volume",
       "visualization": "tile",
-      "query": "'Log Source' = 'oci-wazuh-demo-wazuh-alerts' | stats count as WazuhAlerts"
+      "query": "'Log Source' = 'OCI Unified Schema Logs' and wazuh-alerts-json | stats count as WazuhAlerts"
     },
     {
       "id": "wazuh_alert_raw_search",
       "title": "Wazuh Alerts Raw Search",
       "visualization": "table",
-      "query": "'Log Source' = 'oci-wazuh-demo-wazuh-alerts' | sort -Time | head 50"
+      "query": "'Log Source' = 'OCI Unified Schema Logs' and wazuh-alerts-json | sort -Time | head 50"
     }
   ]
 }

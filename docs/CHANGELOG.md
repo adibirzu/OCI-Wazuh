@@ -18,3 +18,5 @@
 - Added GOAD auto jumpbox key discovery and hub bastion relay support for overlapping/non-transitive OCI VCN topologies.
 - Added guarded teardown through `make down`: reused-host cleanup runs first, Terraform destroy plans are checked for project ownership, and non-interactive destroy requires `DESTROY_CONFIRM`.
 - Added dashboard query validation, hosted public-page validation, and optional authenticated screenshot capture for Wazuh Discover, Wazuh dashboards, and OCI Log Analytics dashboards.
+- Added Log Analytics freshness validation for Wazuh alert delivery and updated Logan dashboard queries to use `OCI Unified Schema Logs` plus `wazuh-alerts-json`.
+- Added sanitized Logan dashboard screenshots and documented dashboard query-pressure errors.

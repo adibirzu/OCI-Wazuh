@@ -24,7 +24,7 @@ const captureTargets = [
   {
     name: "oci-log-analytics-explorer",
     match: (tab) => tab.url.includes("cloud.oracle.com/loganalytics") && tab.url.toLowerCase().includes("explorer"),
-    required: true,
+    required: false,
   },
   {
     name: "oci-log-analytics-dashboard-live",
@@ -101,9 +101,13 @@ async function main() {
   const missingRequired = captureTargets
     .filter((target) => target.required && !pageTabs.find(target.match))
     .map((target) => target.name);
+  const hasLogAnalyticsTab = pageTabs.some((tab) => tab.url.includes("cloud.oracle.com/loganalytics"));
 
   if (missingRequired.length > 0) {
     throw new Error(`Missing required authenticated console tabs: ${missingRequired.join(", ")}`);
+  }
+  if (!hasLogAnalyticsTab) {
+    throw new Error("Missing required authenticated OCI Log Analytics tab");
   }
 
   for (const target of captureTargets) {

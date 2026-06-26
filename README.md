@@ -15,6 +15,7 @@ make e2e
 make goad-discover
 make wazuh-log-analytics
 make log-analytics-bridge
+make log-analytics-freshness
 make wazuh-content
 make opensearch-oci
 make goad-up
@@ -92,7 +93,10 @@ Validate the reusable dashboard assets:
 
 ```bash
 make dashboards-validate
+make log-analytics-freshness
 ```
+
+`make log-analytics-freshness` verifies continuous Wazuh alert delivery through both OCI Logging and OCI Log Analytics. Wazuh alerts forwarded by this bridge appear in Log Analytics as `OCI Unified Schema Logs`; use the `wazuh-alerts-json` filter in dashboard queries.
 
 ## Teaching Wiki
 
@@ -113,6 +117,8 @@ Use the course pack when presenting Wazuh and OCI Log Analytics as a company sec
 - Participant handout: [docs/wiki/WAZUH_LOG_ANALYTICS_PARTICIPANT_HANDOUT.md](docs/wiki/WAZUH_LOG_ANALYTICS_PARTICIPANT_HANDOUT.md)
 - Query cookbook: [docs/wiki/WAZUH_LOG_ANALYTICS_QUERY_COOKBOOK.md](docs/wiki/WAZUH_LOG_ANALYTICS_QUERY_COOKBOOK.md)
 - Assessment: [docs/wiki/WAZUH_LOG_ANALYTICS_ASSESSMENT.md](docs/wiki/WAZUH_LOG_ANALYTICS_ASSESSMENT.md)
+
+Screenshots for the live Logan/Wazuh dashboards are in [docs/wiki/assets](docs/wiki/assets), including FIM/threat hunting, inventory/compliance, vulnerability detection, MITRE ATT&CK, and dashboard error states.
 
 Validate the teaching material:
 
