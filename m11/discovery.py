@@ -50,6 +50,8 @@ def _name(values: Mapping[str, Any]) -> str:
 
 def _tags(value: Mapping[str, Any]) -> dict[str, str]:
     raw = value.get("freeform_tags", value.get("freeform-tags", {}))
+    if not raw:
+        raw = value.get("metadata", {})
     if not isinstance(raw, Mapping):
         return {}
     return {str(key): str(item) for key, item in raw.items()}
