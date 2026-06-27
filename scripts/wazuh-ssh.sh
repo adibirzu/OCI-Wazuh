@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-wazuh_tf_output_json="${WAZUH_TF_OUTPUT_JSON:-artifacts/validation/terraform-output.json}"
+wazuh_tf_output_json="${WAZUH_TF_OUTPUT_JSON:-artifacts/runtime/terraform-output.json}"
 wazuh_tfvars="${TFVARS_FILE:-terraform/terraform.tfvars}"
 wazuh_ctrl_dir="${WAZUH_SSH_CONTROL_DIR:-/tmp/ociwssh-${USER:-operator}}"
 
@@ -32,7 +32,7 @@ wazuh_tfvar_value() {
 
 wazuh_ssh_key() {
   local key
-  key="$(wazuh_tfvar_value ssh_private_key_path)"
+  key="${SSH_PRIVATE_KEY_PATH:-$(wazuh_tfvar_value ssh_private_key_path)}"
   if [[ -z "$key" ]]; then
     key="$HOME/.ssh/id_rsa"
   fi
@@ -93,19 +93,16 @@ wazuh_ensure_bastion_mux() {
 
 wazuh_resolve_target() {
   wazuh_require_outputs
-  local key public_ip private_ip bastion_ip
+  local key private_ip bastion_ip
   key="$(wazuh_ssh_key)"
-  public_ip="$(wazuh_json_output wazuh_public_ip)"
   private_ip="$(wazuh_json_output wazuh_private_ip)"
   bastion_ip="$(wazuh_json_output bastion_public_ip)"
 
-  if [[ "${WAZUH_SSH_MODE:-auto}" == "bastion" ]]; then
-    printf 'bastion|%s|%s|%s\n' "$key" "$private_ip" "$bastion_ip"
-  elif [[ -n "$public_ip" ]]; then
-    printf 'direct|%s|%s|%s\n' "$key" "$public_ip" ""
-  else
-    printf 'bastion|%s|%s|%s\n' "$key" "$private_ip" "$bastion_ip"
+  if [[ "${WAZUH_SSH_MODE:-bastion}" == "direct" ]]; then
+    echo "direct public Wazuh access is forbidden; use the bastion tunnel" >&2
+    return 3
   fi
+  printf 'bastion|%s|%s|%s\n' "$key" "$private_ip" "$bastion_ip"
 }
 
 wazuh_ssh() {
@@ -126,6 +123,8 @@ wazuh_ssh() {
 
   if [[ "$mode" == "direct" ]]; then
     for attempt in 1 2 3; do
+      # The command is intentionally evaluated by the explicitly opted-in development target.
+      # shellcheck disable=SC2029
       ssh "${opts[@]}" "ubuntu@${host}" "$command" && return 0
       [[ "$attempt" -eq 3 ]] && break
       sleep $((attempt * 30))
