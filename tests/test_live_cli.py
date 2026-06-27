@@ -42,3 +42,10 @@ def test_live_workflow_uses_one_controller_and_required_stage_scripts() -> None:
         "m11-destroy.sh",
     ):
         assert (ROOT / "scripts" / script).is_file()
+
+
+def test_discovery_inventories_unowned_name_collisions_before_apply() -> None:
+    discovery = (ROOT / "scripts/m11-discover.py").read_text(encoding="utf-8")
+
+    assert 'query = "query all resources"' in discovery
+    assert "freeformTags.key = 'project'" not in discovery
