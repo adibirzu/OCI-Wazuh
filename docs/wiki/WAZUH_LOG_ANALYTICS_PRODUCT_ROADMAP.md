@@ -60,8 +60,11 @@ The dates are planning placeholders for the public roadmap. Update them when a r
 
 | Priority | Capability | Why it matters | Done when |
 |---|---|---|---|
-| P0 | Real-log validation reliability | Users must trust the demo uses real OCI logs. | Audit and Flow gates pass from a clean deploy |
-| P0 | GOAD cleanup reliability | Reused environments must not retain demo agents. | `make down` removes agents, Sysmon, relay, and manager records |
+| P0 | [Provider compatibility and partial-state recovery](../prd/M11_P0_E2E_RELIABILITY.md) | Local CLI and ORM must behave predictably across clean and interrupted runs. | [#6](https://github.com/adibirzu/OCI-Wazuh/issues/6) and [#7](https://github.com/adibirzu/OCI-Wazuh/issues/7) satisfy AC-01–AC-04 |
+| P0 | [Service Connector capacity safety](../prd/M11_P0_E2E_RELIABILITY.md) | Quota exhaustion must be detected before mutation without touching unrelated connectors. | [#8](https://github.com/adibirzu/OCI-Wazuh/issues/8) satisfies AC-05 |
+| P0 | [Guarded teardown and reused-host cleanup](../prd/M11_P0_E2E_RELIABILITY.md) | Shared environments must retain unowned resources and components. | [#9](https://github.com/adibirzu/OCI-Wazuh/issues/9) satisfies AC-10 and AC-11 |
+| P0 | [Unified current-run validation](../prd/M11_P0_E2E_RELIABILITY.md) | Users must trust that Wazuh, endpoints, real OCI logs, dashboards, and analytics are fresh. | [#10](https://github.com/adibirzu/OCI-Wazuh/issues/10) and [#11](https://github.com/adibirzu/OCI-Wazuh/issues/11) satisfy AC-06–AC-10 |
+| P0 | [Regression and release proof](../prd/M11_P0_E2E_RELIABILITY.md) | The release needs repeatable automated proof and operator guidance. | [#12](https://github.com/adibirzu/OCI-Wazuh/issues/12) and [#13](https://github.com/adibirzu/OCI-Wazuh/issues/13) satisfy AC-12 and RG-01–RG-04 |
 | P1 | More OCI Audit rules | Cloud control-plane detections need depth. | IAM, network, key, compute, and logging changes have named rules |
 | P1 | ATT&CK coverage page | Security leaders need coverage language. | Rule catalog maps to techniques and demo stories |
 | P1 | Dashboard import automation | Manual dashboard creation slows adoption. | Wazuh and Log Analytics dashboard assets can be applied repeatably |
