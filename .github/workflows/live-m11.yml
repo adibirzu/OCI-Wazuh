@@ -1,0 +1,101 @@
+name: live-m11
+
+on:
+  workflow_dispatch:
+    inputs:
+      network_mode:
+        type: choice
+        options: [create, existing]
+        default: create
+      ingestion_mode:
+        type: choice
+        options: [streaming, object_storage, direct_api]
+        default: streaming
+      windows_mode:
+        type: choice
+        options: [skip, new_windows, reuse_goad, install_goad]
+        default: skip
+      managed_opensearch:
+        type: boolean
+        default: false
+      destroy_after_validation:
+        type: boolean
+        default: true
+      stop_after:
+        type: choice
+        options: [full, preflight, reconcile, apply, validate, teardown]
+        default: full
+
+permissions:
+  contents: read
+
+jobs:
+  apply-validate-destroy:
+    environment: oci-m11-live
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      TF_VAR_tenancy_ocid: ${{ secrets.OCI_TENANCY_OCID }}
+      TF_VAR_compartment_ocid: ${{ secrets.OCI_COMPARTMENT_OCID }}
+      TF_VAR_region: ${{ vars.OCI_REGION }}
+      TF_VAR_operator_cidr: ${{ secrets.OPERATOR_CIDR }}
+      TF_VAR_network_mode: ${{ inputs.network_mode }}
+      TF_VAR_ingestion_mode: ${{ inputs.ingestion_mode }}
+      TF_VAR_windows_mode: ${{ inputs.windows_mode }}
+      TF_VAR_create_oci_opensearch: ${{ inputs.managed_opensearch }}
+      TF_VAR_bastion_subnet_id: ${{ secrets.BASTION_SUBNET_OCID }}
+      TF_VAR_agent_subnet_id: ${{ secrets.WORKLOAD_SUBNET_OCID }}
+      TF_VAR_goad_compartment_ocid: ${{ secrets.GOAD_COMPARTMENT_OCID }}
+      TF_VAR_goad_instance_ocids: ${{ secrets.GOAD_INSTANCE_OCIDS_JSON }}
+      TF_VAR_goad_vault_secret_id: ${{ secrets.GOAD_VAULT_SECRET_OCID }}
+      OCI_CLI_USER: ${{ secrets.OCI_USER_OCID }}
+      OCI_CLI_TENANCY: ${{ secrets.OCI_TENANCY_OCID }}
+      OCI_CLI_FINGERPRINT: ${{ secrets.OCI_FINGERPRINT }}
+      OCI_CLI_REGION: ${{ vars.OCI_REGION }}
+      OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_PRIVATE_KEY }}
+      OCI_WAZUH_OPENSEARCH_PASSWORD: ${{ secrets.OCI_OPENSEARCH_MASTER_PASSWORD }}
+      OCI_WAZUH_OPENSEARCH_BACKEND: oci_opensearch
+      TF_VAR_oci_opensearch_master_password_hash: ${{ secrets.OCI_OPENSEARCH_MASTER_PASSWORD_HASH }}
+      COMPARTMENT_OCID: ${{ secrets.OCI_COMPARTMENT_OCID }}
+      SSH_PRIVATE_KEY_PATH: /tmp/oci-wazuh-m11
+      E2E_MODE: orm-live
+      WAZUH_SSH_MODE: bastion
+    steps:
+      - uses: actions/checkout@v7
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.5.7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Install tools
+        run: |
+          python -m pip install --requirement requirements-dev.txt oci-cli
+          mkdir -p "$HOME/.oci"
+          printf '%s\n' "$OCI_CLI_KEY_CONTENT" > "$HOME/.oci/oci_api_key.pem"
+          chmod 0600 "$HOME/.oci/oci_api_key.pem"
+          printf '[DEFAULT]\nuser=%s\ntenancy=%s\nfingerprint=%s\nregion=%s\nkey_file=%s/.oci/oci_api_key.pem\n' \
+            "$OCI_CLI_USER" "$OCI_CLI_TENANCY" "$OCI_CLI_FINGERPRINT" "$OCI_CLI_REGION" "$HOME" \
+            > "$HOME/.oci/config"
+          chmod 0600 "$HOME/.oci/config"
+          echo "OCI_CLI_KEY_FILE=$HOME/.oci/oci_api_key.pem" >> "$GITHUB_ENV"
+          ssh-keygen -q -t ed25519 -N '' -f "$SSH_PRIVATE_KEY_PATH"
+          echo "TF_VAR_ssh_public_key=$(cat "$SSH_PRIVATE_KEY_PATH.pub")" >> "$GITHUB_ENV"
+      - name: Unified M11 live controller
+        env:
+          M11_STOP_AFTER: ${{ inputs.stop_after }}
+        run: |
+          args=(--mode orm --project-name oci-wazuh-demo)
+          if [[ "$M11_STOP_AFTER" != "full" ]]; then
+            args+=(--stop-after "$M11_STOP_AFTER")
+          elif [[ "${{ inputs.destroy_after_validation }}" != "true" ]]; then
+            args+=(--stop-after validate)
+          fi
+          python3 scripts/m11-live.py "${args[@]}"
+      - name: Upload redacted validation evidence
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: m11-validation
+          path: artifacts/validation/
+          if-no-files-found: error

@@ -14,6 +14,7 @@ from m11.reconciliation import ConnectorCapacity, ExpectedResource, ObservedReso
 
 Command = tuple[str, ...]
 Runner = Callable[[Command], subprocess.CompletedProcess[str]]
+Prepare = Callable[[str], None]
 
 
 @dataclass(frozen=True)
@@ -37,10 +38,12 @@ class CommandBackend:
         commands: CommandSet,
         *,
         run: Runner = _default_run,
+        prepare: Prepare | None = None,
     ) -> None:
         self._snapshot_path = Path(snapshot_path)
         self._commands = commands
         self._run = run
+        self._prepare = prepare
 
     def _execute(self, command: Command) -> subprocess.CompletedProcess[str]:
         if not command:
@@ -74,7 +77,8 @@ class CommandBackend:
         return PreflightSnapshot(project_name, expected, observed, capacity)
 
     def preflight(self, run_id: str) -> PreflightSnapshot:
-        del run_id
+        if self._prepare is not None:
+            self._prepare(run_id)
         for command in self._commands.preflight:
             self._execute(command)
         return self._load_snapshot()

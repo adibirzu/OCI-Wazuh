@@ -104,3 +104,18 @@ def test_residual_parser_returns_ids_internally_but_rejects_malformed_output(tmp
     )
     with pytest.raises(ValueError, match="residual search output"):
         malformed.residual_resource_ids()
+
+
+def test_preflight_preparation_runs_after_controller_supplies_run_id(tmp_path: Path) -> None:
+    snapshot = tmp_path / "snapshot.json"
+    prepared: list[str] = []
+
+    def prepare(run_id: str) -> None:
+        prepared.append(run_id)
+        write_snapshot(snapshot)
+
+    backend = CommandBackend(snapshot, CommandSet(), prepare=prepare)
+
+    backend.preflight("current-run")
+
+    assert prepared == ["current-run"]
