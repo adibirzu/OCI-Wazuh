@@ -123,3 +123,23 @@ def test_snapshot_rejects_missing_limit_or_project_fingerprint() -> None:
         assert "connector_limit" in str(exc)
     else:
         raise AssertionError("missing connector capacity must fail closed")
+
+
+def test_object_storage_objects_use_ownership_metadata_instead_of_tags() -> None:
+    resource = {
+        "address": "oci_objectstorage_object.bootstrap",
+        "mode": "managed",
+        "type": "oci_objectstorage_object",
+        "values": {
+            "object": f"{PROJECT}-bootstrap.json",
+            "metadata": {
+                "project": PROJECT,
+                "configuration_fingerprint": FINGERPRINT,
+            },
+        },
+    }
+
+    snapshot = build_preflight_snapshot(plan([resource]), [], PROJECT, connector_limit=1)
+
+    assert snapshot.expected[0].tags["project"] == PROJECT
+    assert snapshot.expected[0].configuration == {"fingerprint": FINGERPRINT}
