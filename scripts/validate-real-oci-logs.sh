@@ -9,10 +9,11 @@ mkdir -p "$REPO_ROOT/artifacts/validation"
 evidence="$REPO_ROOT/artifacts/validation/M6-M7-real-oci-logs.txt"
 
 tfvars="$REPO_ROOT/terraform/terraform.tfvars"
-tf_output="$REPO_ROOT/artifacts/validation/terraform-output.json"
+tf_output="$REPO_ROOT/artifacts/runtime/terraform-output.json"
 
 tfvar_value() {
   local key="$1"
+  [[ -f "$tfvars" ]] || return 0
   awk -F= -v k="$key" '$1 ~ "^[[:space:]]*" k "[[:space:]]*$" {gsub(/[ \"]/,"",$2); print $2; exit}' "$tfvars"
 }
 
@@ -35,10 +36,19 @@ PY
 }
 
 oci_cli() {
-  oci --profile "${OCI_CLI_PROFILE:-$(tfvar_value oci_config_profile)}" --region "${OCI_REGION:-$(tfvar_value region)}" "$@"
+  local profile region
+  profile="${OCI_PROFILE:-${OCI_CLI_PROFILE:-$(tfvar_value oci_config_profile)}}"
+  profile="${profile:-DEFAULT}"
+  region="${OCI_REGION:-${OCI_CLI_REGION:-$(tfvar_value region)}}"
+  if [[ -n "$region" ]]; then
+    oci --profile "$profile" --region "$region" "$@"
+  else
+    oci --profile "$profile" "$@"
+  fi
 }
 
-compartment_id="$(tfvar_value compartment_id)"
+compartment_id="${COMPARTMENT_OCID:-$(tfvar_value compartment_ocid)}"
+compartment_id="${compartment_id:-$(tfvar_value compartment_id)}"
 target_ip="$(tf_output_value ubuntu_agent_private_ip)"
 if [[ -z "$target_ip" ]]; then
   target_ip="$(tf_output_value ol9_agent_private_ip)"
@@ -50,6 +60,15 @@ fi
 
 read -r before_audit before_flow < <(wazuh_ssh "printf '%s %s\n' \"\$(sudo grep -c '\"'\"'\"id\"'\"'\":\"'\"'\"100000\"'\"'\"' /var/ossec/logs/alerts/alerts.json || true)\" \"\$(sudo grep -c '\"'\"'\"id\"'\"'\":\"'\"'\"100100\"'\"'\"' /var/ossec/logs/alerts/alerts.json || true)\"")
 
+read -r run_id run_started < <(python3 - <<'PY'
+import json
+
+context = json.load(open("artifacts/validation/_run.json", encoding="utf-8"))
+print(context["run_id"], context["timestamp"])
+PY
+)
+printf 'run_id=%s\nrun_started=%s\n' "$run_id" "$run_started" > "$evidence"
+
 tag_name="wazuhDemo$(date -u +%Y%m%d%H%M%S)"
 tag_namespace_id="$(oci_cli iam tag-namespace create \
   --compartment-id "$compartment_id" \
@@ -59,7 +78,7 @@ tag_namespace_id="$(oci_cli iam tag-namespace create \
   --raw-output)"
 
 if [[ -n "$tag_namespace_id" && "$tag_namespace_id" != "null" ]]; then
-  oci_cli iam tag-namespace delete --tag-namespace-id "$tag_namespace_id" --force >/dev/null 2>&1 || true
+  oci_cli iam tag-namespace delete --tag-namespace-id "$tag_namespace_id" --force >/dev/null
 fi
 
 wazuh_ssh "set -euo pipefail
@@ -75,6 +94,6 @@ while (( SECONDS < deadline )); do
   sleep 30
 done
 printf 'real_oci_logs=red\naudit_before=%s\naudit_after=%s\nflow_before=%s\nflow_after=%s\n' '${before_audit:-0}' \"\$audit_count\" '${before_flow:-0}' \"\$flow_count\"
-exit 1" > "$evidence"
+exit 1" >> "$evidence"
 
 cat "$evidence"

@@ -11,15 +11,15 @@ locals {
     network_mode             = var.network_mode
     effective_ingestion_mode = local.effective_ingestion_mode
     effective_windows_mode   = local.effective_windows_mode
-    log_analytics             = local.effective_log_analytics
-    wazuh_version             = var.wazuh_version
-    bastion_shape             = var.bastion_shape
-    wazuh_shape               = var.wazuh_shape
-    linux_agent_shape         = var.linux_agent_shape
-    windows_shape             = var.windows_shape
-    vcn_cidr                  = var.vcn_cidr
-    bastion_subnet_cidr       = var.bastion_subnet_cidr
-    workload_subnet_cidr      = var.workload_subnet_cidr
+    log_analytics            = local.effective_log_analytics
+    wazuh_version            = var.wazuh_version
+    bastion_shape            = var.bastion_shape
+    wazuh_shape              = var.wazuh_shape
+    linux_agent_shape        = var.linux_agent_shape
+    windows_shape            = var.windows_shape
+    vcn_cidr                 = var.vcn_cidr
+    bastion_subnet_cidr      = var.bastion_subnet_cidr
+    workload_subnet_cidr     = var.workload_subnet_cidr
   }))
   common_freeform_tags = {
     project                   = var.project_name
