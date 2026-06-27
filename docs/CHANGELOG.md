@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.5.0-rc.1 - unreleased
+
+- Added the OCI Resource Manager schema, deterministic ZIP/checksum/manifest,
+  and independent extracted-package validation.
+- Added create/existing networking, regional AD/image/shape lookup, private
+  verified bootstrap delivery, and Terraform-driven ingestion/Log Analytics.
+- Added private Windows Run Command orchestration, ownership-aware cleanup,
+  Windows/Sysmon Log Analytics collection, unified M11 evidence, guarded
+  residual-resource teardown, and protected live/release workflows.
+- Added pytest coverage enforcement, Bats/ShellCheck gates, schema parity,
+  package redaction, destroy-guard, and gate aggregation tests.
+
 ## Unreleased
 
 - Added Phase 0 requirements decisions.

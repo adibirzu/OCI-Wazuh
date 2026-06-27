@@ -30,3 +30,18 @@ test "$flow_count" -gt 0
 test "$audit_template" = ready
 test "$flow_template" = ready
 '"'"'' | tee "$evidence"
+
+python3 - <<'PY'
+import json
+from pathlib import Path
+
+from m11.artifacts import write_gate
+
+directory = Path("artifacts/validation")
+context = json.loads((directory / "_run.json").read_text(encoding="utf-8"))
+write_gate(directory, context, "managed-opensearch", "green", {
+    "audit_index": "green",
+    "flow_index": "green",
+    "templates": 2,
+})
+PY

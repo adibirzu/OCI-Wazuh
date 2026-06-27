@@ -1,0 +1,67 @@
+#ps1
+$ErrorActionPreference = "Stop"
+$ProgressPreference = "SilentlyContinue"
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+$projectRoot = "C:\ProgramData\OCI-Wazuh"
+$markerPath = Join-Path $projectRoot "ownership.json"
+New-Item -ItemType Directory -Force -Path $projectRoot | Out-Null
+
+$ownership = @{
+  owner = "${project_name}"
+  mode = "${windows_mode}"
+  wazuhInstalledByProject = $false
+  sysmonInstalledByProject = $false
+}
+if (Test-Path $markerPath) {
+  $ownership = Get-Content $markerPath -Raw | ConvertFrom-Json
+  if ($ownership.owner -ne "${project_name}") { throw "Existing ownership marker belongs to another project" }
+}
+
+$metadata = Invoke-RestMethod -UseBasicParsing -Headers @{ Authorization = "Bearer Oracle" } -Uri "http://169.254.169.254/opc/v2/instance/"
+$agentName = $metadata.displayName -replace "^${project_name}-", ""
+if ([string]::IsNullOrWhiteSpace($agentName)) { $agentName = $env:COMPUTERNAME }
+
+if (-not (Get-Service -Name WazuhSvc -ErrorAction SilentlyContinue)) {
+  $msi = Join-Path $projectRoot "wazuh-agent.msi"
+  Invoke-WebRequest -UseBasicParsing -Uri "https://packages.wazuh.com/4.x/windows/wazuh-agent-${wazuh_version}-1.msi" -OutFile $msi
+  $actual = (Get-FileHash -Path $msi -Algorithm SHA256).Hash.ToLowerInvariant()
+  if ($actual -ne "${wazuh_msi_sha256}") { throw "Wazuh MSI checksum mismatch" }
+  $arguments = "/i `"$msi`" /qn WAZUH_MANAGER=`"${wazuh_manager_ip}`" WAZUH_AGENT_NAME=`"$agentName`""
+  $process = Start-Process msiexec.exe -ArgumentList $arguments -Wait -PassThru
+  if ($process.ExitCode -notin @(0, 3010)) { throw "Wazuh MSI failed: $($process.ExitCode)" }
+  $ownership.wazuhInstalledByProject = $true
+}
+
+if (-not (Get-Service -Name Sysmon64 -ErrorAction SilentlyContinue)) {
+  $zip = Join-Path $projectRoot "Sysmon.zip"
+  Invoke-WebRequest -UseBasicParsing -Uri "https://download.sysinternals.com/files/Sysmon.zip" -OutFile $zip
+  $actual = (Get-FileHash -Path $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+  if ($actual -ne "${sysmon_zip_sha256}") { throw "Sysmon ZIP checksum mismatch" }
+  Expand-Archive -Path $zip -DestinationPath (Join-Path $projectRoot "Sysmon") -Force
+  $config = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String("${sysmon_config_base64}"))
+  $configPath = Join-Path $projectRoot "sysmon-config.xml"
+  [IO.File]::WriteAllText($configPath, $config, [Text.UTF8Encoding]::new($false))
+  $sysmon = Join-Path $projectRoot "Sysmon\Sysmon64.exe"
+  $process = Start-Process $sysmon -ArgumentList "-accepteula -i `"$configPath`"" -Wait -PassThru
+  if ($process.ExitCode -ne 0) { throw "Sysmon installation failed: $($process.ExitCode)" }
+  $ownership.sysmonInstalledByProject = $true
+}
+
+$wazuhConfig = "C:\Program Files (x86)\ossec-agent\ossec.conf"
+$wazuhConfigText = Get-Content $wazuhConfig -Raw
+if ($wazuhConfigText -notmatch "Microsoft-Windows-Sysmon/Operational") {
+  $eventChannel = @"
+  <localfile>
+    <location>Microsoft-Windows-Sysmon/Operational</location>
+    <log_format>eventchannel</log_format>
+  </localfile>
+"@
+  $wazuhConfigText = $wazuhConfigText.Replace("</ossec_config>", "$eventChannel`r`n</ossec_config>")
+  [IO.File]::WriteAllText($wazuhConfig, $wazuhConfigText, [Text.UTF8Encoding]::new($false))
+}
+
+$ownership.updatedAt = [DateTime]::UtcNow.ToString("o")
+$ownership | ConvertTo-Json | Set-Content -Path $markerPath -Encoding UTF8
+Restart-Service WazuhSvc
+Start-Process -FilePath "$env:SystemRoot\System32\cmd.exe" -ArgumentList "/c echo OCI-Wazuh Sysmon validation > NUL" -Wait
+Write-Output ('{"state":"green","owner":"${project_name}","host":"' + $agentName + '"}')

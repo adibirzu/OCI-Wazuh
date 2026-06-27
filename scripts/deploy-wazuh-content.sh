@@ -18,7 +18,7 @@ cp "$REPO_ROOT"/wazuh/consumer/oci_log_consumer.py "$tmpdir/consumer/"
 
 tf_output_value() {
   local key="$1"
-  python3 - "$REPO_ROOT/artifacts/validation/terraform-output.json" "$key" <<'PY'
+  python3 - "$REPO_ROOT/artifacts/runtime/terraform-output.json" "$key" <<'PY'
 import json
 import sys
 

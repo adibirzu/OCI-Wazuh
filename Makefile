@@ -1,7 +1,19 @@
-.PHONY: bootstrap lint validate e2e cost up down plan cap-preflight goad-discover goad-up goad-down goad-validate log-analytics-bridge log-analytics-freshness wazuh-log-analytics wazuh-content opensearch-oci validate-opensearch-oci simulate-detections validate-real-oci-logs auth-screenshots teach-validate dashboards-validate public-pages orm-package
+.PHONY: bootstrap lint test shell-test schema-validate validate e2e m11-gate cost up down plan cap-preflight goad-discover goad-up goad-down goad-validate log-analytics-bridge log-analytics-freshness wazuh-log-analytics wazuh-content opensearch-oci validate-opensearch-oci validate-management-dashboard validate-windows validate-bootstrap simulate-detections validate-real-oci-logs auth-screenshots teach-validate dashboards-validate public-pages orm-package security-scan
 
 bootstrap:
 	bash scripts/bootstrap.sh
+
+test:
+	pytest
+
+shell-test:
+	bats tests/shell
+
+schema-validate:
+	python3 scripts/validate-orm-schema.py
+
+security-scan:
+	bash scripts/redact-gate.sh
 
 cap-preflight:
 	bash scripts/cap-preflight.sh
@@ -36,6 +48,15 @@ opensearch-oci:
 validate-opensearch-oci:
 	bash scripts/validate-opensearch-oci.sh
 
+validate-management-dashboard:
+	bash scripts/validate-management-dashboard.sh
+
+validate-windows:
+	bash scripts/validate-windows-mode.sh
+
+validate-bootstrap:
+	bash scripts/validate-bootstrap-status.sh
+
 simulate-detections:
 	bash scripts/simulate-detections.sh
 
@@ -59,17 +80,13 @@ orm-package:
 
 lint:
 	terraform -chdir=terraform fmt -check -recursive
-	python3 -m py_compile wazuh/consumer/oci_log_consumer.py
-	python3 -m py_compile scripts/sanitize-dashboard-screenshots.py
-	python3 -m py_compile scripts/validate-teaching-links.py
-	python3 -m py_compile scripts/validate-public-pages.py
-	python3 -m py_compile scripts/validate-dashboard-assets.py
-	python3 -m py_compile scripts/guard-destroy-plan.py
-	bash -n scripts/validate-log-analytics-freshness.sh
-	bash -n scripts/package-orm-stack.sh
+	terraform -chdir=terraform init -backend=false -input=false
+	terraform -chdir=terraform validate
+	python3 -m compileall -q m11 scripts wazuh/consumer
+	shellcheck -e SC1091,SC2016 scripts/*.sh
 
 plan:
-	terraform -chdir=terraform init -backend=false
+	terraform -chdir=terraform init -backend=false -input=false
 	terraform -chdir=terraform plan
 
 up: cost
@@ -83,6 +100,9 @@ validate:
 
 e2e:
 	bash scripts/e2e.sh
+
+m11-gate:
+	python3 scripts/m11-gate.py
 
 cost:
 	bash scripts/cost-estimate.sh

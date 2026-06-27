@@ -4,6 +4,10 @@ variable "resource_ids" {
   type        = list(string)
   description = "Subnet or VNIC OCIDs to enable VCN Flow Logs for."
 }
+variable "resource_compartment_id" {
+  type        = string
+  description = "Compartment containing managed Flow Log enablement resources."
+}
 variable "log_retention_days" {
   type    = number
   default = 30

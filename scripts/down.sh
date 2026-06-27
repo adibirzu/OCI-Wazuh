@@ -4,8 +4,9 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TF_DIR="$ROOT_DIR/terraform"
 ARTIFACTS="$ROOT_DIR/artifacts/validation"
+RUNTIME="$ROOT_DIR/artifacts/runtime"
 TFVARS="${TFVARS_FILE:-$TF_DIR/terraform.tfvars}"
-mkdir -p "$ARTIFACTS"
+mkdir -p "$ARTIFACTS" "$RUNTIME"
 
 tfvar_value() {
   local key="$1"
@@ -16,28 +17,30 @@ tfvar_value() {
 project_name="${PROJECT_NAME:-$(tfvar_value project_name)}"
 project_name="${project_name:-oci-wazuh-demo}"
 windows_mode="${WINDOWS_MODE:-$(tfvar_value windows_mode)}"
-windows_mode="${windows_mode:-auto}"
-destroy_plan="$ARTIFACTS/destroy.tfplan"
-destroy_json="$ARTIFACTS/destroy-plan.json"
+windows_mode="${windows_mode:-skip}"
+reuse_goad_action="${REUSE_GOAD_ACTION:-$(tfvar_value reuse_goad_action)}"
+reuse_goad_action="${reuse_goad_action:-install}"
+destroy_plan="$RUNTIME/destroy.tfplan"
+destroy_json="$RUNTIME/destroy-plan.json"
 
 echo "down_project=$project_name"
 echo "windows_mode=$windows_mode"
 
-if [[ "${SKIP_GOAD_CLEANUP:-false}" == "true" || "$windows_mode" == "skip" ]]; then
-  echo "goad_cleanup=skipped"
-else
-  if bash "$ROOT_DIR/scripts/goad-wazuh.sh" cleanup; then
-    echo "goad_cleanup=complete"
-  elif [[ "${ALLOW_GOAD_CLEANUP_FAILURE:-false}" == "true" ]]; then
-    echo "goad_cleanup=failed_allowed"
-  else
+if [[ "$windows_mode" == "reuse_goad" ]]; then
+  if [[ "$reuse_goad_action" != "cleanup" ]]; then
     cat >&2 <<EOF
-GOAD cleanup failed. Refusing to destroy Wazuh before reused Windows hosts are cleaned.
-Set SKIP_GOAD_CLEANUP=true only when no reused GOAD/Windows hosts were modified.
-Set ALLOW_GOAD_CLEANUP_FAILURE=true only after manually removing demo agents.
+Refusing destroy for reuse_goad while reuse_goad_action is '$reuse_goad_action'.
+Run an apply with reuse_goad_action=cleanup, validate all project ownership
+markers are removed, then rerun destroy with the same cleanup input.
 EOF
     exit 3
   fi
+  bash "$ROOT_DIR/scripts/validate-windows-mode.sh"
+  echo "goad_cleanup=verified"
+elif [[ "$windows_mode" == "skip" ]]; then
+  echo "windows_cleanup=skipped_by_mode"
+else
+  echo "windows_cleanup=terraform_owned_instances"
 fi
 
 terraform -chdir="$TF_DIR" init -input=false
@@ -61,4 +64,50 @@ EOF
 fi
 
 terraform -chdir="$TF_DIR" apply "$destroy_plan"
-echo "destroy=complete"
+
+profile="${OCI_PROFILE:-${OCI_CLI_PROFILE:-$(tfvar_value oci_config_profile)}}"
+profile="${profile:-DEFAULT}"
+residual_count=1
+for attempt in $(seq 1 12); do
+  residual_count="$(oci --profile "$profile" search resource structured-search \
+    --query-text "query all resources where (freeformTags.key = 'project' && freeformTags.value = '$project_name')" \
+    --query 'length(data.items)' --raw-output)"
+  if [[ "$residual_count" -eq 0 ]]; then
+    break
+  fi
+  echo "waiting for OCI search index to report zero project resources ($attempt/12)" >&2
+  sleep 10
+done
+
+python3 - "$ARTIFACTS" "$project_name" "$residual_count" <<'PY'
+import json
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+directory, project, residual = Path(sys.argv[1]), sys.argv[2], int(sys.argv[3])
+context_path = directory / "_run.json"
+context = json.loads(context_path.read_text(encoding="utf-8")) if context_path.is_file() else {
+    "mode": "teardown",
+    "run_id": "standalone-teardown",
+    "timestamp": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
+}
+payload = {
+    "gate": "destroy-residual",
+    "mode": context["mode"],
+    "project_name": project,
+    "residual_count": residual,
+    "run_id": context["run_id"],
+    "state": "green" if residual == 0 else "failed",
+    "timestamp": context["timestamp"],
+}
+(directory / "destroy-residual.json").write_text(
+    json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+)
+PY
+
+if [[ "$residual_count" -ne 0 ]]; then
+  echo "destroy=failed residual_count=$residual_count" >&2
+  exit 5
+fi
+echo "destroy=complete residual_count=0"

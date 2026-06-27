@@ -1,0 +1,17 @@
+<group name="windows,sysmon,oci-wazuh-demo,">
+  <rule id="100200" level="8">
+    <if_group>sysmon_event1</if_group>
+    <field name="win.eventdata.image" type="pcre2">(?i)\\(powershell|cmd|rundll32|regsvr32)\.exe$</field>
+    <description>Project Windows process execution monitoring: $(win.eventdata.image)</description>
+    <mitre>
+      <id>T1059</id>
+    </mitre>
+  </rule>
+  <rule id="100201" level="7">
+    <if_group>sysmon_event3</if_group>
+    <description>Project Windows network connection observed by Sysmon</description>
+    <mitre>
+      <id>T1049</id>
+    </mitre>
+  </rule>
+</group>

@@ -1,0 +1,266 @@
+schemaVersion: 1.1.0
+locale: en
+title: OCI Wazuh Detection Lab
+description: Private-by-default Wazuh detection lab with OCI Audit, VCN Flow Logs, and optional Windows paths.
+stackDescription: Deploys an isolated teaching lab. Review IAM policies and estimated cost before apply.
+packageVersion: 0.5.0-rc.1
+allowViewState: false
+
+variableGroups:
+  - title: Identity and operator access
+    variables:
+      - tenancy_ocid
+      - compartment_ocid
+      - region
+      - operator_cidr
+      - ssh_public_key
+  - title: Networking
+    variables:
+      - network_mode
+      - vcn_cidr
+      - bastion_subnet_cidr
+      - workload_subnet_cidr
+      - bastion_subnet_id
+      - agent_subnet_id
+  - title: OCI log ingestion
+    variables:
+      - ingestion_mode
+      - enable_log_analytics_bridge
+      - oci_log_retention_days
+  - title: Windows and GOAD
+    variables:
+      - windows_mode
+      - goad_compartment_ocid
+      - goad_instance_ocids
+      - reuse_goad_action
+      - goad_vault_secret_id
+  - title: OpenSearch
+    variables:
+      - create_oci_opensearch
+      - oci_opensearch_software_version
+      - oci_opensearch_security_mode
+      - oci_opensearch_master_user_name
+      - oci_opensearch_master_password_hash
+  - title: Advanced overrides
+    variables:
+      - project_name
+      - availability_domain
+      - availability_domain_index
+      - ol9_image_id
+      - ubuntu2404_image_id
+      - windows2022_image_id
+      - bastion_shape
+      - wazuh_shape
+      - linux_agent_shape
+      - windows_shape
+      - object_storage_namespace
+
+variables:
+  tenancy_ocid:
+    type: string
+    title: Tenancy OCID
+    description: Automatically populated by OCI Resource Manager.
+    required: true
+  compartment_ocid:
+    type: oci:identity:compartment:id
+    title: Deployment compartment
+    required: true
+  region:
+    type: oci:identity:region:name
+    title: Region
+    required: true
+  operator_cidr:
+    type: string
+    title: Operator CIDR
+    description: Restricted IPv4 or IPv6 CIDR allowed to SSH to the bastion. Unrestricted CIDRs are rejected.
+    required: true
+  ssh_public_key:
+    type: oci:core:ssh:publickey
+    title: SSH public key
+    required: true
+  network_mode:
+    type: enum
+    title: Network mode
+    enum: [create, existing]
+    default: create
+    required: true
+  vcn_cidr:
+    type: string
+    title: VCN CIDR
+    default: 10.20.0.0/16
+    visible:
+      eq: [network_mode, create]
+  bastion_subnet_cidr:
+    type: string
+    title: Public bastion subnet CIDR
+    default: 10.20.10.0/24
+    visible:
+      eq: [network_mode, create]
+  workload_subnet_cidr:
+    type: string
+    title: Private workload subnet CIDR
+    default: 10.20.20.0/24
+    visible:
+      eq: [network_mode, create]
+  bastion_subnet_id:
+    type: oci:core:subnet:id
+    title: Existing bastion subnet
+    dependsOn:
+      compartmentId: compartment_ocid
+    visible:
+      eq: [network_mode, existing]
+  agent_subnet_id:
+    type: oci:core:subnet:id
+    title: Existing private workload subnet
+    dependsOn:
+      compartmentId: compartment_ocid
+    visible:
+      eq: [network_mode, existing]
+  ingestion_mode:
+    type: enum
+    title: OCI ingestion mode
+    enum: [streaming, object_storage, direct_api]
+    default: streaming
+    required: true
+  enable_log_analytics_bridge:
+    type: boolean
+    title: Enable OCI Log Analytics bridge
+    default: true
+    required: true
+  oci_log_retention_days:
+    type: number
+    title: OCI Logging retention days
+    default: 30
+    minimum: 30
+    maximum: 180
+  windows_mode:
+    type: enum
+    title: Windows path
+    enum: [skip, new_windows, reuse_goad, install_goad]
+    default: skip
+    required: true
+  goad_compartment_ocid:
+    type: oci:identity:compartment:id
+    title: Reused GOAD compartment
+    visible:
+      eq: [windows_mode, reuse_goad]
+  goad_instance_ocids:
+    type: object
+    title: GOAD host-to-instance map
+    description: JSON object mapping host names to instance OCIDs.
+    default: {}
+    visible:
+      eq: [windows_mode, reuse_goad]
+  reuse_goad_action:
+    type: enum
+    title: Reused GOAD action
+    enum: [install, cleanup]
+    default: install
+    visible:
+      eq: [windows_mode, reuse_goad]
+  goad_vault_secret_id:
+    type: string
+    title: GOAD Vault secret OCID
+    visible:
+      eq: [windows_mode, install_goad]
+  create_oci_opensearch:
+    type: boolean
+    title: Create managed OpenSearch
+    default: false
+  oci_opensearch_software_version:
+    type: string
+    title: OpenSearch software version
+    default: 2.19.0
+    visible: create_oci_opensearch
+  oci_opensearch_security_mode:
+    type: enum
+    title: OpenSearch security mode
+    enum: [ENFORCING, PERMISSIVE, DISABLED]
+    default: ENFORCING
+    visible: create_oci_opensearch
+  oci_opensearch_master_user_name:
+    type: string
+    title: OpenSearch master user
+    default: admin
+    visible: create_oci_opensearch
+  oci_opensearch_master_password_hash:
+    type: password
+    title: OpenSearch master password bcrypt hash
+    visible: create_oci_opensearch
+  project_name:
+    type: string
+    title: Project name and tag
+    default: oci-wazuh-demo
+  availability_domain:
+    type: string
+    title: Availability domain override
+    default: ""
+  availability_domain_index:
+    type: number
+    title: Availability domain index
+    default: 0
+  ol9_image_id:
+    type: string
+    title: Oracle Linux 9 image override
+    default: ""
+  ubuntu2404_image_id:
+    type: string
+    title: Ubuntu 24.04 image override
+    default: ""
+  windows2022_image_id:
+    type: string
+    title: Windows Server 2022 image override
+    default: ""
+  bastion_shape:
+    type: oci:core:instanceshape:name
+    title: Bastion shape
+    default: VM.Standard.E5.Flex
+    dependsOn:
+      compartmentId: compartment_ocid
+  wazuh_shape:
+    type: oci:core:instanceshape:name
+    title: Wazuh shape
+    default: VM.Standard.E5.Flex
+    dependsOn:
+      compartmentId: compartment_ocid
+  linux_agent_shape:
+    type: oci:core:instanceshape:name
+    title: Linux agent shape
+    default: VM.Standard.E5.Flex
+    dependsOn:
+      compartmentId: compartment_ocid
+  windows_shape:
+    type: oci:core:instanceshape:name
+    title: Windows shape
+    default: VM.Standard.E5.Flex
+    dependsOn:
+      compartmentId: compartment_ocid
+  object_storage_namespace:
+    type: string
+    title: Object Storage namespace override
+    description: Optional. Leave empty to discover the tenancy namespace automatically.
+    default: ""
+
+outputGroups:
+  - title: Secure access
+    outputs:
+      - wazuh_dashboard_tunnel_command
+      - effective_modes
+  - title: Validation
+    outputs:
+      - bootstrap_status
+      - m11_validation_status
+
+outputs:
+  wazuh_dashboard_tunnel_command:
+    type: string
+    title: Wazuh dashboard SSH tunnel
+  effective_modes:
+    type: json
+    title: Effective deployment modes
+  bootstrap_status:
+    type: json
+    title: Bootstrap status
+  m11_validation_status:
+    type: json
+    title: M11 validation contract

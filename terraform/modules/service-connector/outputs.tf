@@ -7,7 +7,7 @@ output "service_connector_id" {
 }
 
 output "object_storage_namespace" {
-  value = try(data.oci_objectstorage_namespace.this[0].namespace, null)
+  value = local.object_enabled ? local.effective_object_storage_namespace : null
 }
 
 output "object_storage_bucket" {

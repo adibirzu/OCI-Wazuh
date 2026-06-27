@@ -1,0 +1,93 @@
+#cloud-config
+package_update: true
+packages:
+  - python3
+  - python3-pip
+  - python3-venv
+write_files:
+  - path: /usr/local/bin/oci-wazuh-windows-runner.py
+    permissions: "0750"
+    content: |
+      import base64
+      import hashlib
+      import json
+      import time
+
+      import oci
+
+      TARGETS = json.loads(${jsonencode(targets_json)})
+      signer = oci.auth.signers.InstancePrincipalsSecurityTokenSigner()
+      if "${mode}" == "install_goad":
+          secrets_client = oci.secrets.SecretsClient(
+              {"region": "${region}"}, signer=signer
+          )
+          for attempt in range(90):
+              try:
+                  secret_bundle = secrets_client.get_secret_bundle(
+                      "${goad_vault_secret_id}",
+                      retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY,
+                  ).data
+                  break
+              except Exception:
+                  if attempt == 89:
+                      raise
+                  time.sleep(20)
+          secret_payload = json.loads(base64.b64decode(
+              secret_bundle.secret_bundle_content.content
+          ).decode("utf-8"))
+          required_domains = {
+              "sevenkingdoms.local",
+              "north.sevenkingdoms.local",
+              "essos.local",
+          }
+          passwords = secret_payload.get("domain_admin_passwords", {})
+          if set(passwords) != required_domains or not all(
+              isinstance(value, str) and len(value) >= 14
+              for value in passwords.values()
+          ):
+              raise RuntimeError(
+                  "GOAD Vault secret must contain three domain_admin_passwords of at least 14 characters"
+              )
+      client = oci.compute_instance_agent.ComputeInstanceAgentClient(
+          {"region": "${region}"}, signer=signer
+      )
+      for name, instance_id in sorted(TARGETS.items()):
+          details = oci.compute_instance_agent.models.CreateInstanceAgentCommandDetails(
+              compartment_id="${target_compartment_id}",
+              execution_time_out_in_seconds=3600,
+              target=oci.compute_instance_agent.models.InstanceAgentCommandTarget(
+                  instance_id=instance_id
+              ),
+              content=oci.compute_instance_agent.models.InstanceAgentCommandContent(
+                  source=oci.compute_instance_agent.models.InstanceAgentCommandSourceViaObjectStorageTupleDetails(
+                      source_type="OBJECT_STORAGE_TUPLE",
+                      bucket_name="${bootstrap_bucket}",
+                      namespace_name="${bootstrap_namespace}",
+                      object_name="${command_object_name}",
+                  ),
+                  output=oci.compute_instance_agent.models.InstanceAgentCommandOutputViaObjectStorageTupleDetails(
+                      output_type="OBJECT_STORAGE_TUPLE",
+                      bucket_name="${bootstrap_bucket}",
+                      namespace_name="${bootstrap_namespace}",
+                      object_name=f"status/windows/{name}-${action}.txt",
+                  ),
+              ),
+              display_name=f"${project_name}-{name}-${action}",
+          )
+          token = hashlib.sha256(f"${project_name}:{name}:${action}".encode()).hexdigest()
+          for attempt in range(90):
+              try:
+                  client.create_instance_agent_command(
+                      details,
+                      opc_retry_token=token,
+                      retry_strategy=oci.retry.DEFAULT_RETRY_STRATEGY,
+                  )
+                  break
+              except Exception:
+                  if attempt == 89:
+                      raise
+                  time.sleep(20)
+runcmd:
+  - [python3, -m, venv, /opt/oci-wazuh-runner]
+  - [/opt/oci-wazuh-runner/bin/python3, -m, pip, install, --quiet, "oci==2.179.0"]
+  - [/opt/oci-wazuh-runner/bin/python3, /usr/local/bin/oci-wazuh-windows-runner.py]

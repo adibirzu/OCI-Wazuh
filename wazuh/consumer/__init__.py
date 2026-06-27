@@ -1,0 +1,1 @@
+"""OCI log ingestion consumer."""

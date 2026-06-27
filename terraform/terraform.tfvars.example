@@ -1,41 +1,50 @@
-region         = "eu-frankfurt-1"
-oci_config_profile = "" # local-only; set to "cap" or another OCI CLI profile outside OCI Resource Manager
-tenancy_id     = "<TENANCY_OCID>"
-compartment_id = "<COMPARTMENT_OCID>"
-availability_domain = "<AD_NAME>"
-ol9_image_id = "<OL9_IMAGE_OCID>"
-ubuntu2404_image_id = "<UBUNTU_2404_IMAGE_OCID>"
-bastion_subnet_id = "<PUBLIC_SUBNET_OCID>"
-agent_subnet_id = "<PRIVATE_OR_REUSED_SUBNET_OCID>"
-operator_cidr  = "<YOUR_PUBLIC_IP>/32"
-ssh_public_key = "<SSH_PUBLIC_KEY_CONTENT_FOR_ORM_OR_EMPTY_FOR_LOCAL_PATH>"
-ingestion_mode = "streaming"
-audit_log_resource_id = "" # empty = tenancy_id. Set a compartment OCID to scope audit narrower.
-audit_log_category = "all"
-flow_log_resource_ids = [] # empty = agent_subnet_id. Add subnet or VNIC OCIDs for other monitored networks.
-flow_log_category = "subnet"
-existing_flow_logs = [] # [{ compartment_id = "<SOURCE_COMPARTMENT_OCID>", log_group_id = "<EXISTING_FLOW_LOG_GROUP_OCID>", log_id = "<EXISTING_FLOW_LOG_OCID>" }]
-oci_log_retention_days = 30
-windows_mode   = "auto"
-goad_agent_cidrs = [] # e.g. ["192.168.56.0/24"] when reusing GOAD in another VCN/subnet.
-enable_log_analytics_bridge = true
+region           = "eu-frankfurt-1"
+tenancy_ocid     = "<TENANCY_OCID>"
+compartment_ocid = "<COMPARTMENT_OCID>"
+operator_cidr    = "<OPERATOR_PUBLIC_CIDR>"
+ssh_public_key   = "<SSH_PUBLIC_KEY>"
 
-# OpenSearch backend choice:
-# - default AIO: leave create_oci_opensearch=false and run make opensearch-oci
-# - existing OCI OpenSearch: leave false, then export OCI_WAZUH_OPENSEARCH_URL/USERNAME/PASSWORD before make opensearch-oci
-# - managed OCI OpenSearch: set true and provide a stable bcrypt hash plus runtime password locally, never in committed files
-create_oci_opensearch = false
-oci_opensearch_software_version = "2.19.0"
-oci_opensearch_master_user_name = "admin"
-oci_opensearch_master_password = "" # consumed by make opensearch-oci only
-oci_opensearch_master_password_hash = "" # consumed by Terraform when create_oci_opensearch=true
-oci_opensearch_data_node_count = 1
-oci_opensearch_data_node_ocpus = 1
-oci_opensearch_data_node_memory_gb = 8
-oci_opensearch_data_node_storage_gb = 50
-oci_opensearch_master_node_count = 1
-oci_opensearch_master_node_ocpus = 1
-oci_opensearch_master_node_memory_gb = 8
-oci_opensearch_dashboard_node_count = 1
-oci_opensearch_dashboard_node_ocpus = 1
+# Default: own an isolated VCN, public bastion subnet, and private workload subnet.
+network_mode           = "create"
+vcn_cidr               = "10.20.0.0/16"
+bastion_subnet_cidr    = "10.20.10.0/24"
+workload_subnet_cidr   = "10.20.20.0/24"
+
+# Existing mode never modifies shared route tables.
+# network_mode      = "existing"
+# bastion_subnet_id = "<EXISTING_PUBLIC_SUBNET_OCID>"
+# agent_subnet_id    = "<EXISTING_PRIVATE_SUBNET_OCID>"
+
+# Empty image and AD overrides use regional platform-image and AD lookup.
+availability_domain  = ""
+ol9_image_id         = ""
+ubuntu2404_image_id  = ""
+windows2022_image_id = ""
+
+ingestion_mode             = "streaming" # streaming, object_storage, direct_api
+enable_log_analytics_bridge = true
+flow_log_resource_ids       = []
+existing_flow_logs          = []
+oci_log_retention_days      = 30
+
+windows_mode = "skip" # skip, new_windows, reuse_goad, install_goad
+# goad_compartment_ocid = "<GOAD_COMPARTMENT_OCID>"
+# goad_instance_ocids   = { host01 = "<GOAD_INSTANCE_OCID>" }
+# goad_agent_cidrs      = ["<GOAD_REACHABLE_CIDR>"]
+# reuse_goad_action     = "install" # switch to cleanup, apply, verify, then destroy
+# goad_vault_secret_id  = "<GOAD_VAULT_SECRET_OCID>"
+
+create_oci_opensearch                  = false
+oci_opensearch_software_version        = "2.19.0"
+oci_opensearch_master_user_name        = "admin"
+oci_opensearch_master_password_hash    = "" # required only for managed security modes
+oci_opensearch_data_node_count         = 1
+oci_opensearch_data_node_ocpus         = 1
+oci_opensearch_data_node_memory_gb     = 8
+oci_opensearch_data_node_storage_gb    = 50
+oci_opensearch_master_node_count       = 1
+oci_opensearch_master_node_ocpus       = 1
+oci_opensearch_master_node_memory_gb   = 8
+oci_opensearch_dashboard_node_count    = 1
+oci_opensearch_dashboard_node_ocpus    = 1
 oci_opensearch_dashboard_node_memory_gb = 8

@@ -6,6 +6,7 @@ terraform/terraform.tfvars
 artifacts/validation/*.json
 artifacts/validation/cap-context.txt
 artifacts/validation/
+artifacts/runtime/
 artifacts/orm/
 docs/wiki/assets/live/
 .tmp-chrome-auth-profile/
@@ -13,4 +14,6 @@ docs/wiki/assets/live/
 .ansible/
 __pycache__/
 *.pyc
+.coverage
+.pytest_cache/
 .DS_Store

@@ -26,6 +26,8 @@ resource "oci_logging_log" "flow" {
   defined_tags       = var.defined_tags
 
   configuration {
+    compartment_id = var.resource_compartment_id
+
     source {
       category    = local.flow_log_categories[each.key]
       service     = "flowlogs"

@@ -1,27 +1,36 @@
-output "vcn_id" {
-  value = oci_core_vcn.this.id
+output "bastion_subnet_id" {
+  value = local.bastion_subnet_id
 }
-
-output "public_subnet_id" {
-  value = oci_core_subnet.public.id
+output "workload_subnet_id" {
+  value = local.workload_subnet_id
 }
-
-output "private_subnet_id" {
-  value = oci_core_subnet.private.id
+output "bastion_subnet_cidr" {
+  value = local.bastion_cidr
 }
-
-output "bastion_public_ip" {
-  value = null
+output "workload_subnet_cidr" {
+  value = local.workload_cidr
 }
-
+output "bastion_vcn_id" {
+  value = local.bastion_vcn_id
+}
+output "workload_vcn_id" {
+  value = local.workload_vcn_id
+}
+output "workload_vcn_compartment_id" {
+  value = local.workload_vcn_compartment_id
+}
+output "workload_subnet_compartment_id" {
+  value = local.workload_subnet_compartment_id
+}
 output "bastion_nsg_id" {
   value = oci_core_network_security_group.bastion.id
 }
-
 output "wazuh_nsg_id" {
   value = oci_core_network_security_group.wazuh.id
 }
-
 output "agent_nsg_id" {
-  value = oci_core_network_security_group.agent.id
+  value = oci_core_network_security_group.agents.id
+}
+output "vcn_id" {
+  value = try(oci_core_vcn.this[0].id, null)
 }

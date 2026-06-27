@@ -18,7 +18,7 @@ tfvar_value() {
 
 tf_output_value() {
   local key="$1"
-  python3 - "$artifacts_dir/terraform-output.json" "$key" <<'PY'
+  python3 - "$repo_root/artifacts/runtime/terraform-output.json" "$key" <<'PY'
 import json
 import sys
 

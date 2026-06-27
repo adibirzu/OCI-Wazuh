@@ -16,7 +16,7 @@ fi
 
 tf_output_value() {
   local key="$1"
-  python3 - "$REPO_ROOT/artifacts/validation/terraform-output.json" "$key" <<'PY'
+  python3 - "$REPO_ROOT/artifacts/runtime/terraform-output.json" "$key" <<'PY'
 import json
 import sys
 
@@ -45,15 +45,33 @@ if [[ "$backend" == "oci_opensearch" ]]; then
 fi
 
 remote_script="$(mktemp "${TMPDIR:-/tmp}/oci-wazuh-opensearch.XXXXXX")"
+remote_config="$(mktemp "${TMPDIR:-/tmp}/oci-wazuh-opensearch-config.XXXXXX")"
+cleanup_local() {
+  rm -f "$remote_script" "$remote_config"
+}
+trap cleanup_local EXIT
+OCI_WAZUH_OPENSEARCH_BACKEND="$backend" jq -n \
+  '{backend: env.OCI_WAZUH_OPENSEARCH_BACKEND,
+    url: (env.OCI_WAZUH_OPENSEARCH_URL // ""),
+    username: (env.OCI_WAZUH_OPENSEARCH_USERNAME // ""),
+    password: (env.OCI_WAZUH_OPENSEARCH_PASSWORD // ""),
+    verify_ssl: (env.OCI_WAZUH_OPENSEARCH_VERIFY_SSL // "false"),
+    dashboard_url: (env.OCI_WAZUH_DASHBOARD_URL // "")}' \
+  >"$remote_config"
+chmod 0600 "$remote_config"
 cat > "$remote_script" <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
 
-backend="${OCI_WAZUH_OPENSEARCH_BACKEND:-aio}"
-url="${OCI_WAZUH_OPENSEARCH_URL:-}"
-username="${OCI_WAZUH_OPENSEARCH_USERNAME:-}"
-os_value="${OCI_WAZUH_OPENSEARCH_PASSWORD:-}"
-verify_ssl="${OCI_WAZUH_OPENSEARCH_VERIFY_SSL:-false}"
+config_path=/tmp/oci-wazuh-opensearch-config.json
+trap 'rm -f "$config_path"' EXIT
+test -r "$config_path"
+backend="$(jq -r .backend "$config_path")"
+url="$(jq -r .url "$config_path")"
+username="$(jq -r .username "$config_path")"
+os_value="$(jq -r .password "$config_path")"
+verify_ssl="$(jq -r .verify_ssl "$config_path")"
+dashboard_url="$(jq -r .dashboard_url "$config_path")"
 
 extract_password() {
   if [[ -f /opt/oci-wazuh-demo/wazuh-install-files.tar ]]; then
@@ -68,9 +86,7 @@ if [[ "$backend" == "aio" ]]; then
   url="${url:-https://127.0.0.1:9200}"
   username="${username:-admin}"
   os_value="${os_value:-$(extract_password)}"
-  dashboard_url="${OCI_WAZUH_DASHBOARD_URL:-https://127.0.0.1:443}"
-else
-  dashboard_url="${OCI_WAZUH_DASHBOARD_URL:-}"
+  dashboard_url="${dashboard_url:-https://127.0.0.1:443}"
 fi
 
 if [[ -z "$url" || -z "$username" || -z "$os_value" ]]; then
@@ -148,17 +164,17 @@ if [[ -n "$dashboard_url" ]]; then
   osd_headers=(-H 'Content-Type: application/json' -H 'osd-xsrf: true')
   curl "${curl_opts[@]}" "${auth[@]}" "${osd_headers[@]}" \
     -X POST "$dashboard_url/api/saved_objects/index-pattern/oci-audit-*?overwrite=true" \
-    -d '{"attributes":{"title":"oci-audit-*","timeFieldName":"@timestamp"}}' >/dev/null || true
+    -d '{"attributes":{"title":"oci-audit-*","timeFieldName":"@timestamp"}}' >/dev/null
   curl "${curl_opts[@]}" "${auth[@]}" "${osd_headers[@]}" \
     -X POST "$dashboard_url/api/saved_objects/index-pattern/oci-flow-*?overwrite=true" \
-    -d '{"attributes":{"title":"oci-flow-*","timeFieldName":"@timestamp"}}' >/dev/null || true
+    -d '{"attributes":{"title":"oci-flow-*","timeFieldName":"@timestamp"}}' >/dev/null
 
   curl "${curl_opts[@]}" "${auth[@]}" "${osd_headers[@]}" \
     -X POST "$dashboard_url/api/saved_objects/search/oci-audit-latest?overwrite=true" \
-    -d '{"attributes":{"title":"OCI Audit - Latest Events","description":"Latest normalized OCI Audit events","columns":["@timestamp","eventType","principalName","sourceIp","compartmentId"],"sort":[["@timestamp","desc"]],"kibanaSavedObjectMeta":{"searchSourceJSON":"{\"index\":\"oci-audit-*\",\"query\":{\"language\":\"kuery\",\"query\":\"\"},\"filter\":[]}"}}}' >/dev/null || true
+    -d '{"attributes":{"title":"OCI Audit - Latest Events","description":"Latest normalized OCI Audit events","columns":["@timestamp","eventType","principalName","sourceIp","compartmentId"],"sort":[["@timestamp","desc"]],"kibanaSavedObjectMeta":{"searchSourceJSON":"{\"index\":\"oci-audit-*\",\"query\":{\"language\":\"kuery\",\"query\":\"\"},\"filter\":[]}"}}}' >/dev/null
   curl "${curl_opts[@]}" "${auth[@]}" "${osd_headers[@]}" \
     -X POST "$dashboard_url/api/saved_objects/search/oci-flow-denied?overwrite=true" \
-    -d '{"attributes":{"title":"OCI Flow - Denied Traffic","description":"Rejected OCI VCN Flow events","columns":["@timestamp","srcaddr","dstaddr","dstport","protocol","action","bytes","packets"],"sort":[["@timestamp","desc"]],"kibanaSavedObjectMeta":{"searchSourceJSON":"{\"index\":\"oci-flow-*\",\"query\":{\"language\":\"kuery\",\"query\":\"action: REJECT\"},\"filter\":[]}"}}}' >/dev/null || true
+    -d '{"attributes":{"title":"OCI Flow - Denied Traffic","description":"Rejected OCI VCN Flow events","columns":["@timestamp","srcaddr","dstaddr","dstport","protocol","action","bytes","packets"],"sort":[["@timestamp","desc"]],"kibanaSavedObjectMeta":{"searchSourceJSON":"{\"index\":\"oci-flow-*\",\"query\":{\"language\":\"kuery\",\"query\":\"action: REJECT\"},\"filter\":[]}"}}}' >/dev/null
 
   dashboard_body='{
     "attributes": {
@@ -178,12 +194,12 @@ if [[ -n "$dashboard_url" ]]; then
   }'
   curl "${curl_opts[@]}" "${auth[@]}" "${osd_headers[@]}" \
     -X POST "$dashboard_url/api/saved_objects/dashboard/oci-logs-overview?overwrite=true" \
-    -d "$dashboard_body" >/dev/null || true
+    -d "$dashboard_body" >/dev/null
 fi
 
 systemctl daemon-reload
-systemctl restart oci-wazuh-audit-consumer.service 2>/dev/null || true
-systemctl restart oci-wazuh-flow-consumer.service 2>/dev/null || true
+systemctl restart oci-wazuh-audit-consumer.service
+systemctl restart oci-wazuh-flow-consumer.service
 
 echo "opensearch_backend=$backend"
 echo "oci_audit_index=oci-audit-*"
@@ -199,6 +215,7 @@ SH
 
 chmod +x "$remote_script"
 wazuh_scp_to "$remote_script" "/tmp/oci-wazuh-opensearch.sh"
-rm -f "$remote_script"
+wazuh_scp_to "$remote_config" "/tmp/oci-wazuh-opensearch-config.json"
+rm -f "$remote_script" "$remote_config"
 
-wazuh_ssh "sudo env OCI_WAZUH_OPENSEARCH_BACKEND='${OCI_WAZUH_OPENSEARCH_BACKEND:-aio}' OCI_WAZUH_OPENSEARCH_URL='${OCI_WAZUH_OPENSEARCH_URL:-}' OCI_WAZUH_OPENSEARCH_USERNAME='${OCI_WAZUH_OPENSEARCH_USERNAME:-}' OCI_WAZUH_OPENSEARCH_PASSWORD='${OCI_WAZUH_OPENSEARCH_PASSWORD:-}' OCI_WAZUH_OPENSEARCH_VERIFY_SSL='${OCI_WAZUH_OPENSEARCH_VERIFY_SSL:-false}' OCI_WAZUH_DASHBOARD_URL='${OCI_WAZUH_DASHBOARD_URL:-}' bash /tmp/oci-wazuh-opensearch.sh" | tee "$evidence"
+wazuh_ssh "sudo bash /tmp/oci-wazuh-opensearch.sh" | tee "$evidence"

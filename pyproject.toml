@@ -1,0 +1,16 @@
+[tool.pytest.ini_options]
+addopts = "-ra --strict-markers --cov=m11 --cov=wazuh.consumer --cov-report=term-missing --cov-fail-under=80"
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.coverage.run]
+branch = true
+source = ["m11", "wazuh.consumer"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_also = [
+  "if __name__ == .__main__.:",
+  "raise NotImplementedError",
+]

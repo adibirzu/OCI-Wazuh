@@ -6,16 +6,16 @@ Standalone and OCI-DEMO attachable Wazuh 4.14.x detection lab for OCI.
 
 For the complete deploy/demo/teardown path, use [docs/END_TO_END_DEMO.md](docs/END_TO_END_DEMO.md).
 
-## Planned OCI Resource Manager Deploy
+## OCI Resource Manager Release Candidate
 
-The one-click OCI Resource Manager path is tracked in [docs/ORM_RESOURCE_MANAGER_DEPLOYMENT.md](docs/ORM_RESOURCE_MANAGER_DEPLOYMENT.md). The button target is the planned release artifact `oci-wazuh-orm-stack.zip` and becomes production-ready only when the M11 ORM gate is green.
-
-[![Deploy to Oracle Cloud](https://oci-resourcemanager-plugin.plugins.oci.oraclecloud.com/latest/deploy-to-oracle-cloud.svg)](https://cloud.oracle.com/resourcemanager/stacks/create?zipUrl=https://github.com/adibirzu/OCI-Wazuh/releases/latest/download/oci-wazuh-orm-stack.zip)
+The stack now includes a root `schema.yaml`, deterministic allowlisted packaging, regional image lookup, create/existing networking, private bootstrap delivery, and unified M11 gates. The public Deploy to Oracle Cloud link remains intentionally disabled until the environment-protected live workflow is green and a release actually attaches both the ZIP and checksum. See [docs/ORM_RESOURCE_MANAGER_DEPLOYMENT.md](docs/ORM_RESOURCE_MANAGER_DEPLOYMENT.md).
 
 Local package validation:
 
 ```bash
 make orm-package
+make test
+make lint
 ```
 
 ```bash
@@ -24,17 +24,11 @@ cp terraform/terraform.tfvars.example terraform/terraform.tfvars
 # edit terraform/terraform.tfvars
 make up
 make e2e
-make goad-discover
-make wazuh-log-analytics
-make log-analytics-bridge
+make validate-windows
 make log-analytics-freshness
-make wazuh-content
-make opensearch-oci
-make goad-up
-make goad-validate
-make simulate-detections
 make validate-real-oci-logs
-make validate-opensearch-oci
+make validate-management-dashboard
+make m11-gate
 ```
 
 If the development tenant rate-limits repeated SSH probes, prefer the default SSH ControlMaster path and wait 2-5 minutes before retrying. Use `WAZUH_SSH_CONTROL=none` only for isolated debugging.
@@ -53,7 +47,9 @@ make wazuh-demo-up
 make down
 ```
 
-`make down` is guarded. It first removes only the demo-installed Wazuh agent, Sysmon service, staging files, bastion relays, and Wazuh manager agent records from reused GOAD/Windows hosts. It then creates a Terraform destroy plan, validates that every planned delete is project-owned by tag/name/parent ownership, and only then applies the saved plan.
+`make down` creates a saved destroy plan, validates every delete by project tag/name/parent ownership, applies only that plan, and then requires OCI Search to report zero project-tagged residual resources.
+
+For `windows_mode=reuse_goad`, first set `reuse_goad_action=cleanup`, apply, and run `make validate-windows`. Destroy refuses to proceed until that two-phase ownership-marker contract is green.
 
 For non-interactive teardown:
 
@@ -61,14 +57,13 @@ For non-interactive teardown:
 DESTROY_CONFIRM=oci-wazuh-demo make down
 ```
 
-Use `SKIP_GOAD_CLEANUP=true` only when this lab did not modify reused GOAD/Windows hosts. Use `ALLOW_GOAD_CLEANUP_FAILURE=true` only after manually removing demo-installed agents from reused hosts.
-
 ## Ingestion Modes
 
 - `streaming`: VCN Flow Logs from OCI Logging through Service Connector Hub to OCI Streaming, consumed by the Wazuh node. OCI Audit is collected from the real OCI Audit API by the Wazuh node.
 - `object_storage`: VCN Flow Logs from Service Connector Hub to Object Storage, polled by the Wazuh node. OCI Audit still uses the Audit API path.
-- `direct_api`: Audit-only fallback for development or restricted tenancies.
-- `log_analytics_bridge`: OS/EDR/Wazuh alerts also sent to OCI Log Analytics for correlation dashboards.
+- `direct_api`: Audit API ingestion plus an Object Storage Flow Log transport, so both real rule families remain testable.
+
+`log_analytics_bridge` remains accepted for one compatibility release and normalizes to `direct_api` with Log Analytics enabled.
 
 The default development path is `streaming`.
 
@@ -108,7 +103,7 @@ make dashboards-validate
 make log-analytics-freshness
 ```
 
-`make log-analytics-freshness` verifies continuous Wazuh alert delivery through both OCI Logging and OCI Log Analytics. Wazuh alerts forwarded by this bridge appear in Log Analytics as `OCI Unified Schema Logs`; use the `wazuh-alerts-json` filter in dashboard queries.
+`make log-analytics-freshness` verifies continuous Wazuh alert delivery through both OCI Logging and OCI Log Analytics. For selected Windows modes, it also requires recent Windows/Sysmon events in both services. Wazuh alerts forwarded by this bridge appear in Log Analytics as `OCI Unified Schema Logs`; use the `wazuh-alerts-json` filter in dashboard queries.
 
 ## Teaching Wiki
 

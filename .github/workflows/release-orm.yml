@@ -1,0 +1,79 @@
+name: release-orm
+
+on:
+  workflow_dispatch:
+    inputs:
+      validation_run_id:
+        description: Successful live-m11 workflow run ID for the same commit
+        required: true
+        type: string
+      release_tag:
+        description: Release candidate tag
+        required: true
+        default: v0.5.0-rc.1
+        type: string
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  release:
+    environment: oci-m11-release
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      VALIDATION_RUN_ID: ${{ inputs.validation_run_id }}
+      RELEASE_TAG: ${{ inputs.release_tag }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Verify protected live run and use its exact commit
+        run: |
+          [[ "$VALIDATION_RUN_ID" =~ ^[0-9]+$ ]]
+          [[ "$RELEASE_TAG" =~ ^v0\.5\.0-rc\.[0-9]+$ ]]
+          test "$(gh run view "$VALIDATION_RUN_ID" --json conclusion --jq .conclusion)" = success
+          validated_sha="$(gh run view "$VALIDATION_RUN_ID" --json headSha --jq .headSha)"
+          git checkout --detach "$validated_sha"
+          gh run download "$VALIDATION_RUN_ID" --name m11-validation --dir /tmp/m11-validation
+      - uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: 1.5.7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Install validation tools
+        run: |
+          python -m pip install --requirement requirements-dev.txt
+          sudo apt-get update
+          sudo apt-get install --yes bats shellcheck
+      - name: Verify post-destroy evidence
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+
+          summary = json.loads(Path("/tmp/m11-validation/M11-summary.json").read_text(encoding="utf-8"))
+          required = {"destroy-guard", "destroy-residual", "artifact-hygiene"}
+          assert summary["state"] == "green", summary
+          assert summary["post_destroy"] is True, summary
+          assert all(summary["gates"].get(gate) == "green" for gate in required), summary
+          PY
+      - name: Rebuild and verify release artifacts
+        run: |
+          make test
+          make shell-test
+          make schema-validate
+          make lint
+          make orm-package
+          make security-scan
+      - name: Publish validated release candidate
+        run: |
+          gh release create "$RELEASE_TAG" \
+            artifacts/orm/oci-wazuh-orm-stack.zip \
+            artifacts/orm/oci-wazuh-orm-stack.zip.sha256 \
+            --target "$(git rev-parse HEAD)" \
+            --prerelease \
+            --generate-notes \
+            --title "$RELEASE_TAG"

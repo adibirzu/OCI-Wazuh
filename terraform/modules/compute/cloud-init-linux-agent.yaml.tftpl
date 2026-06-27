@@ -4,44 +4,123 @@ packages:
   - curl
   - audit
   - rsyslog
+  - python3
+  - python3-pip
 write_files:
   - path: /usr/local/bin/oci-wazuh-agent-install.sh
-    permissions: "0755"
+    permissions: "0750"
     content: |
       #!/usr/bin/env bash
-      set -euxo pipefail
-      WAZUH_MANAGER="${wazuh_manager_ip}"
+      set -euo pipefail
+      readonly AGENT_NAME="${agent_name}"
+      readonly WAZUH_MANAGER="${wazuh_manager_ip}"
+      readonly WAZUH_VERSION="${wazuh_version}"
+      readonly WAZUH_KEY_SHA256="${wazuh_repository_key_sha256}"
+      stage="initialize"
+
+      publish_status() {
+        local state="$1"
+        local detail="$2"
+        python3 - "$state" "$stage" "$detail" <<'PY'
+      import json
+      import sys
+      import time
+      import urllib.request
+
+      import oci
+
+      state, stage, detail = sys.argv[1:]
+      instance_id = urllib.request.urlopen(
+          urllib.request.Request(
+              "http://169.254.169.254/opc/v2/instance/id",
+              headers={"Authorization": "Bearer Oracle"},
+          ),
+          timeout=5,
+      ).read().decode()
+      payload = json.dumps({
+          "component": "linux-agent",
+          "detail": detail,
+          "instance_id": instance_id,
+          "stage": stage,
+          "state": state,
+      }, sort_keys=True).encode()
+      for attempt in range(90):
+          try:
+              signer = oci.auth.signers.InstancePrincipalsSecurityTokenSigner()
+              client = oci.object_storage.ObjectStorageClient(
+                  {"region": "${region}"}, signer=signer
+              )
+              client.put_object(
+                  "${bootstrap_namespace}",
+                  "${bootstrap_bucket}",
+                  "${bootstrap_status_prefix}/" + instance_id + ".json",
+                  payload,
+              )
+              break
+          except Exception:
+              if attempt == 89:
+                  raise
+              time.sleep(20)
+      PY
+      }
+
+      fail() {
+        local exit_code=$?
+        python3 -m pip install --quiet "oci==2.179.0" || true
+        publish_status failed "bootstrap command failed with exit $exit_code" || true
+        exit "$exit_code"
+      }
+      trap fail ERR
+
+      stage="repository-key"
+      curl --fail --silent --show-error --location \
+        https://packages.wazuh.com/key/GPG-KEY-WAZUH \
+        --output /tmp/GPG-KEY-WAZUH
+      echo "$WAZUH_KEY_SHA256  /tmp/GPG-KEY-WAZUH" | sha256sum --check --strict
+
+      stage="package-install"
       if [[ "${os_family}" == "ubuntu" ]]; then
-        curl -s https://packages.wazuh.com/key/GPG-KEY-WAZUH | gpg --dearmor >/usr/share/keyrings/wazuh.gpg || true
-        echo "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main" >/etc/apt/sources.list.d/wazuh.list
+        gpg --dearmor </tmp/GPG-KEY-WAZUH >/usr/share/keyrings/wazuh.gpg
+        echo "deb [signed-by=/usr/share/keyrings/wazuh.gpg] https://packages.wazuh.com/4.x/apt/ stable main" \
+          >/etc/apt/sources.list.d/wazuh.list
         apt-get update
-        WAZUH_MANAGER="$WAZUH_MANAGER" apt-get install -y wazuh-agent
+        WAZUH_MANAGER="$WAZUH_MANAGER" WAZUH_AGENT_NAME="$AGENT_NAME" \
+          apt-get install -y "wazuh-agent=$WAZUH_VERSION-1"
       else
-        rpm --import https://packages.wazuh.com/key/GPG-KEY-WAZUH || true
-        cat >/etc/yum.repos.d/wazuh.repo <<'EOF'
-      [wazuh]
-      gpgcheck=1
-      gpgkey=https://packages.wazuh.com/key/GPG-KEY-WAZUH
-      enabled=1
-      name=EL-$releasever - Wazuh
-      baseurl=https://packages.wazuh.com/4.x/yum/
-      protect=1
-      EOF
-        WAZUH_MANAGER="$WAZUH_MANAGER" dnf install -y wazuh-agent
+        rpm --import /tmp/GPG-KEY-WAZUH
+        printf '%s\n' \
+          '[wazuh]' \
+          'gpgcheck=1' \
+          'gpgkey=file:///tmp/GPG-KEY-WAZUH' \
+          'enabled=1' \
+          'name=Wazuh EL repository' \
+          'baseurl=https://packages.wazuh.com/4.x/yum/' \
+          'protect=1' >/etc/yum.repos.d/wazuh.repo
+        WAZUH_MANAGER="$WAZUH_MANAGER" WAZUH_AGENT_NAME="$AGENT_NAME" \
+          dnf install -y "wazuh-agent-$WAZUH_VERSION-1"
       fi
+
+      stage="fim-configuration"
       python3 - <<'PY'
       from pathlib import Path
 
       path = Path("/var/ossec/etc/ossec.conf")
-      text = path.read_text()
+      text = path.read_text(encoding="utf-8")
       start = text.index("<syscheck>")
       end = text.index("</syscheck>", start)
       block = text[start:end]
       block = block.replace("<frequency>43200</frequency>", "<frequency>60</frequency>", 1)
-      path.write_text(text[:start] + block + text[end:])
+      path.write_text(text[:start] + block + text[end:], encoding="utf-8")
       PY
+
+      stage="service-start"
       systemctl daemon-reload
-      systemctl enable --now wazuh-agent || true
-      systemctl restart wazuh-agent || true
+      systemctl enable --now wazuh-agent
+      systemctl is-active --quiet wazuh-agent
+
+      stage="status"
+      python3 -m pip install --quiet "oci==2.179.0"
+      publish_status green "Wazuh $WAZUH_VERSION agent active"
+      trap - ERR
 runcmd:
-  - [ bash, /usr/local/bin/oci-wazuh-agent-install.sh ]
+  - [bash, /usr/local/bin/oci-wazuh-agent-install.sh]

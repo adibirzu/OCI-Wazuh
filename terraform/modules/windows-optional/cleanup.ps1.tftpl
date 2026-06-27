@@ -1,0 +1,39 @@
+#ps1
+$ErrorActionPreference = "Stop"
+$projectRoot = "C:\ProgramData\OCI-Wazuh"
+$markerPath = Join-Path $projectRoot "ownership.json"
+if (-not (Test-Path $markerPath)) {
+  Write-Output '{"state":"green","detail":"no-project-marker"}'
+  exit 0
+}
+$ownership = Get-Content $markerPath -Raw | ConvertFrom-Json
+if ($ownership.owner -ne "${project_name}") {
+  throw "Refusing cleanup: ownership marker does not belong to ${project_name}"
+}
+$removedWazuh = [bool]$ownership.wazuhInstalledByProject
+$removedSysmon = [bool]$ownership.sysmonInstalledByProject
+if ($ownership.wazuhInstalledByProject) {
+  $uninstallRoots = @(
+    "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*",
+    "HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
+  )
+  $product = Get-ItemProperty $uninstallRoots -ErrorAction SilentlyContinue | Where-Object DisplayName -eq "Wazuh Agent" | Select-Object -First 1
+  if ($product -and $product.PSChildName -match "^\{[0-9A-F-]+\}$") {
+    $process = Start-Process msiexec.exe -ArgumentList "/x $($product.PSChildName) /qn" -Wait -PassThru
+    if ($process.ExitCode -notin @(0, 1605, 3010)) { throw "Wazuh uninstall failed: $($process.ExitCode)" }
+  }
+}
+if ($ownership.sysmonInstalledByProject) {
+  $sysmon = Join-Path $projectRoot "Sysmon\Sysmon64.exe"
+  if (Test-Path $sysmon) {
+    $process = Start-Process $sysmon -ArgumentList "-u force" -Wait -PassThru
+    if ($process.ExitCode -ne 0) { throw "Sysmon uninstall failed: $($process.ExitCode)" }
+  }
+}
+Remove-Item -Path $projectRoot -Recurse -Force
+@{
+  state = "green"
+  detail = "project-components-removed"
+  wazuhRemoved = $removedWazuh
+  sysmonRemoved = $removedSysmon
+} | ConvertTo-Json -Compress | Write-Output

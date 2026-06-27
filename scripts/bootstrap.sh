@@ -2,6 +2,7 @@
 set -euo pipefail
 
 mkdir -p artifacts/validation
+bash scripts/validation-run.sh --directory artifacts/validation --mode bootstrap --run-id "${VALIDATION_RUN_ID:-}"
 
 status=0
 
@@ -19,10 +20,17 @@ for category in network compute logging SCH; do
   fi
 done
 
-{
-  echo "gate=M1"
-  echo "status=$([[ "$status" -eq 0 ]] && echo green || echo red)"
-  echo "timestamp=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-} > artifacts/validation/M1-bootstrap.txt
+python3 - "$status" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+from m11.artifacts import write_gate
+
+directory = Path("artifacts/validation")
+context = json.loads((directory / "_run.json").read_text(encoding="utf-8"))
+status = int(sys.argv[1])
+write_gate(directory, context, "M1-bootstrap", "green" if status == 0 else "failed", {})
+PY
 
 exit "$status"

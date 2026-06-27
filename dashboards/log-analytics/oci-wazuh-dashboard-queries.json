@@ -42,13 +42,13 @@
       "id": "windows_sysmon_event_ids",
       "title": "GOAD Sysmon Event IDs",
       "visualization": "bar",
-      "query": "'Log Source' = 'Windows Sysmon Events' | stats count by 'Event ID' | sort -count"
+      "query": "'Log Source' = 'OCI Unified Schema Logs' and Channel = 'Microsoft-Windows-Sysmon/Operational' | stats count by 'Event ID' | sort -count"
     },
     {
       "id": "windows_sysmon_network",
       "title": "GOAD Sysmon Network Connections",
       "visualization": "table",
-      "query": "'Log Source' = 'Windows Sysmon Events' and 'Event ID' = '3' | stats count by 'Host Name', 'Process Name', 'Destination IP' | sort -count"
+      "query": "'Log Source' = 'OCI Unified Schema Logs' and Channel = 'Microsoft-Windows-Sysmon/Operational' and 'Event ID' = '3' | stats count by 'Host Name', 'Process Name', 'Destination IP' | sort -count"
     },
     {
       "id": "linux_host_logs",

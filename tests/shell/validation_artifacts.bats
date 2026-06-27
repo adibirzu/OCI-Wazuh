@@ -15,7 +15,7 @@ setup() {
   [ "$output" = "bats-run green" ]
 }
 
-@test "Wazuh SSH defaults to bastion and direct access requires an explicit development opt-in" {
+@test "Wazuh SSH defaults to bastion and always rejects direct public access" {
   outputs="${BATS_TEST_TMPDIR}/outputs.json"
   cat >"${outputs}" <<'JSON'
 {"wazuh_public_ip":{"value":"198.51.100.8"},"wazuh_private_ip":{"value":"192.0.2.10"},"bastion_public_ip":{"value":"198.51.100.9"}}
