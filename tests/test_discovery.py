@@ -1,3 +1,5 @@
+import json
+
 from m11.discovery import build_preflight_snapshot
 
 
@@ -143,3 +145,31 @@ def test_object_storage_objects_use_ownership_metadata_instead_of_tags() -> None
 
     assert snapshot.expected[0].tags["project"] == PROJECT
     assert snapshot.expected[0].configuration == {"fingerprint": FINGERPRINT}
+
+
+def test_dashboard_import_reads_name_and_tags_from_import_details() -> None:
+    resource = {
+        "address": "oci_management_dashboard_management_dashboards_import.wazuh[0]",
+        "mode": "managed",
+        "type": "oci_management_dashboard_management_dashboards_import",
+        "values": {
+            "import_details": json.dumps(
+                {
+                    "dashboards": [
+                        {
+                            "displayName": f"{PROJECT}-correlation",
+                            "freeformTags": {
+                                "project": PROJECT,
+                                "configuration_fingerprint": FINGERPRINT,
+                            },
+                        }
+                    ]
+                }
+            )
+        },
+    }
+
+    snapshot = build_preflight_snapshot(plan([resource]), [], PROJECT, connector_limit=1)
+
+    assert snapshot.expected[0].name == f"{PROJECT}-correlation"
+    assert snapshot.expected[0].tags["configuration_fingerprint"] == FINGERPRINT
