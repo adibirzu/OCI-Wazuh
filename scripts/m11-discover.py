@@ -107,10 +107,10 @@ def main() -> int:
         stdout_path=plan_json_path,
     )
 
-    query = (
-        "query all resources where "
-        f"(freeformTags.key = 'project' && freeformTags.value = '{args.project_name}')"
-    )
+    # Inventory all accessible resources so name-only and externally owned
+    # collisions are visible. build_preflight_snapshot retains only names and
+    # types present in the current Terraform plan; raw inventory is not saved.
+    query = "query all resources"
     search = run_json(
         oci_command(args.profile, "search", "resource", "structured-search", "--query-text", query, "--all")
     )
