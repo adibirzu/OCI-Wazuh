@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any
 
@@ -45,13 +46,33 @@ def _name(values: Mapping[str, Any]) -> str:
         value = values.get(key)
         if isinstance(value, str) and value:
             return value
+    dashboard = _dashboard(values)
+    display_name = dashboard.get("displayName")
+    if isinstance(display_name, str):
+        return display_name
     return ""
+
+
+def _dashboard(value: Mapping[str, Any]) -> Mapping[str, Any]:
+    raw = value.get("import_details")
+    if not isinstance(raw, str):
+        return {}
+    try:
+        payload = json.loads(raw)
+    except (TypeError, ValueError):
+        return {}
+    dashboards = payload.get("dashboards", []) if isinstance(payload, Mapping) else []
+    if not dashboards or not isinstance(dashboards[0], Mapping):
+        return {}
+    return dashboards[0]
 
 
 def _tags(value: Mapping[str, Any]) -> dict[str, str]:
     raw = value.get("freeform_tags", value.get("freeform-tags", {}))
     if not raw:
         raw = value.get("metadata", {})
+    if not raw:
+        raw = _dashboard(value).get("freeformTags", {})
     if not isinstance(raw, Mapping):
         return {}
     return {str(key): str(item) for key, item in raw.items()}
