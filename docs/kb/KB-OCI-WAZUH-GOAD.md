@@ -60,4 +60,7 @@ If `make goad-discover` reports `goad_reuse=not_ready`, use the GOADv3 OCI provi
 
 ## Cleanup
 
-`make down` runs `make goad-down` before Terraform destroy. The cleanup playbook removes WazuhSvc, the Wazuh Windows package, Sysmon service, and staging directories from reused GOAD hosts, then removes the GOAD agent records from the Wazuh manager.
+The unified M11 controller performs reused-host cleanup before guarded
+Terraform teardown. It removes Wazuh, Sysmon, relay, staging, firewall, and
+manager-record components only when the project ownership marker records that
+this lab installed them. Pre-existing or unmarked components are preserved.

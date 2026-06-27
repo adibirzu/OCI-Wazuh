@@ -32,7 +32,9 @@ Recovery steps:
 4. If the Wazuh probe reports `UNKNOWN port 65535` through a stable bastion mux, soft-reset only the Wazuh instance and wait for SSH/cloud-init to settle.
 5. Re-run `make e2e`; do not run parallel manual SSH loops while the gate is probing.
 
-For development CAP deployments using fallback public workload placement, keep validation on the bastion path unless you intentionally add a temporary operator-only SSH rule. Public deployment keeps Wazuh private and uses the dashboard SSH tunnel.
+All M11 deployments keep Wazuh and workloads private. Validation uses the
+bastion path and dashboard SSH tunnel; a bastion failure is actionable evidence,
+not permission to add a direct workload rule.
 
 For one-off content or synthetic detection gates where ControlMaster sockets become part of the failure mode, disable them for that command:
 

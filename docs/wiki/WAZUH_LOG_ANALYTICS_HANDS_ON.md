@@ -152,8 +152,6 @@ Keep real secrets in OCI Vault, environment variables, or local ignored files.
 For CAP development, the helper resolves local OCI configuration and writes local Terraform variables:
 
 ```bash
-USE_BASTION_SUBNET_FOR_WORKLOADS=true \
-WORKLOAD_ASSIGN_PUBLIC_IP=true \
 make up
 ```
 

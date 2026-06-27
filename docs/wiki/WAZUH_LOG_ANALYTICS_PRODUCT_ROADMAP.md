@@ -128,7 +128,11 @@ Promote backlog items with a score of 24 or higher into the next release candida
 - [ ] OCI Audit and VCN Flow validation output is captured.
 - [ ] GOAD or Windows path is either validated or explicitly marked skipped.
 - [ ] Log Analytics source inventory is captured.
-- [ ] Teardown command and expected cleanup are shown.
+- [ ] The reconciliation report contains only current-run create/import classifications and no blocker.
+- [ ] Service Connector quota/capacity evidence is current and redacted.
+- [ ] Teardown preserves unmarked reused-host components and proves zero project-owned OCI residuals.
+- [ ] The protected run completes without `stop_after` and every artifact carries the same run ID.
+- [ ] `v0.5.0-rc.1` attaches both the ORM ZIP and SHA-256 checksum before the deploy path is enabled.
 
 ## Related Pages
 

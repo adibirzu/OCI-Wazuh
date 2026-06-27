@@ -1,123 +1,166 @@
-# OCI Resource Manager Deployment Plan
+# OCI Resource Manager deployment
 
-This page defines the planned OCI Resource Manager one-click deployment path for the OCI Wazuh Detection Lab.
+The M11 stack is implemented as a release candidate. The Terraform root is the
+source of truth; packaging, host bootstrap, validation, and safe teardown use
+small deterministic Python or shell helpers.
 
-## Planned Deploy Button
+The deploy button must not be described as production-ready until the
+environment-protected `live-m11` workflow passes and a release attaches both
+`oci-wazuh-orm-stack.zip` and `oci-wazuh-orm-stack.zip.sha256`.
 
-The deploy button target is the release artifact `oci-wazuh-orm-stack.zip`. The button becomes production-ready when the `v0.5.x` Resource Manager release attaches that ZIP and the M11 gate below is green.
+The public deploy link is intentionally disabled while this release candidate lacks a protected live M11 result and attached release artifacts.
 
-[![Deploy to Oracle Cloud](https://oci-resourcemanager-plugin.plugins.oci.oraclecloud.com/latest/deploy-to-oracle-cloud.svg)](https://cloud.oracle.com/resourcemanager/stacks/create?zipUrl=https://github.com/adibirzu/OCI-Wazuh/releases/latest/download/oci-wazuh-orm-stack.zip)
-
-Until the release artifact exists, use this local packaging command for validation:
+## Build and inspect the artifact
 
 ```bash
+make test
+make lint
+make schema-validate
 make orm-package
+unzip -l artifacts/orm/oci-wazuh-orm-stack.zip
 ```
 
-The generated artifact is:
+The packager uses explicit allowlists, normalized ZIP metadata, a SHA-256
+sidecar, and a JSON manifest. It excludes tfvars, state, caches, browser
+profiles, validation evidence, local configuration, and SSH keys. Tests build
+the artifact twice and require identical bytes, validate its file list, and
+scan all public text for OCI identifiers and sensitive topology.
 
-```text
-artifacts/orm/oci-wazuh-orm-stack.zip
+The ZIP root contains `schema.yaml`, Terraform root files, relative modules,
+the private bootstrap bundle and manifest, rules/decoders/consumer assets,
+dashboard definitions, and this public-safe README.
+
+## Resource Manager inputs
+
+Resource Manager automatically supplies `tenancy_ocid`, `compartment_ocid`,
+and `region`. The stack provider block requires only `region`, following
+[Oracle's Resource Manager guidance](https://docs.oracle.com/en-us/iaas/Content/ResourceManager/Concepts/terraformconfigresourcemanager.htm).
+The console form is defined by the ZIP-root
+[`schema.yaml`](https://docs.oracle.com/en-us/iaas/Content/ResourceManager/Concepts/terraformconfigresourcemanager_topic-schema.htm).
+
+Required operator input:
+
+- a restricted `operator_cidr`; unrestricted IPv4 and IPv6 CIDRs are rejected;
+- `ssh_public_key` content; ORM never reads a local key path;
+- mode selections appropriate for the target compartment.
+
+`tenancy_id` and `compartment_id` remain deprecated local-CLI aliases for one
+release. `windows_mode=auto` normalizes to `skip`, and
+`ingestion_mode=log_analytics_bridge` normalizes to `direct_api` with Log
+Analytics enabled.
+
+## Mode behavior
+
+Networking:
+
+- `create` owns an isolated VCN, public bastion subnet, private workload
+  subnet, Internet/NAT/service gateways, route tables, default-deny ingress
+  security lists, and role-specific NSGs.
+- `existing` creates only project NSGs and compute attachments. It does not
+  modify shared route tables. The supplied subnets must already provide the
+  required reachability.
+
+Only the bastion receives a public IP. Wazuh, Linux agents, Windows hosts,
+GOAD hosts, and the orchestration runner are private.
+
+Ingestion:
+
+- `streaming`: Flow Logs use Connector Hub and Streaming; Audit uses the real
+  OCI Audit API.
+- `object_storage`: Flow Logs use a private batch bucket; Audit uses the Audit
+  API.
+- `direct_api`: Audit uses the Audit API and Flow Logs use the private batch
+  bucket so the real Flow detection gate remains available.
+
+Windows:
+
+- `skip`: no Windows resources and an explicit skipped gate.
+- `new_windows`: one private Windows Server 2022 instance.
+- `reuse_goad`: explicit existing instance OCIDs; shared routes are untouched.
+- `install_goad`: five private Windows hosts with GOADv3-compatible names and
+  a pinned upstream attribution boundary.
+
+For `install_goad`, `goad_vault_secret_id` must reference a JSON secret with
+`domain_admin_passwords` keys for `sevenkingdoms.local`,
+`north.sevenkingdoms.local`, and `essos.local`. Each value must be at least 14
+characters. The private runner retrieves and validates the secret with its
+instance principal at runtime; secret values are never passed to Terraform.
+
+All non-skip Windows paths use OCI Agent Run Command from a private,
+Terraform-managed runner. Wazuh and Sysmon are installed only when absent, and
+the local marker records which components are project-owned. Cleanup removes
+only those components. The five-host GOAD infrastructure path remains a manual
+release gate: it cannot be declared green until the selected Vault-backed AD
+provisioning run passes in the protected live environment.
+
+## Bootstrap and IAM
+
+Terraform uploads a private JSON bootstrap archive and SHA-256 manifest to a
+project bucket. Instance principals retry through IAM propagation, verify the
+bundle and every asset before extraction, install pinned Wazuh 4.14.x inputs,
+and publish explicit status markers. No SSH private key or WinRM password is
+stored by ORM.
+
+Policies are separated by purpose: bundle/status objects, Audit/transport
+consumption, Connector Hub source/target access, Unified Agent Wazuh and
+Windows/Sysmon publication, and Windows Run Command execution.
+
+## Live M11 gate
+
+The protected workflow invokes one controller:
+
+```bash
+python3 scripts/m11-live.py --mode orm --project-name oci-wazuh-demo
 ```
 
-## End-to-End Feature Profile
+The controller creates a unique run ID before preflight and runs discovery,
+reconciliation, apply, validation, ownership cleanup, guarded teardown, and
+bounded residual checks. The workflow input `stop_after` may retain a stage for
+debugging, but any stopped run is incomplete and cannot satisfy a release gate.
 
-The ORM stack must deploy the full demo path, not only the base compute layer.
+Preflight derives expected resources from the Terraform JSON plan and compares
+them with OCI Search and Service Connector inventory. Automatic import requires
+the project tag and exact configuration fingerprint. Name-only, external,
+ambiguous, drifted, deleted, or provider-non-importable matches block without
+mutation. The redacted report distinguishes `create`, `import`, `blocked`, and
+external ownership; runtime identifiers remain outside uploaded evidence.
 
-Required features:
+Service Connector limits and active usage are queried before apply. An exact
+active project match may be imported. Deleted records are ignored for adoption,
+and unrelated connectors are never stopped or removed. If capacity remains
+exhausted, request quota, wait for lifecycle accounting, or reduce the selected
+connector footprint before rerunning.
 
-- Wazuh 4.14.x all-in-one manager, indexer, and dashboard.
-- Bastion-only Wazuh dashboard access.
-- Oracle Linux 9 and Ubuntu 24.04 Wazuh agents.
-- FIM, SCA, syscollector, vulnerability detection, and Linux log collection.
-- Windows path selection: skip, new Windows Server 2022, reuse GOAD, or install GOADv3 when supported.
-- Sysmon and SOC Fortress rules for Windows or GOAD hosts.
-- OCI Audit ingestion into Wazuh with rule IDs `100000-100099`.
-- VCN Flow Log ingestion into Wazuh with rule IDs `100100-100199`.
-- Dedicated OpenSearch data views for `wazuh-alerts-*`, `oci-audit-*`, and `oci-flow-*`.
-- Optional OCI Search with OpenSearch backend.
-- Wazuh alerts and host telemetry forwarded to OCI Log Analytics.
-- Log Analytics dashboard query pack and freshness validation.
-- Guarded teardown that removes only demo-owned resources and demo-installed reused-host agents.
+The protected run requires:
 
-## ORM Input Model
+1. bastion-only Wazuh access and API authentication;
+2. two active Linux agents and FIM evidence;
+3. the selected Windows mode or an explicit skip;
+4. real Audit rule `100000` and Flow rule `100100` detections;
+5. Wazuh/OpenSearch data views;
+6. the idempotently imported Management Dashboard;
+7. recent Wazuh alerts in OCI Logging and Log Analytics;
+8. guarded destroy and zero residual project-tagged resources.
 
-Resource Manager cannot depend on local files such as `~/.oci/config` or `~/.ssh/id_rsa.pub`. The Terraform root therefore supports:
+Evidence uses only `green|failed|skipped`, carries the current run ID, and is
+newer than the run start. Stale gate files are deleted at initialization and
+cross-run gate documents are rejected. Public Wazuh SSH is not a
+release-validation fallback.
 
-- `oci_config_profile = ""` for ORM deployments.
-- `ssh_public_key` for pasted public key content.
-- `ssh_public_key_path` only for local CLI deployments.
+For `reuse_goad`, teardown is two phase:
 
-Required user inputs:
+```bash
+# 1. update reuse_goad_action to cleanup and apply
+terraform -chdir=terraform apply
 
-| Variable | Purpose |
-|---|---|
-| `region` | OCI region for the lab. |
-| `tenancy_id` | Tenancy OCID for availability-domain and image lookups. |
-| `compartment_id` | Target compartment for demo resources. |
-| `availability_domain` | Availability domain for compute instances. |
-| `ol9_image_id` | Oracle Linux 9 image OCID. |
-| `ubuntu2404_image_id` | Ubuntu 24.04 image OCID. |
-| `bastion_subnet_id` | Public or existing bastion subnet. |
-| `agent_subnet_id` | Workload subnet for Wazuh and agents. |
-| `operator_cidr` | CIDR allowed to SSH to the bastion. |
-| `ssh_public_key` | SSH public key content. |
-| `ingestion_mode` | `streaming`, `object_storage`, `direct_api`, or `log_analytics_bridge`. |
-| `windows_mode` | `auto`, `skip`, `new_windows`, `reuse_goad`, or `install_goad`. |
-| `enable_log_analytics_bridge` | Enables Wazuh-to-Log Analytics correlation path. |
-| `create_oci_opensearch` | Optional managed OpenSearch backend. |
+# 2. verify the cleanup Run Command output markers
+make validate-windows
 
-## Release Artifact Requirements
+# 3. run guarded destroy and residual-resource verification
+DESTROY_CONFIRM=oci-wazuh-demo make down
+```
 
-The ORM ZIP must include:
-
-- Terraform root files at ZIP root.
-- `terraform/modules/**`.
-- Wazuh decoder, rule, and consumer assets.
-- Dashboard query packs and Wazuh view definitions.
-- Scripts and Ansible roles needed by post-deploy bootstrap.
-- Public-safe README for Resource Manager users.
-
-The ZIP must exclude:
-
-- `terraform.tfvars`.
-- Terraform state and lock output.
-- Local OCI CLI config.
-- Local SSH keys.
-- Raw screenshots and browser profiles.
-- Validation artifacts with environment-specific values.
-
-## M11 Acceptance Gate: ORM Deploy Button
-
-Gate is green only when all checks pass from a clean tenancy or clean compartment:
-
-1. `make orm-package` creates `artifacts/orm/oci-wazuh-orm-stack.zip`.
-2. The release attaches `oci-wazuh-orm-stack.zip`.
-3. The README and GitHub Wiki deploy button points to that release artifact.
-4. OCI Resource Manager stack creation from the button succeeds.
-5. ORM plan succeeds without local profile, local tfvars, local SSH key path, or local scripts.
-6. ORM apply provisions Wazuh, Linux agents, OCI log ingestion, and Log Analytics bridge.
-7. Post-apply validation confirms:
-   - Wazuh dashboard reachable through tunnel.
-   - Wazuh API authenticates.
-   - Linux agents active.
-   - GOAD or Windows mode is active or explicitly skipped by selected input.
-   - OCI Audit rule fires from real OCI activity.
-   - VCN Flow rule fires from real VCN traffic.
-   - Wazuh alerts are present in OCI Log Analytics.
-8. ORM destroy removes only demo-owned OCI resources.
-9. Reused GOAD or Windows hosts retain no demo-installed Wazuh agent, Sysmon service, staging files, relay artifacts, or stale Wazuh manager records.
-
-## Implementation Work Items
-
-| Priority | Work item | Done when |
-|---|---|---|
-| P0 | Resource Manager package artifact | `make orm-package` produces a clean ZIP and CI validates it. |
-| P0 | ORM input schema | Stack UI exposes required variables, defaults, descriptions, and safe choices. |
-| P0 | End-to-end post-apply bootstrap | Wazuh content, OCI consumers, Log Analytics bridge, and dashboards converge without manual SSH. |
-| P0 | ORM validation job | A clean Resource Manager apply produces the same evidence as local `make e2e` plus log gates. |
-| P0 | ORM destroy safety | Destroy validates demo ownership and reused-host cleanup. |
-| P1 | Region portability | Image lookup or documented image-selection workflow works in supported regions. |
-| P1 | GOAD install option | `windows_mode=install_goad` can bootstrap GOADv3 when no reusable GOAD exists. |
-| P1 | Dashboard import automation | Wazuh and Log Analytics dashboards are created by the stack or post-apply bootstrap. |
-
+Full GOAD and managed OpenSearch runs are manual protected release gates due
+to cost. `v0.5.0-rc.1` remains blocked until the selected capability matrix is
+green, teardown proves zero project-owned resources, and the release attaches
+both `oci-wazuh-orm-stack.zip` and `oci-wazuh-orm-stack.zip.sha256`.

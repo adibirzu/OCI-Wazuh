@@ -23,6 +23,8 @@ The lab deploys a Wazuh all-in-one node, two Linux agents, optional Windows/GOAD
 - Windows coverage defaults to GOAD reuse when `make goad-discover` reports the GOAD VCN and five hosts as ready.
 - Log Analytics correlation is validated with `make log-analytics-bridge`, which checks that OS, Sysmon/EDR, OCI Audit, VCN Flow, Wazuh, and GOAD entities are discoverable.
 
-Development CAP fallback may place workloads in a public subnet for recovery from SSH/fail2ban issues. Public deployment keeps Wazuh and agents private and uses the bastion/dashboard tunnel path.
+M11 keeps Wazuh and agents private in every mode and uses the
+bastion/dashboard tunnel path. Recovery from SSH or fail2ban issues must repair
+that path rather than expose a workload directly.
 
 Detailed publishable architecture and workflow diagrams are maintained in [WAZUH_LOG_ANALYTICS_ARCHITECTURE](../wiki/WAZUH_LOG_ANALYTICS_ARCHITECTURE.md).

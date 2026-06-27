@@ -10,7 +10,7 @@ This is the operator path for deploying the OCI Wazuh demo end to end and showin
 Run from this repository:
 
 ```bash
-cd /Users/abirzu/dev/OCI-Wazuh
+cd <OCI_WAZUH_CHECKOUT>
 make bootstrap
 make cap-preflight
 ```
@@ -56,11 +56,9 @@ When `existing_flow_logs` is set, Terraform reuses that Flow Log and creates onl
 
 ## 2. Deploy Wazuh and Linux Agents
 
-Development CAP path:
+Development CAP path for infrastructure-only debugging:
 
 ```bash
-USE_BASTION_SUBNET_FOR_WORKLOADS=true \
-WORKLOAD_ASSIGN_PUBLIC_IP=true \
 make up
 ```
 
@@ -78,6 +76,43 @@ This provisions:
 - OCI NSGs and host firewall rules for dashboard/API/agent enrollment
 - Wazuh auth replacement for duplicate disconnected agents
 
+For a release-candidate run, use the unified controller instead of sequencing
+the commands in this guide manually:
+
+```bash
+# Full run, including guarded teardown.
+python3 scripts/m11-live.py --mode local --profile <OCI_CLI_PROFILE>
+
+# Preserve a validated deployment for debugging. This is intentionally not a
+# release-green terminal state.
+python3 scripts/m11-live.py \
+  --mode local \
+  --profile <OCI_CLI_PROFILE> \
+  --stop-after validate
+```
+
+The controller initializes a unique run ID, discovers the Terraform plan and
+matching OCI resources, reconciles safe exact matches, applies, validates, and
+tears down. A full run removes the deployment; use `--stop-after` only when the
+result is intentionally being retained for debugging.
+
+### Reconciliation and quota preflight
+
+The runtime-only snapshot is written under
+`artifacts/runtime/reconciliation-snapshot.json`. A resource is imported only
+when its deterministic address/name, `project=oci-wazuh-demo` tag, active
+lifecycle, and configuration fingerprint all match. Name-only, untagged,
+ambiguous, drifted, or provider-non-importable collisions stop the run before
+apply. The redacted classification report is
+`artifacts/validation/reconciliation-report.json`.
+
+Service Connector capacity is queried before reconciliation. An exact active
+project connector is imported even when the limit is otherwise full. Deleted
+entries are never adopted. If no safe match and no capacity exist, request a
+limit increase, wait for OCI lifecycle/quota accounting to converge, or select
+an architecture requiring fewer connectors. Never delete or repurpose an
+unrelated connector to make this lab pass.
+
 ## 3. Validate Wazuh and Linux Detection
 
 Run:
@@ -94,7 +129,8 @@ Expected green artifacts:
 - `artifacts/validation/M4-fim-marker-alerts.txt`
 - `artifacts/validation/e2e.txt`
 
-The current development path may fall back to direct Wazuh SSH if bastion SSH is rate-limited. This is expected in CAP development and documented in [KB-OCI-WAZUH-RUNBOOK](kb/KB-OCI-WAZUH-RUNBOOK.md).
+Wazuh validation is bastion-only. If the bastion path is unavailable, the run
+fails with redacted diagnostics; direct public Wazuh access is never a fallback.
 
 Dashboard tunnel command:
 
@@ -498,7 +534,8 @@ Destroy standalone lab resources:
 make down
 ```
 
-`make down` is the only supported teardown entry point. It performs:
+The unified controller is the release teardown entry point. `make down` remains
+the lower-level guarded teardown command used by the controller. It performs:
 
 1. Reused-host cleanup for GOAD/Windows when enabled: Wazuh agent, Sysmon service, staging directories, bastion relays, firewall relay rules, and Wazuh manager agent records.
 2. Terraform destroy-plan generation.
@@ -520,6 +557,12 @@ artifacts/validation/destroy-guard.json
 
 The guard blocks planned deletes that are not tagged, named, or child-owned by the current project. For shared GOAD and OCI-DEMO resources, do not destroy the shared GOAD VCN or shared OCI-DEMO Log Analytics content unless the parent deployment owns them. The Wazuh-specific resources created by this repo are tagged or named with the project prefix.
 
+On reused hosts, cleanup removes only components listed in the project ownership
+marker: the project-installed Wazuh agent, Sysmon installation, relay service,
+staging files, relay firewall rules, and matching Wazuh manager record.
+Pre-existing or unmarked components are preserved and reported. A missing or
+failed ownership marker blocks teardown.
+
 Use `SKIP_GOAD_CLEANUP=true` only when no reused GOAD/Windows host was modified by this lab. Use `ALLOW_GOAD_CLEANUP_FAILURE=true` only after manually removing demo-installed Windows agents and Sysmon from reused hosts.
 
 Post-destroy check:
@@ -530,6 +573,10 @@ oci search resource structured-search \
 ```
 
 Expected result: no Wazuh-owned residual resources.
+
+The controller performs this search with bounded retries for OCI eventual
+consistency. A nonzero result at the retry deadline is a failed run, even when
+Terraform apply itself completed successfully.
 
 ## 15. Documentation and Screenshot Validation
 
