@@ -128,7 +128,7 @@ fi
 
 if ! run_wazuh "$wazuh_user" "sudo cloud-init status --wait >/dev/null 2>&1"; then
   echo "wazuh_bootstrap=failed" >&2
-  run_wazuh "$wazuh_user" "sudo cloud-init status --long; if sudo test -f /var/log/oci-wazuh-demo/wazuh-install.log; then sudo grep -E -i 'error|failed|could not|unsupported|unable' /var/log/oci-wazuh-demo/wazuh-install.log | tail -80; fi" >&2 || true
+  run_wazuh "$wazuh_user" "sudo cloud-init status --long; if sudo test -f /var/log/oci-wazuh-demo/wazuh-install.log; then sudo grep -E -i 'error|failed|could not|unsupported|unable' /var/log/oci-wazuh-demo/wazuh-install.log | tail -80; sudo tail -120 /var/log/oci-wazuh-demo/wazuh-install.log | sed -E '/password|secret|token|credential/Id'; fi" >&2 || true
   exit 7
 fi
 

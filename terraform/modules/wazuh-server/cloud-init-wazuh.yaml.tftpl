@@ -1,13 +1,4 @@
 #cloud-config
-package_update: true
-packages:
-  - curl
-  - jq
-  - python3
-  - python3-pip
-  - python3-venv
-  - unzip
-  - rsyslog
 write_files:
   - path: /usr/local/bin/oci-wazuh-install.sh
     permissions: "0750"
@@ -23,6 +14,25 @@ write_files:
       stage="initialize"
 
       mkdir -p "$INSTALL_ROOT" /var/log/oci-wazuh-demo /var/lib/oci-wazuh-consumer /var/ossec/logs/oci
+      stage="system-packages"
+      export DEBIAN_FRONTEND=noninteractive
+      packages_installed=false
+      for package_attempt in $(seq 1 6); do
+        if apt-get update -o Acquire::Retries=3 -o DPkg::Lock::Timeout=120 \
+          && apt-get install --yes -o Acquire::Retries=3 -o DPkg::Lock::Timeout=120 \
+            curl jq python3 python3-pip python3-venv unzip rsyslog; then
+          packages_installed=true
+          break
+        fi
+        if [[ "$package_attempt" -lt 6 ]]; then
+          sleep 20
+        fi
+      done
+      if [[ "$packages_installed" != "true" ]]; then
+        echo "system package installation failed after bounded retries" >&2
+        exit 1
+      fi
+
       python3 -m venv "$VENV"
       "$VENV/bin/python3" -m pip install --quiet --disable-pip-version-check "oci==2.179.0"
 
