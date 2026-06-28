@@ -61,7 +61,14 @@ def test_backend_loads_snapshot_and_executes_argument_vectors(tmp_path: Path) ->
     assert backend.cleanup_reused_hosts("run-1") is True
     backend.destroy("run-1")
     assert backend.residual_resource_ids() == []
-    assert ("terraform", "-chdir=terraform", "import", "oci_identity_dynamic_group.demo", "synthetic-id") in calls
+    assert (
+        "terraform",
+        "-chdir=terraform",
+        "import",
+        "-input=false",
+        "oci_identity_dynamic_group.demo",
+        "synthetic-id",
+    ) in calls
 
 
 def test_backend_fails_closed_on_command_error_or_invalid_snapshot(tmp_path: Path) -> None:
@@ -80,6 +87,31 @@ def test_backend_fails_closed_on_command_error_or_invalid_snapshot(tmp_path: Pat
     snapshot.write_text('{"project_name":"wrong"}', encoding="utf-8")
     with pytest.raises(ValueError, match="snapshot"):
         backend.preflight("run-1")
+
+
+def test_backend_preserves_private_command_diagnostics(tmp_path: Path) -> None:
+    snapshot = tmp_path / "snapshot.json"
+    diagnostic = tmp_path / "runtime" / "command.log"
+    write_snapshot(snapshot)
+
+    def fail(command: tuple[str, ...]) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(
+            command,
+            1,
+            stdout="private standard output",
+            stderr="private provider error",
+        )
+
+    backend = CommandBackend(snapshot, CommandSet(), run=fail, diagnostic_path=diagnostic)
+
+    with pytest.raises(RuntimeError) as exc:
+        backend.import_resource("oci_identity_dynamic_group.demo", "private-id")
+
+    assert "private" not in str(exc.value)
+    assert diagnostic.read_text(encoding="utf-8") == (
+        "private standard output\nprivate provider error\n"
+    )
+    assert diagnostic.stat().st_mode & 0o777 == 0o600
 
 
 def test_residual_parser_returns_ids_internally_but_rejects_malformed_output(tmp_path: Path) -> None:

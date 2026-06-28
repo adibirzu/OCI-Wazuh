@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -39,17 +40,30 @@ class CommandBackend:
         *,
         run: Runner = _default_run,
         prepare: Prepare | None = None,
+        diagnostic_path: Path | None = None,
     ) -> None:
         self._snapshot_path = Path(snapshot_path)
         self._commands = commands
         self._run = run
         self._prepare = prepare
+        self._diagnostic_path = Path(diagnostic_path) if diagnostic_path is not None else None
+
+    def _write_diagnostic(self, result: subprocess.CompletedProcess[str]) -> None:
+        if self._diagnostic_path is None:
+            return
+        self._diagnostic_path.parent.mkdir(parents=True, exist_ok=True)
+        flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+        descriptor = os.open(self._diagnostic_path, flags, 0o600)
+        os.chmod(self._diagnostic_path, 0o600)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as diagnostics:
+            diagnostics.write(f"{result.stdout}\n{result.stderr}\n")
 
     def _execute(self, command: Command) -> subprocess.CompletedProcess[str]:
         if not command:
             raise RuntimeError("command is not configured")
         result = self._run(command)
         if result.returncode != 0:
+            self._write_diagnostic(result)
             raise RuntimeError(f"command failed: {command[0]}")
         return result
 
@@ -84,7 +98,9 @@ class CommandBackend:
         return self._load_snapshot()
 
     def import_resource(self, address: str, resource_id: str) -> None:
-        self._execute(("terraform", "-chdir=terraform", "import", address, resource_id))
+        self._execute(
+            ("terraform", "-chdir=terraform", "import", "-input=false", address, resource_id)
+        )
 
     def apply(self, run_id: str) -> None:
         del run_id

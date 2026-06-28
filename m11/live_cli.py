@@ -100,6 +100,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         build_default_commands(args.project_name),
         run=_runner(environment),
         prepare=None if args.skip_discovery else prepare,
+        diagnostic_path=Path("artifacts/runtime/m11-command-backend.log"),
     )
     summary = LiveWorkflow(args.artifacts, backend).run(
         mode=args.mode,
