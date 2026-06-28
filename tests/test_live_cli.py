@@ -74,6 +74,13 @@ def test_discovery_inventories_unowned_name_collisions_before_apply() -> None:
 
     assert 'query = "query all resources"' in discovery
     assert "freeformTags.key = 'project'" not in discovery
+    for label in (
+        "Terraform plan rendering",
+        "OCI resource search",
+        "OCI Service Connector inventory",
+        "OCI Service Connector limit query",
+    ):
+        assert label in discovery
 
 
 def test_terraform_stage_output_is_kept_out_of_public_logs() -> None:

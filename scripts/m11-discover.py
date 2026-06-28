@@ -6,7 +6,6 @@ from __future__ import annotations
 import argparse
 import json
 import os
-import subprocess
 import sys
 from dataclasses import asdict
 from pathlib import Path
@@ -20,10 +19,17 @@ from m11.discovery import build_preflight_snapshot
 from m11.secure_subprocess import classify_terraform_error, run_quiet
 
 
-def run_json(command: list[str], *, stdout_path: Path | None = None) -> Any:
-    result = subprocess.run(command, check=False, capture_output=True, text=True)
-    if result.returncode != 0:
-        raise RuntimeError(f"discovery command failed: {command[0]}")
+def run_json(
+    command: list[str],
+    *,
+    label: str,
+    stdout_path: Path | None = None,
+) -> Any:
+    result = run_quiet(
+        command,
+        label,
+        diagnostic_path=ROOT / "artifacts/runtime/m11-discovery-command.log",
+    )
     if stdout_path is not None:
         stdout_path.write_text(result.stdout, encoding="utf-8")
     return json.loads(result.stdout)
@@ -57,7 +63,8 @@ def connector_limit(profile: str, tenancy_id: str) -> int:
             "--scope-type",
             "REGION",
             "--all",
-        )
+        ),
+        label="OCI Service Connector limit query",
     )
     values = [
         int(item["value"])
@@ -112,6 +119,7 @@ def main() -> int:
     )
     plan = run_json(
         ["terraform", "-chdir=terraform", "show", "-json", str(plan_path.resolve())],
+        label="Terraform plan rendering",
         stdout_path=plan_json_path,
     )
 
@@ -120,7 +128,8 @@ def main() -> int:
     # types present in the current Terraform plan; raw inventory is not saved.
     query = "query all resources"
     search = run_json(
-        oci_command(args.profile, "search", "resource", "structured-search", "--query-text", query, "--all")
+        oci_command(args.profile, "search", "resource", "structured-search", "--query-text", query, "--all"),
+        label="OCI resource search",
     )
     connectors = run_json(
         oci_command(
@@ -131,7 +140,8 @@ def main() -> int:
             "--compartment-id",
             compartment,
             "--all",
-        )
+        ),
+        label="OCI Service Connector inventory",
     )
     items = list(search.get("data", {}).get("items", []))
     known = {str(item.get("identifier", "")) for item in items}
