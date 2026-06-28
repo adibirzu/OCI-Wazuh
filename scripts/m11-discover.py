@@ -47,9 +47,10 @@ def oci_command(profile: str, *arguments: str) -> list[str]:
     return command
 
 
-def planned_resource_values(plan: dict[str, Any], resource_type: str) -> dict[str, Any] | None:
+def planned_resource_values(plan: dict[str, Any], resource_type: str) -> tuple[dict[str, Any], ...]:
     root = plan.get("planned_values", {}).get("root_module", {})
     modules = [root]
+    matches: list[dict[str, Any]] = []
     while modules:
         module = modules.pop()
         modules.extend(module.get("child_modules", []))
@@ -58,15 +59,19 @@ def planned_resource_values(plan: dict[str, Any], resource_type: str) -> dict[st
                 values = resource.get("values")
                 if values is not None and not isinstance(values, dict):
                     raise ValueError("planned Log Analytics group values are invalid")
-                return values
-    return None
+                if values is not None:
+                    matches.append(values)
+    return tuple(matches)
 
 
 def planned_log_analytics_group(plan: dict[str, Any]) -> dict[str, Any] | None:
-    return planned_resource_values(plan, "oci_log_analytics_log_analytics_log_group")
+    groups = planned_resource_values(plan, "oci_log_analytics_log_analytics_log_group")
+    if len(groups) > 1:
+        raise ValueError("multiple planned Log Analytics groups are unsupported")
+    return groups[0] if groups else None
 
 
-def planned_logging_group(plan: dict[str, Any]) -> dict[str, Any] | None:
+def planned_logging_groups(plan: dict[str, Any]) -> tuple[dict[str, Any], ...]:
     return planned_resource_values(plan, "oci_logging_log_group")
 
 
@@ -155,8 +160,9 @@ def main() -> int:
         label="OCI resource search",
     )
     items = list(search.get("data", {}).get("items", []))
-    logging_group = planned_logging_group(plan)
-    if logging_group is not None:
+    normalized_logs: list[dict[str, Any]] = []
+    normalized_log_ids: set[str] = set()
+    for logging_group in planned_logging_groups(plan):
         logging_group_name = logging_group.get("display_name", "")
         candidate_groups = [
             item
@@ -165,8 +171,6 @@ def main() -> int:
             and item.get("display-name") == logging_group_name
             and item.get("identifier")
         ]
-        normalized_logs: list[dict[str, Any]] = []
-        normalized_log_ids: set[str] = set()
         for candidate_group in candidate_groups:
             group_id = str(candidate_group["identifier"])
             logging_logs = run_json(
@@ -185,15 +189,15 @@ def main() -> int:
             normalized_log_ids.update(
                 str(item.get("id", "")) for item in logging_logs.get("data", [])
             )
-        items = [
-            item
-            for item in items
-            if not (
-                item.get("resource-type") == "Log"
-                and str(item.get("identifier", "")) in normalized_log_ids
-            )
-        ]
-        items.extend(normalized_logs)
+    items = [
+        item
+        for item in items
+        if not (
+            item.get("resource-type") == "Log"
+            and str(item.get("identifier", "")) in normalized_log_ids
+        )
+    ]
+    items.extend(normalized_logs)
     log_analytics_group = planned_log_analytics_group(plan)
     if log_analytics_group is not None:
         namespace = log_analytics_group.get("namespace", "")
