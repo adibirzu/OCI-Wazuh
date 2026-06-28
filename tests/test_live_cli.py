@@ -133,6 +133,7 @@ def test_destroy_path_purges_only_state_owned_log_analytics_and_retries() -> Non
     assert 'logGroupId:\\"$group_id\\"' in purge
     assert "get-storage-work-request" in purge
     assert "oci_management_dashboard_management_dashboards_import.wazuh[0]" in dashboards
+    assert 'if type == "string" then fromjson else . end' in dashboards
     assert '.freeformTags.project == $project' in dashboards
     assert "management-dashboard saved-search delete" in dashboards
     assert "oci_objectstorage_bucket.bootstrap" in bucket
