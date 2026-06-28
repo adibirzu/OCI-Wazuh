@@ -100,6 +100,18 @@ def test_terraform_stage_output_is_kept_out_of_public_logs() -> None:
         assert "2>&1" in content
 
 
+def test_destroy_path_purges_only_state_owned_log_analytics_and_retries() -> None:
+    destroy = (ROOT / "scripts/down.sh").read_text(encoding="utf-8")
+    purge = (ROOT / "scripts/purge-project-log-analytics.sh").read_text(encoding="utf-8")
+
+    assert "purge-project-log-analytics.sh" in destroy
+    assert "for destroy_attempt in $(seq 1 4)" in destroy
+    assert "guard-destroy-plan.py" in destroy
+    assert 'freeform_tags.project == \\$project' in purge
+    assert 'logGroupId:\\"$group_id\\"' in purge
+    assert "get-storage-work-request" in purge
+
+
 def test_published_python_entrypoints_resolve_project_modules() -> None:
     for script in ("m11-live.py", "m11-discover.py"):
         result = subprocess.run(

@@ -43,7 +43,10 @@ else
   echo "windows_cleanup=terraform_owned_instances"
 fi
 
+profile="${OCI_PROFILE:-${OCI_CLI_PROFILE:-$(tfvar_value oci_config_profile)}}"
+profile="${profile:-DEFAULT}"
 terraform -chdir="$TF_DIR" init -input=false
+bash "$ROOT_DIR/scripts/purge-project-log-analytics.sh" "$project_name" "$profile"
 terraform -chdir="$TF_DIR" plan -destroy -out="$destroy_plan"
 terraform -chdir="$TF_DIR" show -json "$destroy_plan" > "$destroy_json"
 python3 "$ROOT_DIR/scripts/guard-destroy-plan.py" "$destroy_json" "$project_name"
@@ -63,10 +66,27 @@ EOF
   fi
 fi
 
-terraform -chdir="$TF_DIR" apply "$destroy_plan"
+destroy_succeeded=false
+for destroy_attempt in $(seq 1 4); do
+  if [[ "$destroy_attempt" -gt 1 ]]; then
+    terraform -chdir="$TF_DIR" plan -destroy -out="$destroy_plan"
+    terraform -chdir="$TF_DIR" show -json "$destroy_plan" > "$destroy_json"
+    python3 "$ROOT_DIR/scripts/guard-destroy-plan.py" "$destroy_json" "$project_name"
+  fi
+  if terraform -chdir="$TF_DIR" apply "$destroy_plan"; then
+    destroy_succeeded=true
+    break
+  fi
+  if [[ "$destroy_attempt" -lt 4 ]]; then
+    echo "destroy_retry=$destroy_attempt/4 waiting_for_oci_consistency" >&2
+    sleep 45
+  fi
+done
+[[ "$destroy_succeeded" == "true" ]] || {
+  echo "destroy=failed retries_exhausted" >&2
+  exit 5
+}
 
-profile="${OCI_PROFILE:-${OCI_CLI_PROFILE:-$(tfvar_value oci_config_profile)}}"
-profile="${profile:-DEFAULT}"
 residual_count=1
 for attempt in $(seq 1 12); do
   residual_count="$(oci --profile "$profile" search resource structured-search \
