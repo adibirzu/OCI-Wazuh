@@ -126,6 +126,12 @@ if [[ -z "$wazuh_user" ]]; then
   exit 4
 fi
 
+if ! run_wazuh "$wazuh_user" "sudo cloud-init status --wait >/dev/null 2>&1"; then
+  echo "wazuh_bootstrap=failed" >&2
+  run_wazuh "$wazuh_user" "sudo cloud-init status --long; if sudo test -f /var/log/oci-wazuh-demo/wazuh-install.log; then sudo grep -E -i 'error|failed|could not|unsupported|unable' /var/log/oci-wazuh-demo/wazuh-install.log | tail -80; fi" >&2 || true
+  exit 7
+fi
+
 ready_cmd='sudo /var/ossec/bin/wazuh-control status >/tmp/wazuh.ready && grep -q "wazuh-remoted is running" /tmp/wazuh.ready && grep -q "wazuh-authd is running" /tmp/wazuh.ready && grep -q "wazuh-apid is running" /tmp/wazuh.ready && curl -ksSf -o /dev/null https://127.0.0.1:443'
 for attempt in $(seq 1 60); do
   if run_wazuh "$wazuh_user" "$ready_cmd" >"$ssh_last_error" 2>&1; then
