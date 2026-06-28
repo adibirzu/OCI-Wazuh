@@ -1,4 +1,6 @@
 from pathlib import Path
+import subprocess
+import sys
 
 from m11.live_cli import build_default_commands, runner_environment
 
@@ -49,3 +51,15 @@ def test_discovery_inventories_unowned_name_collisions_before_apply() -> None:
 
     assert 'query = "query all resources"' in discovery
     assert "freeformTags.key = 'project'" not in discovery
+
+
+def test_published_python_entrypoints_resolve_project_modules() -> None:
+    for script in ("m11-live.py", "m11-discover.py"):
+        result = subprocess.run(
+            [sys.executable, str(ROOT / "scripts" / script), "--help"],
+            cwd=ROOT,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+        assert result.returncode == 0, result.stderr
