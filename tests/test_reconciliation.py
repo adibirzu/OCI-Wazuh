@@ -76,6 +76,23 @@ def test_owned_drift_ambiguity_and_provider_import_defect_block() -> None:
     assert not import_report.safe_to_apply
 
 
+def test_exact_owned_apply_adoptable_resources_bypass_provider_import_defects() -> None:
+    for resource_type in (
+        "oci_objectstorage_object",
+        "oci_management_dashboard_management_dashboards_import",
+    ):
+        report = reconcile_resources(
+            [expected(resource_type)],
+            [observed(resource_type=resource_type, importable=False)],
+            PROJECT,
+        )
+
+        assert report.safe_to_apply is True
+        assert report.decisions[0].action == "adopt_on_apply"
+        assert report.decisions[0].reason == "owned_configuration_match_provider_apply_adoption"
+        assert report.decisions[0].resource_id is None
+
+
 def test_deleted_candidates_are_ignored() -> None:
     report = reconcile_resources(
         [expected()],

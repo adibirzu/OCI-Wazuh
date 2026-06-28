@@ -109,6 +109,43 @@ def test_partial_deploy_imports_exact_match_before_apply(tmp_path: Path) -> None
     assert '"import": 1' in report_text
 
 
+def test_exact_nonimportable_match_is_adopted_by_apply_without_import(tmp_path: Path) -> None:
+    dashboard_type = "oci_management_dashboard_management_dashboards_import"
+    dashboard_expected = ExpectedResource(
+        address="oci_management_dashboard_management_dashboards_import.wazuh[0]",
+        resource_type=dashboard_type,
+        name=f"{PROJECT}-correlation",
+        tags={"project": PROJECT},
+        configuration={"fingerprint": "matching"},
+    )
+    dashboard_observed = ObservedResource(
+        resource_id="private-dashboard-id",
+        resource_type=dashboard_type,
+        name=f"{PROJECT}-correlation",
+        lifecycle_state="ACTIVE",
+        tags={"project": PROJECT},
+        configuration={"fingerprint": "matching"},
+        importable=False,
+    )
+    backend = FakeBackend(
+        PreflightSnapshot(
+            project_name=PROJECT,
+            expected=(dashboard_expected,),
+            observed=(dashboard_observed,),
+            connector_capacity=ConnectorCapacity(limit=1, active_count=0),
+        )
+    )
+
+    summary = LiveWorkflow(tmp_path, backend).run(
+        mode="orm", run_id="dashboard-run", stop_after="apply"
+    )
+
+    assert summary.state == "stopped"
+    assert backend.calls == ["preflight", "apply"]
+    report = json.loads((tmp_path / "reconciliation-report.json").read_text(encoding="utf-8"))
+    assert report["counts"] == {"adopt_on_apply": 1}
+
+
 def test_connector_quota_exhaustion_blocks_before_import_or_apply(tmp_path: Path) -> None:
     backend = FakeBackend(snapshot(capacity=ConnectorCapacity(limit=1, active_count=1)))
 
