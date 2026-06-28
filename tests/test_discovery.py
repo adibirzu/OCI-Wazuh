@@ -1,6 +1,10 @@
 import json
 
-from m11.discovery import build_preflight_snapshot, normalize_log_analytics_groups
+from m11.discovery import (
+    build_preflight_snapshot,
+    normalize_log_analytics_groups,
+    normalize_logging_logs,
+)
 
 
 PROJECT = "oci-wazuh-demo"
@@ -231,3 +235,49 @@ def test_log_analytics_groups_are_inventoried_with_provider_import_ids() -> None
         "namespaces/synthetic-namespace/logAnalyticsLogGroups/synthetic-log-analytics-group-id"
     )
     assert snapshot.observed[0].importable is True
+
+
+def test_logging_logs_are_inventoried_with_provider_composite_import_ids() -> None:
+    resource = planned_resource(
+        "oci_logging_log.flow[0]",
+        "oci_logging_log",
+        f"{PROJECT}-flow",
+    )
+    payload = {
+        "data": [
+            {
+                "id": "synthetic-log-id",
+                "display-name": f"{PROJECT}-flow",
+                "lifecycle-state": "ACTIVE",
+                "freeform-tags": {
+                    "project": PROJECT,
+                    "configuration_fingerprint": FINGERPRINT,
+                },
+            }
+        ]
+    }
+
+    inventory = normalize_logging_logs(payload, "synthetic-log-group-id")
+    snapshot = build_preflight_snapshot(plan([resource]), inventory, PROJECT, connector_limit=1)
+
+    assert inventory[0]["resource-type"] == "Log"
+    assert snapshot.observed[0].resource_id == (
+        "logGroupId/synthetic-log-group-id/logId/synthetic-log-id"
+    )
+    assert snapshot.observed[0].importable is True
+
+
+def test_bare_logging_log_identifier_is_not_importable() -> None:
+    resource = planned_resource(
+        "oci_logging_log.flow[0]",
+        "oci_logging_log",
+        f"{PROJECT}-flow",
+    )
+    snapshot = build_preflight_snapshot(
+        plan([resource]),
+        [search_item(f"{PROJECT}-flow", "Log")],
+        PROJECT,
+        connector_limit=1,
+    )
+
+    assert snapshot.observed[0].importable is False

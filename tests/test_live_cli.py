@@ -95,6 +95,10 @@ def test_discovery_inventories_unowned_name_collisions_before_apply() -> None:
         "OCI Service Connector limit query",
     ):
         assert label in discovery
+    assert "normalize_logging_logs" in discovery
+    assert '"logging",' in discovery
+    assert '"log",' in discovery
+    assert '"list",' in discovery
 
 
 def test_terraform_stage_output_is_kept_out_of_public_logs() -> None:
