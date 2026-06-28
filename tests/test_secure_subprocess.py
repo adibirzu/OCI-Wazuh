@@ -81,6 +81,16 @@ def test_terraform_error_classifier_uses_fixed_safe_categories(
     assert classify_terraform_error(output) == expected
 
 
+def test_terraform_error_classifier_can_return_only_source_location() -> None:
+    output = '''
+Error: provider returned an unknown sensitive diagnostic
+  with data.oci_example.internal,
+  on data.tf line 68, in data "oci_example" "internal":
+'''
+
+    assert classify_terraform_error(output) == "terraform_source:data.tf:68"
+
+
 def test_run_quiet_can_add_only_classified_diagnostic() -> None:
     sensitive = 'Invalid value for variable\nvariable "operator_cidr"\nocid1.example.sensitive'
 

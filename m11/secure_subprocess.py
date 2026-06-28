@@ -14,6 +14,7 @@ DiagnosticClassifier = Callable[[str], str]
 _VARIABLE_DECLARATION = re.compile(r'variable\s+"([a-z][a-z0-9_]*)"')
 _ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*m")
 _OCI_SERVICE_ERROR = re.compile(r"Error:\s+([45][0-9]{2})-[A-Za-z][A-Za-z0-9]*")
+_TERRAFORM_SOURCE = re.compile(r"\bon ([a-z][a-z0-9_-]*\.tf) line ([1-9][0-9]*)\b")
 _SAFE_TERRAFORM_DIAGNOSTICS = (
     ('The argument "namespace" is required', "missing_namespace"),
     ("availability_domain_index is outside", "availability_domain_unavailable"),
@@ -40,6 +41,9 @@ def classify_terraform_error(output: str) -> str:
     service_error = _OCI_SERVICE_ERROR.search(normalized)
     if service_error:
         return f"oci_service_error:{service_error.group(1)}"
+    source = _TERRAFORM_SOURCE.search(normalized)
+    if source:
+        return f"terraform_source:{source.group(1)}:{source.group(2)}"
     return "unclassified"
 
 
