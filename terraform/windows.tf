@@ -14,11 +14,12 @@ locals {
 }
 
 resource "oci_objectstorage_object" "windows_install" {
-  namespace    = local.bootstrap_namespace
-  bucket       = oci_objectstorage_bucket.bootstrap.name
-  object       = "windows/install.ps1"
-  content      = local.windows_install_script
-  content_type = "text/plain"
+  namespace                  = local.bootstrap_namespace
+  bucket                     = oci_objectstorage_bucket.bootstrap.name
+  object                     = "windows/install.ps1"
+  content                    = local.windows_install_script
+  content_type               = "text/plain"
+  delete_all_object_versions = true
   metadata = {
     project                   = var.project_name
     configuration_fingerprint = local.configuration_fingerprint
@@ -26,11 +27,12 @@ resource "oci_objectstorage_object" "windows_install" {
 }
 
 resource "oci_objectstorage_object" "windows_cleanup" {
-  namespace    = local.bootstrap_namespace
-  bucket       = oci_objectstorage_bucket.bootstrap.name
-  object       = "windows/cleanup.ps1"
-  content      = local.windows_cleanup_script
-  content_type = "text/plain"
+  namespace                  = local.bootstrap_namespace
+  bucket                     = oci_objectstorage_bucket.bootstrap.name
+  object                     = "windows/cleanup.ps1"
+  content                    = local.windows_cleanup_script
+  content_type               = "text/plain"
+  delete_all_object_versions = true
   metadata = {
     sha256                    = sha256(local.windows_cleanup_script)
     project                   = var.project_name

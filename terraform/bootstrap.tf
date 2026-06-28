@@ -58,11 +58,12 @@ resource "oci_objectstorage_bucket" "bootstrap" {
 }
 
 resource "oci_objectstorage_object" "bootstrap" {
-  namespace    = local.bootstrap_namespace
-  bucket       = oci_objectstorage_bucket.bootstrap.name
-  object       = "bootstrap/oci-wazuh-bootstrap.json"
-  content      = local.bootstrap_bundle_content
-  content_type = "application/json"
+  namespace                  = local.bootstrap_namespace
+  bucket                     = oci_objectstorage_bucket.bootstrap.name
+  object                     = "bootstrap/oci-wazuh-bootstrap.json"
+  content                    = local.bootstrap_bundle_content
+  content_type               = "application/json"
+  delete_all_object_versions = true
   metadata = {
     sha256                    = local.bootstrap_bundle_sha256
     project                   = var.project_name
@@ -71,11 +72,12 @@ resource "oci_objectstorage_object" "bootstrap" {
 }
 
 resource "oci_objectstorage_object" "bootstrap_manifest" {
-  namespace    = local.bootstrap_namespace
-  bucket       = oci_objectstorage_bucket.bootstrap.name
-  object       = "bootstrap/manifest.json"
-  content      = local.bootstrap_manifest_content
-  content_type = "application/json"
+  namespace                  = local.bootstrap_namespace
+  bucket                     = oci_objectstorage_bucket.bootstrap.name
+  object                     = "bootstrap/manifest.json"
+  content                    = local.bootstrap_manifest_content
+  content_type               = "application/json"
+  delete_all_object_versions = true
   metadata = {
     project                   = var.project_name
     configuration_fingerprint = local.configuration_fingerprint

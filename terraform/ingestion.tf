@@ -43,7 +43,7 @@ resource "oci_identity_policy" "wazuh_consumer" {
 }
 
 resource "oci_identity_policy" "sch_log_source" {
-  for_each       = nonsensitive(toset(keys(local.sch_log_source_policy_scope_ids)))
+  for_each       = toset(nonsensitive(keys(sensitive(local.sch_log_source_policy_scope_ids))))
   compartment_id = local.effective_tenancy_ocid
   name           = "${var.project_name}-sch-log-source-${each.key}"
   description    = "Allow Service Connector Hub to read selected OCI Flow Logs."

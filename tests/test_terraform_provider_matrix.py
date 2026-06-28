@@ -52,7 +52,9 @@ def test_flow_log_for_each_keys_do_not_depend_on_apply_time_resource_ids() -> No
     assert "distinct(var.resource_ids)" not in flowlogs
     assert "if resource_id != \"\"" not in flowlogs
     assert "Every flow_log_resource_ids entry must be non-empty." in variables
-    assert "for_each       = nonsensitive(toset(keys(local.sch_log_source_policy_scope_ids)))" in ingestion
+    assert (
+        "for_each       = toset(nonsensitive(keys(sensitive(local.sch_log_source_policy_scope_ids))))" in ingestion
+    )
     assert "local.sch_log_source_policy_scope_ids[each.key]" in ingestion
 
 
@@ -66,3 +68,11 @@ def test_windows_install_object_ownership_metadata_is_plan_time_known() -> None:
     assert "project                   = var.project_name" in install_block
     assert "configuration_fingerprint = local.configuration_fingerprint" in install_block
     assert "sha256(local.windows_install_script)" not in install_block
+
+
+def test_project_objects_remove_all_versions_during_destroy() -> None:
+    bootstrap = (ROOT / "terraform/bootstrap.tf").read_text(encoding="utf-8")
+    windows = (ROOT / "terraform/windows.tf").read_text(encoding="utf-8")
+
+    assert bootstrap.count("delete_all_object_versions = true") == 2
+    assert windows.count("delete_all_object_versions = true") == 2
