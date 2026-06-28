@@ -54,3 +54,15 @@ def test_flow_log_for_each_keys_do_not_depend_on_apply_time_resource_ids() -> No
     assert "Every flow_log_resource_ids entry must be non-empty." in variables
     assert "for_each       = nonsensitive(toset(keys(local.sch_log_source_policy_scope_ids)))" in ingestion
     assert "local.sch_log_source_policy_scope_ids[each.key]" in ingestion
+
+
+def test_windows_install_object_ownership_metadata_is_plan_time_known() -> None:
+    windows = (ROOT / "terraform/windows.tf").read_text(encoding="utf-8")
+    install_block = windows.split('resource "oci_objectstorage_object" "windows_install"', 1)[1].split(
+        'resource "oci_objectstorage_object" "windows_cleanup"',
+        1,
+    )[0]
+
+    assert "project                   = var.project_name" in install_block
+    assert "configuration_fingerprint = local.configuration_fingerprint" in install_block
+    assert "sha256(local.windows_install_script)" not in install_block

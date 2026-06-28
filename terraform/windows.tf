@@ -20,7 +20,6 @@ resource "oci_objectstorage_object" "windows_install" {
   content      = local.windows_install_script
   content_type = "text/plain"
   metadata = {
-    sha256                    = sha256(local.windows_install_script)
     project                   = var.project_name
     configuration_fingerprint = local.configuration_fingerprint
   }
