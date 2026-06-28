@@ -103,8 +103,10 @@ def test_terraform_stage_output_is_kept_out_of_public_logs() -> None:
 def test_destroy_path_purges_only_state_owned_log_analytics_and_retries() -> None:
     destroy = (ROOT / "scripts/down.sh").read_text(encoding="utf-8")
     purge = (ROOT / "scripts/purge-project-log-analytics.sh").read_text(encoding="utf-8")
+    dashboards = (ROOT / "scripts/cleanup-project-dashboard-content.sh").read_text(encoding="utf-8")
 
     assert "purge-project-log-analytics.sh" in destroy
+    assert "cleanup-project-dashboard-content.sh" in destroy
     assert 'destroy_max_attempts="${DESTROY_MAX_ATTEMPTS:-12}"' in destroy
     assert 'destroy_retry_seconds="${DESTROY_RETRY_SECONDS:-60}"' in destroy
     assert 'for destroy_attempt in $(seq 1 "$destroy_max_attempts")' in destroy
@@ -115,6 +117,13 @@ def test_destroy_path_purges_only_state_owned_log_analytics_and_retries() -> Non
     assert 'freeform_tags.project == \\$project' in purge
     assert 'logGroupId:\\"$group_id\\"' in purge
     assert "get-storage-work-request" in purge
+    assert "oci_management_dashboard_management_dashboards_import.wazuh[0]" in dashboards
+    assert '.freeformTags.project == $project' in dashboards
+    assert "management-dashboard saved-search delete" in dashboards
+    confirmation = destroy.index('if [[ "${AUTO_APPROVE:-false}"')
+    cleanup = destroy.index('bash "$ROOT_DIR/scripts/cleanup-project-dashboard-content.sh"')
+    purge_call = destroy.index('bash "$ROOT_DIR/scripts/purge-project-log-analytics.sh"')
+    assert confirmation < cleanup < purge_call
 
 
 def test_published_python_entrypoints_resolve_project_modules() -> None:

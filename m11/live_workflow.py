@@ -82,14 +82,31 @@ class LiveWorkflow:
         decisions: tuple[ReconciliationDecision, ...],
     ) -> None:
         counts = dict(sorted(Counter(decision.action for decision in decisions).items()))
-        blocked = sorted(
-            decision.reason
-            for decision in decisions
-            if decision.action not in {"create", "import"}
+        blocked_decisions = tuple(
+            decision for decision in decisions if decision.action not in {"create", "import"}
+        )
+        blocked = sorted(decision.reason for decision in blocked_decisions)
+        blocked_details = sorted(
+            (
+                {
+                    "action": decision.action,
+                    "address": decision.address,
+                    "reason": decision.reason,
+                }
+                for decision in blocked_decisions
+            ),
+            key=lambda item: item["address"],
         )
         payload = {
+            "blocked": blocked_details,
             "blocked_reasons": blocked,
             "counts": counts,
+            "operator_remediation": (
+                "Review each blocked Terraform address, verify live ownership and configuration, "
+                "then explicitly import, remove, or rename the conflicting resource before rerunning."
+                if blocked_details
+                else ""
+            ),
             "run_id": run_id,
             "state": "failed" if blocked else "green",
         }

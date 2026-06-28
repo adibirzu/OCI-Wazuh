@@ -15,7 +15,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from m11.discovery import build_preflight_snapshot
+from m11.discovery import build_preflight_snapshot, normalize_log_analytics_groups
 from m11.secure_subprocess import classify_terraform_error, run_quiet
 
 
@@ -41,6 +41,21 @@ def oci_command(profile: str, *arguments: str) -> list[str]:
         command.extend(("--profile", profile))
     command.extend(arguments)
     return command
+
+
+def planned_log_analytics_group(plan: dict[str, Any]) -> dict[str, Any] | None:
+    root = plan.get("planned_values", {}).get("root_module", {})
+    modules = [root]
+    while modules:
+        module = modules.pop()
+        modules.extend(module.get("child_modules", []))
+        for resource in module.get("resources", []):
+            if resource.get("type") == "oci_log_analytics_log_analytics_log_group":
+                values = resource.get("values")
+                if values is not None and not isinstance(values, dict):
+                    raise ValueError("planned Log Analytics group values are invalid")
+                return values
+    return None
 
 
 def connector_limit(profile: str, tenancy_id: str) -> int:
@@ -128,6 +143,27 @@ def main() -> int:
         label="OCI resource search",
     )
     items = list(search.get("data", {}).get("items", []))
+    log_analytics_group = planned_log_analytics_group(plan)
+    if log_analytics_group is not None:
+        namespace = log_analytics_group.get("namespace", "")
+        group_compartment = log_analytics_group.get("compartment_id", "")
+        if not namespace or not group_compartment:
+            raise RuntimeError("planned Log Analytics group inventory scope is incomplete")
+        log_analytics_groups = run_json(
+            oci_command(
+                args.profile,
+                "log-analytics",
+                "log-group",
+                "list",
+                "--namespace-name",
+                namespace,
+                "--compartment-id",
+                group_compartment,
+                "--all",
+            ),
+            label="OCI Log Analytics group inventory",
+        )
+        items.extend(normalize_log_analytics_groups(log_analytics_groups, namespace))
     snapshot = build_preflight_snapshot(
         plan,
         items,

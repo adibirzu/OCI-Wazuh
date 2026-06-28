@@ -74,7 +74,6 @@ if ! terraform -chdir="$TF_DIR" init -input=false > "$destroy_init_log" 2>&1; th
   echo "destroy_init=failed diagnostic=artifacts/runtime/destroy-init.log" >&2
   exit 5
 fi
-bash "$ROOT_DIR/scripts/purge-project-log-analytics.sh" "$project_name" "$profile"
 render_guarded_destroy_plan
 
 if [[ "${AUTO_APPROVE:-false}" != "true" && "${DESTROY_CONFIRM:-}" != "$project_name" ]]; then
@@ -91,6 +90,9 @@ EOF
     exit 4
   fi
 fi
+
+bash "$ROOT_DIR/scripts/cleanup-project-dashboard-content.sh" "$project_name" "$profile"
+bash "$ROOT_DIR/scripts/purge-project-log-analytics.sh" "$project_name" "$profile"
 
 destroy_succeeded=false
 rm -f "$destroy_apply_log"

@@ -120,6 +120,33 @@ def test_connector_quota_exhaustion_blocks_before_import_or_apply(tmp_path: Path
     assert report["blocked_reasons"] == ["service_connector_quota_exhausted"]
 
 
+def test_blocked_report_is_actionable_without_resource_identifiers(tmp_path: Path) -> None:
+    drifted = ObservedResource(
+        resource_id="private-drifted-id",
+        resource_type="oci_sch_service_connector",
+        name=f"{PROJECT}-flow",
+        lifecycle_state="ACTIVE",
+        tags={"project": PROJECT},
+        configuration={"source": "audit", "target": "external"},
+    )
+    backend = FakeBackend(snapshot((drifted,)))
+
+    summary = LiveWorkflow(tmp_path, backend).run(mode="orm", run_id="drift-run")
+
+    assert summary.state == "failed"
+    report_path = tmp_path / "reconciliation-report.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    assert report["blocked"] == [
+        {
+            "action": "blocked",
+            "address": "module.service_connector.oci_sch_service_connector.flow",
+            "reason": "owned_configuration_mismatch",
+        }
+    ]
+    assert report["operator_remediation"]
+    assert "private-drifted-id" not in report_path.read_text(encoding="utf-8")
+
+
 def test_cleanup_failure_prevents_destroy(tmp_path: Path) -> None:
     backend = FakeBackend(snapshot(), cleanup_green=False)
 

@@ -12,6 +12,7 @@ SUPPORTED_RESOURCE_TYPES = frozenset(
     {
         "oci_identity_dynamic_group",
         "oci_identity_policy",
+        "oci_log_analytics_log_analytics_log_group",
         "oci_logging_log_group",
         "oci_logging_log",
         "oci_logging_unified_agent_configuration",

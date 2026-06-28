@@ -1,6 +1,6 @@
 import json
 
-from m11.discovery import build_preflight_snapshot
+from m11.discovery import build_preflight_snapshot, normalize_log_analytics_groups
 
 
 PROJECT = "oci-wazuh-demo"
@@ -9,6 +9,7 @@ FINGERPRINT = "a" * 64
 
 def planned_resource(address: str, resource_type: str, name: str) -> dict:
     name_key = "display_name" if resource_type in {
+        "oci_log_analytics_log_analytics_log_group",
         "oci_logging_log_group",
         "oci_logging_log",
         "oci_sch_service_connector",
@@ -191,3 +192,34 @@ def test_dashboard_import_reads_name_and_tags_from_import_details() -> None:
 
     assert snapshot.expected[0].name == f"{PROJECT}-correlation"
     assert snapshot.expected[0].tags["configuration_fingerprint"] == FINGERPRINT
+
+
+def test_log_analytics_groups_are_inventoried_with_provider_import_ids() -> None:
+    resource = planned_resource(
+        "oci_log_analytics_log_analytics_log_group.wazuh[0]",
+        "oci_log_analytics_log_analytics_log_group",
+        f"{PROJECT}-log-analytics",
+    )
+    payload = {
+        "data": {
+            "items": [
+                {
+                    "id": "synthetic-log-analytics-group-id",
+                    "display-name": f"{PROJECT}-log-analytics",
+                    "freeform-tags": {
+                        "project": PROJECT,
+                        "configuration_fingerprint": FINGERPRINT,
+                    },
+                }
+            ]
+        }
+    }
+
+    inventory = normalize_log_analytics_groups(payload, "synthetic-namespace")
+    snapshot = build_preflight_snapshot(plan([resource]), inventory, PROJECT, connector_limit=1)
+
+    assert inventory[0]["resource-type"] == "LogAnalyticsLogGroup"
+    assert snapshot.observed[0].resource_id == (
+        "namespaces/synthetic-namespace/logAnalyticsLogGroups/synthetic-log-analytics-group-id"
+    )
+    assert snapshot.observed[0].importable is True

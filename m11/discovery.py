@@ -18,6 +18,7 @@ from m11.reconciliation import (
 OCI_TO_TERRAFORM_TYPE = {
     "DynamicGroup": "oci_identity_dynamic_group",
     "Policy": "oci_identity_policy",
+    "LogAnalyticsLogGroup": "oci_log_analytics_log_analytics_log_group",
     "LogGroup": "oci_logging_log_group",
     "Log": "oci_logging_log",
     "LogConfiguration": "oci_logging_unified_agent_configuration",
@@ -33,6 +34,35 @@ NON_IMPORTABLE_TYPES = frozenset(
         "oci_management_dashboard_management_dashboards_import",
     }
 )
+
+
+def normalize_log_analytics_groups(
+    payload: Mapping[str, Any], namespace: str
+) -> tuple[dict[str, Any], ...]:
+    """Return immutable Resource Search-shaped entries with provider import IDs."""
+    if not namespace:
+        raise ValueError("Log Analytics namespace is required for inventory normalization")
+    data = payload.get("data", {})
+    items = data.get("items", []) if isinstance(data, Mapping) else []
+    if not isinstance(items, Sequence) or isinstance(items, (str, bytes)):
+        raise ValueError("Log Analytics group inventory has invalid items")
+
+    normalized: list[dict[str, Any]] = []
+    for item in items:
+        if not isinstance(item, Mapping):
+            raise ValueError("Log Analytics group inventory item is invalid")
+        group_id = item.get("id", "")
+        if not isinstance(group_id, str) or not group_id:
+            raise ValueError("Log Analytics group inventory item has no ID")
+        normalized.append(
+            {
+                **dict(item),
+                "identifier": f"namespaces/{namespace}/logAnalyticsLogGroups/{group_id}",
+                "lifecycle-state": item.get("lifecycle-state", "ACTIVE"),
+                "resource-type": "LogAnalyticsLogGroup",
+            }
+        )
+    return tuple(normalized)
 
 
 def _resources(module: Mapping[str, Any]) -> Iterator[Mapping[str, Any]]:
