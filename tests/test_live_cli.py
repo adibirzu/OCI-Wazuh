@@ -46,6 +46,20 @@ def test_live_workflow_uses_one_controller_and_required_stage_scripts() -> None:
         assert (ROOT / "scripts" / script).is_file()
 
 
+def test_live_workflow_maps_provider_null_fallbacks_from_protected_secrets() -> None:
+    workflow = (ROOT / ".github/workflows/live-m11.yml").read_text(encoding="utf-8")
+
+    expected = {
+        "TF_VAR_availability_domain": "OCI_AVAILABILITY_DOMAIN",
+        "TF_VAR_ol9_image_id": "OCI_OL9_IMAGE_OCID",
+        "TF_VAR_ubuntu2404_image_id": "OCI_UBUNTU2404_IMAGE_OCID",
+        "TF_VAR_object_storage_namespace": "OCI_OBJECT_STORAGE_NAMESPACE",
+        "TF_VAR_log_analytics_namespace": "OCI_LOG_ANALYTICS_NAMESPACE",
+    }
+    for variable, secret in expected.items():
+        assert f"{variable}: ${{{{ secrets.{secret} }}}}" in workflow
+
+
 def test_discovery_inventories_unowned_name_collisions_before_apply() -> None:
     discovery = (ROOT / "scripts/m11-discover.py").read_text(encoding="utf-8")
 

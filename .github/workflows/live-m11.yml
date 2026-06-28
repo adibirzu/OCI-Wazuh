@@ -39,6 +39,11 @@ jobs:
       TF_VAR_compartment_ocid: ${{ secrets.OCI_COMPARTMENT_OCID }}
       TF_VAR_region: ${{ vars.OCI_REGION }}
       TF_VAR_operator_cidr: ${{ secrets.OPERATOR_CIDR }}
+      TF_VAR_availability_domain: ${{ secrets.OCI_AVAILABILITY_DOMAIN }}
+      TF_VAR_ol9_image_id: ${{ secrets.OCI_OL9_IMAGE_OCID }}
+      TF_VAR_ubuntu2404_image_id: ${{ secrets.OCI_UBUNTU2404_IMAGE_OCID }}
+      TF_VAR_object_storage_namespace: ${{ secrets.OCI_OBJECT_STORAGE_NAMESPACE }}
+      TF_VAR_log_analytics_namespace: ${{ secrets.OCI_LOG_ANALYTICS_NAMESPACE }}
       TF_VAR_network_mode: ${{ inputs.network_mode }}
       TF_VAR_ingestion_mode: ${{ inputs.ingestion_mode }}
       TF_VAR_windows_mode: ${{ inputs.windows_mode }}
