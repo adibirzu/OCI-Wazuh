@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from m11.discovery import build_preflight_snapshot
+from m11.secure_subprocess import run_quiet
 
 
 def run_json(command: list[str], *, stdout_path: Path | None = None) -> Any:
@@ -99,13 +100,13 @@ def main() -> int:
     args.output.parent.mkdir(parents=True, exist_ok=True)
     plan_path = args.output.with_suffix(".tfplan")
     plan_json_path = args.output.with_suffix(".plan.json")
-    subprocess.run(
+    run_quiet(
         ["terraform", "-chdir=terraform", "init", "-backend=false", "-input=false"],
-        check=True,
+        "Terraform discovery init",
     )
-    subprocess.run(
+    run_quiet(
         ["terraform", "-chdir=terraform", "plan", "-input=false", f"-out={plan_path.resolve()}"],
-        check=True,
+        "Terraform discovery plan",
     )
     plan = run_json(
         ["terraform", "-chdir=terraform", "show", "-json", str(plan_path.resolve())],

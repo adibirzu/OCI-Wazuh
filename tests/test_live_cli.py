@@ -53,6 +53,22 @@ def test_discovery_inventories_unowned_name_collisions_before_apply() -> None:
     assert "freeformTags.key = 'project'" not in discovery
 
 
+def test_terraform_stage_output_is_kept_out_of_public_logs() -> None:
+    discovery = (ROOT / "scripts/m11-discover.py").read_text(encoding="utf-8")
+    assert "run_quiet(" in discovery
+
+    expected_logs = {
+        "m11-apply.sh": ("m11-plan.log", "m11-apply.log"),
+        "m11-cleanup.sh": ("m11-cleanup.log",),
+        "m11-destroy.sh": ("m11-destroy.log",),
+    }
+    for script, logs in expected_logs.items():
+        content = (ROOT / "scripts" / script).read_text(encoding="utf-8")
+        for log in logs:
+            assert f"artifacts/runtime/{log}" in content
+        assert "2>&1" in content
+
+
 def test_published_python_entrypoints_resolve_project_modules() -> None:
     for script in ("m11-live.py", "m11-discover.py"):
         result = subprocess.run(
