@@ -127,6 +127,24 @@ def test_snapshot_rejects_missing_limit_or_project_fingerprint() -> None:
         raise AssertionError("missing connector capacity must fail closed")
 
 
+def test_configuration_only_disabled_resources_are_not_expected() -> None:
+    enabled = planned_resource(
+        "oci_identity_policy.demo",
+        "oci_identity_policy",
+        f"{PROJECT}-policy",
+    )
+    disabled = {
+        "address": "oci_objectstorage_object.windows_install",
+        "mode": "managed",
+        "type": "oci_objectstorage_object",
+        "values": None,
+    }
+
+    snapshot = build_preflight_snapshot(plan([enabled, disabled]), [], PROJECT, connector_limit=1)
+
+    assert [resource.address for resource in snapshot.expected] == ["oci_identity_policy.demo"]
+
+
 def test_object_storage_objects_use_ownership_metadata_instead_of_tags() -> None:
     resource = {
         "address": "oci_objectstorage_object.bootstrap",

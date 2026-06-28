@@ -89,7 +89,11 @@ def _expected_resources(plan: Mapping[str, Any], project_name: str) -> tuple[Exp
         resource_type = resource.get("type")
         if resource_type not in SUPPORTED_RESOURCE_TYPES:
             continue
-        values = resource.get("values") or {}
+        values = resource.get("values")
+        if values is None:
+            continue
+        if not isinstance(values, Mapping):
+            raise ValueError(f"supported resource {resource.get('address', '<unknown>')} has invalid planned values")
         tags = _tags(values)
         fingerprint = tags.get("configuration_fingerprint", "")
         name = _name(values)
