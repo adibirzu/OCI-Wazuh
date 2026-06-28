@@ -148,6 +148,15 @@ def test_destroy_path_purges_only_state_owned_log_analytics_and_retries() -> Non
     assert confirmation < cleanup < purge_call
 
 
+def test_e2e_fails_fast_with_private_wazuh_bootstrap_diagnostics() -> None:
+    e2e = (ROOT / "scripts/e2e.sh").read_text(encoding="utf-8")
+
+    assert "cloud-init status --wait" in e2e
+    assert "wazuh_bootstrap=failed" in e2e
+    assert "/var/log/oci-wazuh-demo/wazuh-install.log" in e2e
+    assert "grep -E -i 'error|failed|could not|unsupported|unable'" in e2e
+
+
 def test_published_python_entrypoints_resolve_project_modules() -> None:
     for script in ("m11-live.py", "m11-discover.py"):
         result = subprocess.run(
