@@ -27,7 +27,7 @@ JSON
 
   run env OUTPUTS="$outputs" bash -c 'WAZUH_TF_OUTPUT_JSON="$OUTPUTS"; WAZUH_SSH_MODE=direct; source scripts/wazuh-ssh.sh; wazuh_resolve_target'
   [ "$status" -ne 0 ]
-  [[ "$output" == *"development-only"* ]]
+  [[ "$output" == *"forbidden"* ]]
 
   run env OUTPUTS="$outputs" bash -c 'WAZUH_TF_OUTPUT_JSON="$OUTPUTS"; WAZUH_SSH_MODE=direct; ALLOW_PUBLIC_WAZUH_SSH=true; source scripts/wazuh-ssh.sh; wazuh_resolve_target'
   [ "$status" -ne 0 ]
