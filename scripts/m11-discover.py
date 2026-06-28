@@ -108,6 +108,7 @@ def main() -> int:
         ["terraform", "-chdir=terraform", "plan", "-input=false", f"-out={plan_path.resolve()}"],
         "Terraform discovery plan",
         diagnostic_classifier=classify_terraform_error,
+        diagnostic_path=ROOT / "artifacts/runtime/m11-discovery-plan.log",
     )
     plan = run_json(
         ["terraform", "-chdir=terraform", "show", "-json", str(plan_path.resolve())],

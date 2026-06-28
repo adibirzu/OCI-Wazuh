@@ -1,4 +1,5 @@
 import subprocess
+import stat
 
 import pytest
 
@@ -109,3 +110,22 @@ def test_run_quiet_can_add_only_classified_diagnostic() -> None:
         )
 
     assert "ocid1" not in str(failure.value)
+
+
+def test_run_quiet_writes_failure_detail_only_to_private_runtime_file(tmp_path) -> None:
+    sensitive = "provider diagnostic with private topology"
+    diagnostic_path = tmp_path / "runtime" / "terraform.log"
+
+    def runner(command: list[str], **kwargs: object) -> subprocess.CompletedProcess[str]:
+        return subprocess.CompletedProcess(command, 1, "stdout detail", sensitive)
+
+    with pytest.raises(RuntimeError, match=r"^Terraform plan failed$"):
+        run_quiet(
+            ["terraform", "plan"],
+            "Terraform plan",
+            runner=runner,
+            diagnostic_path=diagnostic_path,
+        )
+
+    assert diagnostic_path.read_text(encoding="utf-8") == f"stdout detail\n{sensitive}\n"
+    assert stat.S_IMODE(diagnostic_path.stat().st_mode) == 0o600
