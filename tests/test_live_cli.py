@@ -96,6 +96,8 @@ def test_discovery_inventories_unowned_name_collisions_before_apply() -> None:
     ):
         assert label in discovery
     assert "normalize_logging_logs" in discovery
+    assert "planned_logging_groups" in discovery
+    assert "for logging_group in planned_logging_groups(plan)" in discovery
     assert '"logging",' in discovery
     assert '"log",' in discovery
     assert '"list",' in discovery
