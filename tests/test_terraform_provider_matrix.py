@@ -41,3 +41,16 @@ def test_all_common_resource_tags_include_stable_configuration_fingerprint() -> 
         "wazuh_version",
     ):
         assert input_name in locals_file
+
+
+def test_flow_log_for_each_keys_do_not_depend_on_apply_time_resource_ids() -> None:
+    flowlogs = (ROOT / "terraform/modules/flowlogs/main.tf").read_text(encoding="utf-8")
+    variables = (ROOT / "terraform/variables.tf").read_text(encoding="utf-8")
+    ingestion = (ROOT / "terraform/ingestion.tf").read_text(encoding="utf-8")
+
+    assert "for idx, resource_id in var.resource_ids" in flowlogs
+    assert "distinct(var.resource_ids)" not in flowlogs
+    assert "if resource_id != \"\"" not in flowlogs
+    assert "Every flow_log_resource_ids entry must be non-empty." in variables
+    assert "for_each       = nonsensitive(toset(keys(local.sch_log_source_policy_scope_ids)))" in ingestion
+    assert "local.sch_log_source_policy_scope_ids[each.key]" in ingestion

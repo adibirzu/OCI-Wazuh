@@ -43,12 +43,12 @@ resource "oci_identity_policy" "wazuh_consumer" {
 }
 
 resource "oci_identity_policy" "sch_log_source" {
-  for_each       = local.sch_log_source_policy_scope_ids
+  for_each       = nonsensitive(toset(keys(local.sch_log_source_policy_scope_ids)))
   compartment_id = local.effective_tenancy_ocid
   name           = "${var.project_name}-sch-log-source-${each.key}"
   description    = "Allow Service Connector Hub to read selected OCI Flow Logs."
   statements = [
-    "Allow any-user to read log-content in compartment id ${each.value} where request.principal.type='serviceconnector'",
+    "Allow any-user to read log-content in compartment id ${local.sch_log_source_policy_scope_ids[each.key]} where request.principal.type='serviceconnector'",
   ]
   freeform_tags = local.common_freeform_tags
   defined_tags  = var.defined_tags

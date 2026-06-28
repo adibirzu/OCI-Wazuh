@@ -264,6 +264,11 @@ variable "flow_log_resource_ids" {
   default     = []
   description = "Optional subnet, VCN, or VNIC OCIDs for Flow Logs. Empty selects the workload subnet."
   sensitive   = true
+
+  validation {
+    condition     = alltrue([for resource_id in var.flow_log_resource_ids : trimspace(resource_id) != ""])
+    error_message = "Every flow_log_resource_ids entry must be non-empty."
+  }
 }
 
 variable "flow_log_resource_compartment_id" {

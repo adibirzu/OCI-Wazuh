@@ -1,8 +1,7 @@
 locals {
   flow_log_targets = {
-    for idx, resource_id in distinct(var.resource_ids) :
+    for idx, resource_id in var.resource_ids :
     format("%02d", idx) => resource_id
-    if resource_id != ""
   }
   flow_log_categories = {
     for key, resource_id in local.flow_log_targets :
