@@ -161,6 +161,20 @@ def test_e2e_fails_fast_with_private_wazuh_bootstrap_diagnostics() -> None:
     assert "wazuh_bootstrap=failed" in e2e
     assert "/var/log/oci-wazuh-demo/wazuh-install.log" in e2e
     assert "grep -E -i 'error|failed|could not|unsupported|unable'" in e2e
+    assert "sed -E '/password|secret|token|credential/Id'" in e2e
+
+
+def test_wazuh_cloud_init_uses_bounded_package_retries() -> None:
+    cloud_init = (
+        ROOT / "terraform/modules/wazuh-server/cloud-init-wazuh.yaml.tftpl"
+    ).read_text(encoding="utf-8")
+
+    assert "package_update:" not in cloud_init
+    assert "packages:" not in cloud_init
+    assert "for package_attempt in $(seq 1 6)" in cloud_init
+    assert "apt-get update" in cloud_init
+    assert "apt-get install --yes" in cloud_init
+    assert "system package installation failed after bounded retries" in cloud_init
 
 
 def test_published_python_entrypoints_resolve_project_modules() -> None:
