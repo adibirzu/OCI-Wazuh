@@ -23,6 +23,13 @@ SUPPORTED_RESOURCE_TYPES = frozenset(
     }
 )
 
+APPLY_ADOPTABLE_RESOURCE_TYPES = frozenset(
+    {
+        "oci_objectstorage_object",
+        "oci_management_dashboard_management_dashboards_import",
+    }
+)
+
 
 def configuration_fingerprint(configuration: Mapping[str, Any]) -> str:
     """Return a deterministic digest without retaining or emitting raw values."""
@@ -107,6 +114,12 @@ def _decision_for(
     if not exact:
         return ReconciliationDecision(expected.address, "blocked", "owned_configuration_mismatch")
     if not exact[0].importable:
+        if expected.resource_type in APPLY_ADOPTABLE_RESOURCE_TYPES:
+            return ReconciliationDecision(
+                expected.address,
+                "adopt_on_apply",
+                "owned_configuration_match_provider_apply_adoption",
+            )
         return ReconciliationDecision(expected.address, "blocked", "provider_import_unsupported")
     return ReconciliationDecision(expected.address, "import", "owned_configuration_match", exact[0].resource_id)
 
@@ -118,7 +131,7 @@ def reconcile_resources(
 ) -> ReconciliationReport:
     """Classify resources without mutating either input collection."""
     decisions = tuple(_decision_for(item, observed, project_name) for item in expected)
-    safe = all(decision.action in {"create", "import"} for decision in decisions)
+    safe = all(decision.action in {"create", "import", "adopt_on_apply"} for decision in decisions)
     return ReconciliationReport(decisions=decisions, safe_to_apply=safe)
 
 

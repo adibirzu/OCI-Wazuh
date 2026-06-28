@@ -83,7 +83,9 @@ class LiveWorkflow:
     ) -> None:
         counts = dict(sorted(Counter(decision.action for decision in decisions).items()))
         blocked_decisions = tuple(
-            decision for decision in decisions if decision.action not in {"create", "import"}
+            decision
+            for decision in decisions
+            if decision.action not in {"create", "import", "adopt_on_apply"}
         )
         blocked = sorted(decision.reason for decision in blocked_decisions)
         blocked_details = sorted(
@@ -127,7 +129,9 @@ class LiveWorkflow:
             decisions = self._decisions(self._snapshot)
             self._write_reconciliation_report(run_id, decisions)
             blocked = tuple(
-                decision for decision in decisions if decision.action not in {"create", "import"}
+                decision
+                for decision in decisions
+                if decision.action not in {"create", "import", "adopt_on_apply"}
             )
             if blocked:
                 return StageResult(
