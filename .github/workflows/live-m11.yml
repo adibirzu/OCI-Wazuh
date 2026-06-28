@@ -97,6 +97,26 @@ jobs:
             args+=(--stop-after validate)
           fi
           python3 scripts/m11-live.py "${args[@]}"
+      - name: Encrypt runtime diagnostics
+        if: failure()
+        env:
+          M11_DIAGNOSTIC_ENCRYPTION_KEY: ${{ secrets.M11_DIAGNOSTIC_ENCRYPTION_KEY }}
+        run: |
+          if [[ -z "$M11_DIAGNOSTIC_ENCRYPTION_KEY" ]]; then
+            echo "runtime_diagnostics=unavailable"
+            exit 0
+          fi
+          mkdir -p artifacts/validation
+          encrypted=0
+          for source in artifacts/runtime/*.log; do
+            [[ -f "$source" ]] || continue
+            destination="artifacts/validation/$(basename "$source").enc"
+            openssl enc -aes-256-cbc -pbkdf2 -salt \
+              -in "$source" -out "$destination" \
+              -pass env:M11_DIAGNOSTIC_ENCRYPTION_KEY
+            encrypted=$((encrypted + 1))
+          done
+          echo "runtime_diagnostics=encrypted count=$encrypted"
       - name: Upload redacted validation evidence
         if: always()
         uses: actions/upload-artifact@v6

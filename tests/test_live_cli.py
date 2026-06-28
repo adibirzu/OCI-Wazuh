@@ -60,6 +60,15 @@ def test_live_workflow_maps_provider_null_fallbacks_from_protected_secrets() -> 
         assert f"{variable}: ${{{{ secrets.{secret} }}}}" in workflow
 
 
+def test_live_workflow_uploads_only_encrypted_runtime_diagnostics() -> None:
+    workflow = (ROOT / ".github/workflows/live-m11.yml").read_text(encoding="utf-8")
+
+    assert "M11_DIAGNOSTIC_ENCRYPTION_KEY" in workflow
+    assert "openssl enc -aes-256-cbc -pbkdf2 -salt" in workflow
+    assert 'artifacts/validation/$(basename "$source").enc' in workflow
+    assert "path: artifacts/runtime/" not in workflow
+
+
 def test_discovery_inventories_unowned_name_collisions_before_apply() -> None:
     discovery = (ROOT / "scripts/m11-discover.py").read_text(encoding="utf-8")
 
