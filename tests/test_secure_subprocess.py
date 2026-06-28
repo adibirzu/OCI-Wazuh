@@ -52,6 +52,35 @@ def test_terraform_error_classifier_does_not_echo_unknown_output() -> None:
     assert classify_terraform_error(output) == "unclassified"
 
 
+@pytest.mark.parametrize(
+    ("output", "expected"),
+    (
+        ('Error: Missing required argument\nThe argument "namespace" is required', "missing_namespace"),
+        (
+            "Error: Resource precondition failed\n"
+            "The selected availability domain is not available in this tenancy and region.",
+            "availability_domain_unavailable",
+        ),
+        (
+            "Error: Resource precondition failed\n"
+            "Compatible Oracle Linux 9 and Ubuntu 24.04 platform images were not found",
+            "linux_images_unavailable",
+        ),
+        (
+            "Error: Resource precondition failed\n"
+            "Log Analytics is enabled but no namespace is onboarded",
+            "log_analytics_namespace_missing",
+        ),
+        ("Error: 404-NotAuthorizedOrNotFound", "oci_service_error:404"),
+    ),
+)
+def test_terraform_error_classifier_uses_fixed_safe_categories(
+    output: str,
+    expected: str,
+) -> None:
+    assert classify_terraform_error(output) == expected
+
+
 def test_run_quiet_can_add_only_classified_diagnostic() -> None:
     sensitive = 'Invalid value for variable\nvariable "operator_cidr"\nocid1.example.sensitive'
 
