@@ -67,6 +67,33 @@ def normalize_log_analytics_groups(
     return tuple(normalized)
 
 
+def normalize_logging_logs(
+    payload: Mapping[str, Any], log_group_id: str
+) -> tuple[dict[str, Any], ...]:
+    """Return immutable Logging entries with the provider's composite import IDs."""
+    if not log_group_id:
+        raise ValueError("Logging log group ID is required for inventory normalization")
+    items = payload.get("data", [])
+    if not isinstance(items, Sequence) or isinstance(items, (str, bytes)):
+        raise ValueError("Logging log inventory has invalid data")
+
+    normalized: list[dict[str, Any]] = []
+    for item in items:
+        if not isinstance(item, Mapping):
+            raise ValueError("Logging log inventory item is invalid")
+        log_id = item.get("id", "")
+        if not isinstance(log_id, str) or not log_id:
+            raise ValueError("Logging log inventory item has no ID")
+        normalized.append(
+            {
+                **dict(item),
+                "identifier": f"logGroupId/{log_group_id}/logId/{log_id}",
+                "resource-type": "Log",
+            }
+        )
+    return tuple(normalized)
+
+
 def _resources(module: Mapping[str, Any]) -> Iterator[Mapping[str, Any]]:
     yield from module.get("resources", [])
     for child in module.get("child_modules", []):
@@ -175,15 +202,19 @@ def build_preflight_snapshot(
         if (resource_type, name) not in expected_keys:
             continue
         tags = _tags(item)
+        resource_id = str(item.get("identifier", item.get("id", "")))
+        importable = resource_type not in NON_IMPORTABLE_TYPES and not (
+            resource_type == "oci_logging_log" and not resource_id.startswith("logGroupId/")
+        )
         observed.append(
             ObservedResource(
-                resource_id=str(item.get("identifier", item.get("id", ""))),
+                resource_id=resource_id,
                 resource_type=resource_type,
                 name=name,
                 lifecycle_state=state,
                 tags=tags,
                 configuration={"fingerprint": tags.get("configuration_fingerprint", "")},
-                importable=resource_type not in NON_IMPORTABLE_TYPES,
+                importable=importable,
             )
         )
 

@@ -15,7 +15,11 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from m11.discovery import build_preflight_snapshot, normalize_log_analytics_groups
+from m11.discovery import (
+    build_preflight_snapshot,
+    normalize_log_analytics_groups,
+    normalize_logging_logs,
+)
 from m11.secure_subprocess import classify_terraform_error, run_quiet
 
 
@@ -43,19 +47,27 @@ def oci_command(profile: str, *arguments: str) -> list[str]:
     return command
 
 
-def planned_log_analytics_group(plan: dict[str, Any]) -> dict[str, Any] | None:
+def planned_resource_values(plan: dict[str, Any], resource_type: str) -> dict[str, Any] | None:
     root = plan.get("planned_values", {}).get("root_module", {})
     modules = [root]
     while modules:
         module = modules.pop()
         modules.extend(module.get("child_modules", []))
         for resource in module.get("resources", []):
-            if resource.get("type") == "oci_log_analytics_log_analytics_log_group":
+            if resource.get("type") == resource_type:
                 values = resource.get("values")
                 if values is not None and not isinstance(values, dict):
                     raise ValueError("planned Log Analytics group values are invalid")
                 return values
     return None
+
+
+def planned_log_analytics_group(plan: dict[str, Any]) -> dict[str, Any] | None:
+    return planned_resource_values(plan, "oci_log_analytics_log_analytics_log_group")
+
+
+def planned_logging_group(plan: dict[str, Any]) -> dict[str, Any] | None:
+    return planned_resource_values(plan, "oci_logging_log_group")
 
 
 def connector_limit(profile: str, tenancy_id: str) -> int:
@@ -143,6 +155,45 @@ def main() -> int:
         label="OCI resource search",
     )
     items = list(search.get("data", {}).get("items", []))
+    logging_group = planned_logging_group(plan)
+    if logging_group is not None:
+        logging_group_name = logging_group.get("display_name", "")
+        candidate_groups = [
+            item
+            for item in items
+            if item.get("resource-type") == "LogGroup"
+            and item.get("display-name") == logging_group_name
+            and item.get("identifier")
+        ]
+        normalized_logs: list[dict[str, Any]] = []
+        normalized_log_ids: set[str] = set()
+        for candidate_group in candidate_groups:
+            group_id = str(candidate_group["identifier"])
+            logging_logs = run_json(
+                oci_command(
+                    args.profile,
+                    "logging",
+                    "log",
+                    "list",
+                    "--log-group-id",
+                    group_id,
+                    "--all",
+                ),
+                label="OCI Logging log inventory",
+            )
+            normalized_logs.extend(normalize_logging_logs(logging_logs, group_id))
+            normalized_log_ids.update(
+                str(item.get("id", "")) for item in logging_logs.get("data", [])
+            )
+        items = [
+            item
+            for item in items
+            if not (
+                item.get("resource-type") == "Log"
+                and str(item.get("identifier", "")) in normalized_log_ids
+            )
+        ]
+        items.extend(normalized_logs)
     log_analytics_group = planned_log_analytics_group(plan)
     if log_analytics_group is not None:
         namespace = log_analytics_group.get("namespace", "")
