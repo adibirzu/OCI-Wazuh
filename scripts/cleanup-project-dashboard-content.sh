@@ -22,10 +22,10 @@ if [[ "$dashboard_count" -eq 0 ]]; then
   exit 0
 fi
 
-import_details="$(jq -r "$resource_filter | .values.import_details" "$state_json")"
+normalize_import_details='if type == "string" then fromjson else . end'
+import_details="$(jq -c "$resource_filter | .values.import_details | $normalize_import_details" "$state_json")"
 compartment_id="$(jq -r --arg project "$project" '
-  fromjson
-  | .dashboards[0]
+  .dashboards[0]
   | select(.freeformTags.project == $project)
   | .compartmentId
 ' <<< "$import_details")"
@@ -35,8 +35,7 @@ compartment_id="$(jq -r --arg project "$project" '
 }
 
 jq -r --arg project "$project" '
-  fromjson
-  | .dashboards[0]
+  .dashboards[0]
   | select(.freeformTags.project == $project)
   | .savedSearches[]
   | select(.freeformTags.project == $project)
