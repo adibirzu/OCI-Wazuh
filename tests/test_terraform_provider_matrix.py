@@ -52,9 +52,10 @@ def test_flow_log_for_each_keys_do_not_depend_on_apply_time_resource_ids() -> No
     assert "distinct(var.resource_ids)" not in flowlogs
     assert "if resource_id != \"\"" not in flowlogs
     assert "Every flow_log_resource_ids entry must be non-empty." in variables
-    assert (
-        "for_each       = toset(nonsensitive(keys(sensitive(local.sch_log_source_policy_scope_ids))))" in ingestion
-    )
+    assert "sch_log_source_policy_keys = length(var.existing_flow_logs) > 0 ?" in ingestion
+    assert 'toset(["0"])' in ingestion
+    assert "for_each       = local.sch_log_source_policy_keys" in ingestion
+    assert "keys(sensitive(local.sch_log_source_policy_scope_ids))" not in ingestion
     assert "local.sch_log_source_policy_scope_ids[each.key]" in ingestion
 
 

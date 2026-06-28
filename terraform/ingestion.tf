@@ -1,8 +1,15 @@
 locals {
-  oci_log_source_compartment_ids = distinct([for source in local.oci_log_sources : source.compartment_id])
-  sch_log_source_policy_scope_ids = {
-    for index, compartment_id in local.oci_log_source_compartment_ids : tostring(index) => compartment_id
+  existing_log_source_compartment_ids = distinct([
+    for source in var.existing_flow_logs : source.compartment_id
+  ])
+  sch_log_source_policy_scope_ids = length(var.existing_flow_logs) > 0 ? {
+    for index, compartment_id in local.existing_log_source_compartment_ids : tostring(index) => compartment_id
+    } : {
+    "0" = local.effective_compartment_ocid
   }
+  sch_log_source_policy_keys = length(var.existing_flow_logs) > 0 ? toset([
+    for index, _compartment_id in local.existing_log_source_compartment_ids : tostring(index)
+  ]) : toset(["0"])
   audit_read_statement = var.audit_log_resource_id == "" || startswith(var.audit_log_resource_id, "ocid1.tenancy.") ? (
     "Allow dynamic-group ${oci_identity_dynamic_group.wazuh_consumer.name} to read audit-events in tenancy"
     ) : (
@@ -43,7 +50,7 @@ resource "oci_identity_policy" "wazuh_consumer" {
 }
 
 resource "oci_identity_policy" "sch_log_source" {
-  for_each       = toset(nonsensitive(keys(sensitive(local.sch_log_source_policy_scope_ids))))
+  for_each       = local.sch_log_source_policy_keys
   compartment_id = local.effective_tenancy_ocid
   name           = "${var.project_name}-sch-log-source-${each.key}"
   description    = "Allow Service Connector Hub to read selected OCI Flow Logs."
