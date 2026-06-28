@@ -74,10 +74,11 @@ def test_discovery_inventories_unowned_name_collisions_before_apply() -> None:
 
     assert 'query = "query all resources"' in discovery
     assert "freeformTags.key = 'project'" not in discovery
+    assert '"--limit",' in discovery
+    assert '"1000",' in discovery
     for label in (
         "Terraform plan rendering",
         "OCI resource search",
-        "OCI Service Connector inventory",
         "OCI Service Connector limit query",
     ):
         assert label in discovery

@@ -76,19 +76,6 @@ def connector_limit(profile: str, tenancy_id: str) -> int:
     return max(values)
 
 
-def normalize_connectors(payload: dict[str, Any]) -> list[dict[str, Any]]:
-    return [
-        {
-            "identifier": item.get("id", ""),
-            "display-name": item.get("display-name", ""),
-            "resource-type": "ServiceConnector",
-            "lifecycle-state": item.get("lifecycle-state", ""),
-            "freeform-tags": item.get("freeform-tags", {}),
-        }
-        for item in payload.get("data", {}).get("items", payload.get("data", []))
-    ]
-
-
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--mode", choices=("local", "orm"), required=True)
@@ -128,24 +115,19 @@ def main() -> int:
     # types present in the current Terraform plan; raw inventory is not saved.
     query = "query all resources"
     search = run_json(
-        oci_command(args.profile, "search", "resource", "structured-search", "--query-text", query, "--all"),
-        label="OCI resource search",
-    )
-    connectors = run_json(
         oci_command(
             args.profile,
-            "sch",
-            "service-connector",
-            "list",
-            "--compartment-id",
-            compartment,
-            "--all",
+            "search",
+            "resource",
+            "structured-search",
+            "--query-text",
+            query,
+            "--limit",
+            "1000",
         ),
-        label="OCI Service Connector inventory",
+        label="OCI resource search",
     )
     items = list(search.get("data", {}).get("items", []))
-    known = {str(item.get("identifier", "")) for item in items}
-    items.extend(item for item in normalize_connectors(connectors) if item["identifier"] not in known)
     snapshot = build_preflight_snapshot(
         plan,
         items,
