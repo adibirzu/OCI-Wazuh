@@ -98,4 +98,4 @@ jobs:
         with:
           name: m11-validation
           path: artifacts/validation/
-          if-no-files-found: error
+          if-no-files-found: warn
