@@ -91,6 +91,7 @@ EOF
   fi
 fi
 
+bash "$ROOT_DIR/scripts/cleanup-project-bootstrap-bucket.sh" "$project_name" "$profile"
 bash "$ROOT_DIR/scripts/cleanup-project-dashboard-content.sh" "$project_name" "$profile"
 bash "$ROOT_DIR/scripts/purge-project-log-analytics.sh" "$project_name" "$profile"
 

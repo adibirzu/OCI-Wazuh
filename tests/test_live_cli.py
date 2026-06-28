@@ -60,6 +60,19 @@ def test_live_workflow_maps_provider_null_fallbacks_from_protected_secrets() -> 
         assert f"{variable}: ${{{{ secrets.{secret} }}}}" in workflow
 
 
+def test_live_workflow_restricts_bastion_to_runner_and_tears_down_on_failure() -> None:
+    workflow = (ROOT / ".github/workflows/live-m11.yml").read_text(encoding="utf-8")
+
+    assert "TF_VAR_operator_cidr: ${{ secrets.OPERATOR_CIDR }}" not in workflow
+    assert "name: Resolve protected runner CIDR" in workflow
+    assert 'echo "::add-mask::$runner_ip"' in workflow
+    assert 'TF_VAR_operator_cidr=$runner_ip/32' in workflow
+    assert "name: Guarded failure teardown" in workflow
+    assert "failure() && inputs.destroy_after_validation" in workflow
+    assert "bash scripts/m11-cleanup.sh" in workflow
+    assert "bash scripts/m11-destroy.sh" in workflow
+
+
 def test_live_workflow_uploads_only_encrypted_runtime_diagnostics() -> None:
     workflow = (ROOT / ".github/workflows/live-m11.yml").read_text(encoding="utf-8")
 
@@ -104,9 +117,11 @@ def test_destroy_path_purges_only_state_owned_log_analytics_and_retries() -> Non
     destroy = (ROOT / "scripts/down.sh").read_text(encoding="utf-8")
     purge = (ROOT / "scripts/purge-project-log-analytics.sh").read_text(encoding="utf-8")
     dashboards = (ROOT / "scripts/cleanup-project-dashboard-content.sh").read_text(encoding="utf-8")
+    bucket = (ROOT / "scripts/cleanup-project-bootstrap-bucket.sh").read_text(encoding="utf-8")
 
     assert "purge-project-log-analytics.sh" in destroy
     assert "cleanup-project-dashboard-content.sh" in destroy
+    assert "cleanup-project-bootstrap-bucket.sh" in destroy
     assert 'destroy_max_attempts="${DESTROY_MAX_ATTEMPTS:-12}"' in destroy
     assert 'destroy_retry_seconds="${DESTROY_RETRY_SECONDS:-60}"' in destroy
     assert 'for destroy_attempt in $(seq 1 "$destroy_max_attempts")' in destroy
@@ -120,6 +135,12 @@ def test_destroy_path_purges_only_state_owned_log_analytics_and_retries() -> Non
     assert "oci_management_dashboard_management_dashboards_import.wazuh[0]" in dashboards
     assert '.freeformTags.project == $project' in dashboards
     assert "management-dashboard saved-search delete" in dashboards
+    assert "oci_objectstorage_bucket.bootstrap" in bucket
+    assert '.freeform_tags.project == $project' in bucket
+    assert 'startswith("bootstrap/")' in bucket
+    assert 'startswith("status/")' in bucket
+    assert 'startswith("windows/")' in bucket
+    assert "os object delete" in bucket
     confirmation = destroy.index('if [[ "${AUTO_APPROVE:-false}"')
     cleanup = destroy.index('bash "$ROOT_DIR/scripts/cleanup-project-dashboard-content.sh"')
     purge_call = destroy.index('bash "$ROOT_DIR/scripts/purge-project-log-analytics.sh"')

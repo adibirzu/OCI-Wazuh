@@ -12,6 +12,7 @@ def planned_resource(address: str, resource_type: str, name: str) -> dict:
         "oci_log_analytics_log_analytics_log_group",
         "oci_logging_log_group",
         "oci_logging_log",
+        "oci_logging_unified_agent_configuration",
         "oci_sch_service_connector",
     } else "name"
     return {
@@ -55,11 +56,17 @@ def search_item(name: str, resource_type: str, *, state: str = "ACTIVE", fingerp
 def test_snapshot_derives_supported_expected_and_observed_resources() -> None:
     resources = [
         planned_resource("oci_identity_dynamic_group.demo", "oci_identity_dynamic_group", f"{PROJECT}-dg"),
+        planned_resource(
+            "oci_logging_unified_agent_configuration.demo",
+            "oci_logging_unified_agent_configuration",
+            f"{PROJECT}-agent-config",
+        ),
         planned_resource("module.sch.oci_sch_service_connector.flow", "oci_sch_service_connector", f"{PROJECT}-flow"),
         planned_resource("oci_core_vcn.demo", "oci_core_vcn", f"{PROJECT}-vcn"),
     ]
     search = [
-        search_item(f"{PROJECT}-dg", "DynamicGroup"),
+        search_item(f"{PROJECT}-dg", "DynamicResourceGroup"),
+        search_item(f"{PROJECT}-agent-config", "UnifiedAgentConfiguration"),
         search_item(f"{PROJECT}-flow", "ServiceConnector"),
     ]
 
@@ -67,9 +74,10 @@ def test_snapshot_derives_supported_expected_and_observed_resources() -> None:
 
     assert [item.address for item in snapshot.expected] == [
         "oci_identity_dynamic_group.demo",
+        "oci_logging_unified_agent_configuration.demo",
         "module.sch.oci_sch_service_connector.flow",
     ]
-    assert len(snapshot.observed) == 2
+    assert len(snapshot.observed) == 3
     assert snapshot.connector_capacity.limit == 3
     assert snapshot.connector_capacity.active_count == 1
 

@@ -38,7 +38,6 @@ jobs:
       TF_VAR_tenancy_ocid: ${{ secrets.OCI_TENANCY_OCID }}
       TF_VAR_compartment_ocid: ${{ secrets.OCI_COMPARTMENT_OCID }}
       TF_VAR_region: ${{ vars.OCI_REGION }}
-      TF_VAR_operator_cidr: ${{ secrets.OPERATOR_CIDR }}
       TF_VAR_availability_domain: ${{ secrets.OCI_AVAILABILITY_DOMAIN }}
       TF_VAR_ol9_image_id: ${{ secrets.OCI_OL9_IMAGE_OCID }}
       TF_VAR_ubuntu2404_image_id: ${{ secrets.OCI_UBUNTU2404_IMAGE_OCID }}
@@ -86,6 +85,12 @@ jobs:
           echo "OCI_CLI_KEY_FILE=$HOME/.oci/oci_api_key.pem" >> "$GITHUB_ENV"
           ssh-keygen -q -t ed25519 -N '' -f "$SSH_PRIVATE_KEY_PATH"
           echo "TF_VAR_ssh_public_key=$(cat "$SSH_PRIVATE_KEY_PATH.pub")" >> "$GITHUB_ENV"
+      - name: Resolve protected runner CIDR
+        run: |
+          runner_ip="$(curl --fail --silent --show-error --max-time 10 https://api.ipify.org)"
+          python3 -c 'import ipaddress, sys; address = ipaddress.ip_address(sys.argv[1]); assert address.version == 4 and address.is_global' "$runner_ip"
+          echo "::add-mask::$runner_ip"
+          echo "TF_VAR_operator_cidr=$runner_ip/32" >> "$GITHUB_ENV"
       - name: Unified M11 live controller
         env:
           M11_STOP_AFTER: ${{ inputs.stop_after }}
@@ -97,6 +102,20 @@ jobs:
             args+=(--stop-after validate)
           fi
           python3 scripts/m11-live.py "${args[@]}"
+      - name: Guarded failure teardown
+        if: ${{ failure() && inputs.destroy_after_validation }}
+        run: |
+          cleanup_status=0
+          if [[ -f artifacts/runtime/terraform-output.json ]]; then
+            bash scripts/m11-cleanup.sh || cleanup_status=$?
+          fi
+          destroy_status=0
+          bash scripts/m11-destroy.sh || destroy_status=$?
+          if [[ "$cleanup_status" -ne 0 || "$destroy_status" -ne 0 ]]; then
+            echo "failure_teardown=failed cleanup=$cleanup_status destroy=$destroy_status"
+            exit 1
+          fi
+          echo "failure_teardown=green"
       - name: Encrypt runtime diagnostics
         if: failure()
         env:

@@ -17,11 +17,13 @@ from m11.reconciliation import (
 
 OCI_TO_TERRAFORM_TYPE = {
     "DynamicGroup": "oci_identity_dynamic_group",
+    "DynamicResourceGroup": "oci_identity_dynamic_group",
     "Policy": "oci_identity_policy",
     "LogAnalyticsLogGroup": "oci_log_analytics_log_analytics_log_group",
     "LogGroup": "oci_logging_log_group",
     "Log": "oci_logging_log",
     "LogConfiguration": "oci_logging_unified_agent_configuration",
+    "UnifiedAgentConfiguration": "oci_logging_unified_agent_configuration",
     "ServiceConnector": "oci_sch_service_connector",
     "Stream": "oci_streaming_stream",
     "Object": "oci_objectstorage_object",
