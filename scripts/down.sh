@@ -22,6 +22,31 @@ reuse_goad_action="${REUSE_GOAD_ACTION:-$(tfvar_value reuse_goad_action)}"
 reuse_goad_action="${reuse_goad_action:-install}"
 destroy_plan="$RUNTIME/destroy.tfplan"
 destroy_json="$RUNTIME/destroy-plan.json"
+destroy_init_log="$RUNTIME/destroy-init.log"
+destroy_plan_log="$RUNTIME/destroy-plan.log"
+destroy_apply_log="$RUNTIME/destroy-apply.log"
+destroy_max_attempts="${DESTROY_MAX_ATTEMPTS:-12}"
+destroy_retry_seconds="${DESTROY_RETRY_SECONDS:-60}"
+
+validate_bounded_integer() {
+  local name="$1" value="$2" minimum="$3" maximum="$4"
+  if [[ ! "$value" =~ ^[0-9]+$ ]] || ((value < minimum || value > maximum)); then
+    echo "destroy=blocked invalid_${name}; expected integer ${minimum}-${maximum}" >&2
+    exit 2
+  fi
+}
+
+validate_bounded_integer "max_attempts" "$destroy_max_attempts" 1 30
+validate_bounded_integer "retry_seconds" "$destroy_retry_seconds" 5 300
+
+render_guarded_destroy_plan() {
+  if ! terraform -chdir="$TF_DIR" plan -destroy -out="$destroy_plan" > "$destroy_plan_log" 2>&1; then
+    echo "destroy_plan=failed diagnostic=artifacts/runtime/destroy-plan.log" >&2
+    return 1
+  fi
+  terraform -chdir="$TF_DIR" show -json "$destroy_plan" > "$destroy_json"
+  python3 "$ROOT_DIR/scripts/guard-destroy-plan.py" "$destroy_json" "$project_name"
+}
 
 echo "down_project=$project_name"
 echo "windows_mode=$windows_mode"
@@ -45,11 +70,12 @@ fi
 
 profile="${OCI_PROFILE:-${OCI_CLI_PROFILE:-$(tfvar_value oci_config_profile)}}"
 profile="${profile:-DEFAULT}"
-terraform -chdir="$TF_DIR" init -input=false
+if ! terraform -chdir="$TF_DIR" init -input=false > "$destroy_init_log" 2>&1; then
+  echo "destroy_init=failed diagnostic=artifacts/runtime/destroy-init.log" >&2
+  exit 5
+fi
 bash "$ROOT_DIR/scripts/purge-project-log-analytics.sh" "$project_name" "$profile"
-terraform -chdir="$TF_DIR" plan -destroy -out="$destroy_plan"
-terraform -chdir="$TF_DIR" show -json "$destroy_plan" > "$destroy_json"
-python3 "$ROOT_DIR/scripts/guard-destroy-plan.py" "$destroy_json" "$project_name"
+render_guarded_destroy_plan
 
 if [[ "${AUTO_APPROVE:-false}" != "true" && "${DESTROY_CONFIRM:-}" != "$project_name" ]]; then
   cat <<EOF
@@ -67,23 +93,22 @@ EOF
 fi
 
 destroy_succeeded=false
-for destroy_attempt in $(seq 1 4); do
+rm -f "$destroy_apply_log"
+for destroy_attempt in $(seq 1 "$destroy_max_attempts"); do
   if [[ "$destroy_attempt" -gt 1 ]]; then
-    terraform -chdir="$TF_DIR" plan -destroy -out="$destroy_plan"
-    terraform -chdir="$TF_DIR" show -json "$destroy_plan" > "$destroy_json"
-    python3 "$ROOT_DIR/scripts/guard-destroy-plan.py" "$destroy_json" "$project_name"
+    render_guarded_destroy_plan
   fi
-  if terraform -chdir="$TF_DIR" apply "$destroy_plan"; then
+  if terraform -chdir="$TF_DIR" apply "$destroy_plan" > "$destroy_apply_log" 2>&1; then
     destroy_succeeded=true
     break
   fi
-  if [[ "$destroy_attempt" -lt 4 ]]; then
-    echo "destroy_retry=$destroy_attempt/4 waiting_for_oci_consistency" >&2
-    sleep 45
+  if [[ "$destroy_attempt" -lt "$destroy_max_attempts" ]]; then
+    echo "destroy_retry=$destroy_attempt/$destroy_max_attempts waiting_for_oci_consistency" >&2
+    sleep "$destroy_retry_seconds"
   fi
 done
 [[ "$destroy_succeeded" == "true" ]] || {
-  echo "destroy=failed retries_exhausted" >&2
+  echo "destroy=failed retries_exhausted diagnostic=artifacts/runtime/destroy-apply.log" >&2
   exit 5
 }
 

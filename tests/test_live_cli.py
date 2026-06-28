@@ -105,7 +105,12 @@ def test_destroy_path_purges_only_state_owned_log_analytics_and_retries() -> Non
     purge = (ROOT / "scripts/purge-project-log-analytics.sh").read_text(encoding="utf-8")
 
     assert "purge-project-log-analytics.sh" in destroy
-    assert "for destroy_attempt in $(seq 1 4)" in destroy
+    assert 'destroy_max_attempts="${DESTROY_MAX_ATTEMPTS:-12}"' in destroy
+    assert 'destroy_retry_seconds="${DESTROY_RETRY_SECONDS:-60}"' in destroy
+    assert 'for destroy_attempt in $(seq 1 "$destroy_max_attempts")' in destroy
+    assert 'destroy-plan.log' in destroy
+    assert 'destroy-apply.log' in destroy
+    assert '> "$destroy_apply_log" 2>&1' in destroy
     assert "guard-destroy-plan.py" in destroy
     assert 'freeform_tags.project == \\$project' in purge
     assert 'logGroupId:\\"$group_id\\"' in purge
