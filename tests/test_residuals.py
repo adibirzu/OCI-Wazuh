@@ -49,3 +49,34 @@ def test_residual_inventory_combines_search_and_explicit_log_analytics_without_i
         {"identifier": f"Vcn:{PROJECT}-vcn"},
     ]
     assert "private" not in str(residuals)
+
+
+def test_dashboard_residuals_use_authoritative_dashboard_inventory_over_stale_search() -> None:
+    stale_search = {
+        "data": {
+            "items": [
+                {
+                    "resource-type": "ManagementDashboard",
+                    "display-name": f"{PROJECT}-correlation",
+                    "lifecycle-state": "AVAILABLE",
+                    "freeform-tags": {"project": PROJECT},
+                },
+                {
+                    "resource-type": "ManagementSavedSearch",
+                    "display-name": f"{PROJECT}-audit",
+                    "lifecycle-state": "AVAILABLE",
+                    "freeform-tags": {"project": PROJECT},
+                },
+            ]
+        }
+    }
+
+    residuals = logical_residuals(
+        stale_search,
+        {"data": {"items": []}},
+        PROJECT,
+        {"data": {"items": []}},
+        {"data": {"items": []}},
+    )
+
+    assert residuals == []

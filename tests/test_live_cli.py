@@ -183,7 +183,8 @@ def test_wazuh_cloud_init_uses_bounded_package_retries() -> None:
     assert "apt-get install --yes" in cloud_init
     assert "python3-venv unzip rsyslog iptables" in cloud_init
     assert "system package installation failed after bounded retries" in cloud_init
-    assert 'printf "stage=%s exit=%s\\n" "$stage" "$exit_code"' in cloud_init
+    assert 'printf "stage=%s exit=%s command=%q\\n"' in cloud_init
+    assert 'command=%q' in cloud_init
 
 
 def test_published_python_entrypoints_resolve_project_modules() -> None:

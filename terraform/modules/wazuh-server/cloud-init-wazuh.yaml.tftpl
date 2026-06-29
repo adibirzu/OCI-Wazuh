@@ -91,7 +91,8 @@ write_files:
 
       fail() {
         local exit_code=$?
-        printf "stage=%s exit=%s\n" "$stage" "$exit_code" > /var/log/oci-wazuh-demo/bootstrap-failure
+        local failed_command="$${BASH_COMMAND%% *}"
+        printf "stage=%s exit=%s command=%q\n" "$stage" "$exit_code" "$failed_command" > /var/log/oci-wazuh-demo/bootstrap-failure
         chmod 0640 /var/log/oci-wazuh-demo/bootstrap-failure
         object_operation status failed "$stage" "bootstrap command failed with exit $exit_code" || true
         exit "$exit_code"

@@ -125,7 +125,45 @@ def main() -> int:
         ),
         "OCI residual Log Analytics inventory",
     )
-    print(json.dumps({"data": {"items": logical_residuals(search, log_analytics, args.project_name)}}))
+    dashboards = _json(
+        _oci(
+            args.profile,
+            "management-dashboard",
+            "dashboard",
+            "list",
+            "--compartment-id",
+            compartment,
+            "--all",
+        ),
+        "OCI residual Management Dashboard inventory",
+    )
+    saved_searches = _json(
+        _oci(
+            args.profile,
+            "management-dashboard",
+            "saved-search",
+            "list",
+            "--compartment-id",
+            compartment,
+            "--all",
+        ),
+        "OCI residual Management Saved Search inventory",
+    )
+    print(
+        json.dumps(
+            {
+                "data": {
+                    "items": logical_residuals(
+                        search,
+                        log_analytics,
+                        args.project_name,
+                        dashboards,
+                        saved_searches,
+                    )
+                }
+            }
+        )
+    )
     return 0
 
 

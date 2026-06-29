@@ -29,17 +29,32 @@ def logical_residuals(
     search_payload: Mapping[str, Any],
     log_analytics_payload: Mapping[str, Any],
     project_name: str,
+    dashboard_payload: Mapping[str, Any] | None = None,
+    saved_search_payload: Mapping[str, Any] | None = None,
 ) -> list[dict[str, str]]:
-    """Return logical tokens only; never propagate OCI resource identifiers."""
+    """Return logical tokens only; never propagate OCI resource identifiers.
+
+    Resource Search is eventually consistent for Management Dashboard content.
+    When the service inventories are supplied, they replace that stale surface for
+    dashboard and saved-search resource types.
+    """
     residuals: list[dict[str, str]] = []
     for item in _items(search_payload):
         tags = item.get("freeform-tags", item.get("freeform_tags", {}))
         state = str(item.get("lifecycle-state", item.get("lifecycle_state", ""))).upper()
         if not isinstance(tags, Mapping) or tags.get("project") != project_name or state in ABSENT_STATES:
             continue
+        resource_type = str(item.get("resource-type", item.get("resource_type", "")))
+        uses_authoritative_inventory = (
+            resource_type == "ManagementDashboard" and dashboard_payload is not None
+        ) or (
+            resource_type == "ManagementSavedSearch" and saved_search_payload is not None
+        )
+        if uses_authoritative_inventory:
+            continue
         residuals.append(
             _token(
-                str(item.get("resource-type", item.get("resource_type", ""))),
+                resource_type,
                 str(item.get("display-name", item.get("display_name", item.get("name", "")))),
             )
         )
@@ -53,4 +68,23 @@ def logical_residuals(
                 str(item.get("display-name", item.get("display_name", ""))),
             )
         )
-    return sorted(residuals, key=lambda item: item["identifier"])
+    for resource_type, payload in (
+        ("ManagementDashboard", dashboard_payload),
+        ("ManagementSavedSearch", saved_search_payload),
+    ):
+        if payload is None:
+            continue
+        for item in _items(payload):
+            tags = item.get("freeform-tags", item.get("freeform_tags", {}))
+            if not isinstance(tags, Mapping) or tags.get("project") != project_name:
+                continue
+            residuals.append(
+                _token(
+                    resource_type,
+                    str(item.get("display-name", item.get("display_name", item.get("name", "")))),
+                )
+            )
+    return [
+        {"identifier": identifier}
+        for identifier in sorted({item["identifier"] for item in residuals})
+    ]
