@@ -137,7 +137,9 @@ def test_destroy_path_purges_only_state_owned_log_analytics_and_retries() -> Non
     assert '> "$destroy_apply_log" 2>&1' in destroy
     assert "guard-destroy-plan.py" in destroy
     assert 'freeform_tags.project == \\$project' in purge
-    assert 'logGroupId:\\"$group_id\\"' in purge
+    assert "group_name=" in purge
+    assert "'Log Group' = '" in purge
+    assert 'logGroupId:\\"$group_id\\"' not in purge
     assert "get-storage-work-request" in purge
     assert "oci_management_dashboard_management_dashboards_import.wazuh[0]" in dashboards
     assert 'if type == "string" then fromjson else . end' in dashboards
