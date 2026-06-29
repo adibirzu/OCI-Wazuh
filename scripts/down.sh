@@ -116,10 +116,11 @@ done
 }
 
 residual_count=1
+residual_json="$RUNTIME/destroy-residual-inventory.json"
 for attempt in $(seq 1 12); do
-  residual_count="$(oci --profile "$profile" search resource structured-search \
-    --query-text "query all resources where (freeformTags.key = 'project' && freeformTags.value = '$project_name')" \
-    --query 'length(data.items)' --raw-output)"
+  python3 "$ROOT_DIR/scripts/m11-residual.py" \
+    --project-name "$project_name" --profile "$profile" > "$residual_json"
+  residual_count="$(jq '.data.items | length' "$residual_json")"
   if [[ "$residual_count" -eq 0 ]]; then
     break
   fi

@@ -15,17 +15,13 @@ from m11.provider_compat import provider_environment
 
 
 def build_default_commands(project_name: str) -> CommandSet:
-    query = (
-        "query all resources where "
-        f"(freeformTags.key = 'project' && freeformTags.value = '{project_name}')"
-    )
     return CommandSet(
         preflight=(("terraform", "-chdir=terraform", "validate"),),
         apply=(("bash", "scripts/m11-apply.sh"),),
         validate=(("bash", "scripts/m11-validate.sh"),),
         cleanup=(("bash", "scripts/m11-cleanup.sh"),),
         destroy=(("bash", "scripts/m11-destroy.sh"),),
-        residual=("oci", "search", "resource", "structured-search", "--query-text", query),
+        residual=("python3", "scripts/m11-residual.py", "--project-name", project_name),
     )
 
 
