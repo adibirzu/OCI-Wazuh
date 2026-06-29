@@ -145,6 +145,9 @@ def test_destroy_path_purges_only_state_owned_log_analytics_and_retries() -> Non
     assert 'if type == "string" then fromjson else . end' in dashboards
     assert '.freeformTags.project == $project' in dashboards
     assert "management-dashboard saved-search delete" in dashboards
+    assert "management-dashboard dashboard delete" in dashboards
+    assert 'for inventory_attempt in $(seq 1 12)' in dashboards
+    assert 'for absence_attempt in $(seq 1 12)' in dashboards
     assert "oci_objectstorage_bucket.bootstrap" in bucket
     assert '.freeform_tags.project == $project' in bucket
     assert 'startswith("bootstrap/")' in bucket
@@ -165,6 +168,7 @@ def test_e2e_fails_fast_with_private_wazuh_bootstrap_diagnostics() -> None:
     assert "/var/log/oci-wazuh-demo/wazuh-install.log" in e2e
     assert "grep -E -i 'error|failed|could not|unsupported|unable'" in e2e
     assert "sed -E '/password|secret|token|credential/Id'" in e2e
+    assert "/var/log/oci-wazuh-demo/bootstrap-failure" in e2e
 
 
 def test_wazuh_cloud_init_uses_bounded_package_retries() -> None:
@@ -177,7 +181,9 @@ def test_wazuh_cloud_init_uses_bounded_package_retries() -> None:
     assert "for package_attempt in $(seq 1 6)" in cloud_init
     assert "apt-get update" in cloud_init
     assert "apt-get install --yes" in cloud_init
+    assert "python3-venv unzip rsyslog iptables" in cloud_init
     assert "system package installation failed after bounded retries" in cloud_init
+    assert 'printf "stage=%s exit=%s\\n" "$stage" "$exit_code"' in cloud_init
 
 
 def test_published_python_entrypoints_resolve_project_modules() -> None:
