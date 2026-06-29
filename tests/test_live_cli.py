@@ -16,8 +16,8 @@ def test_default_command_sequence_uses_fixed_project_scripts() -> None:
     assert commands.validate == (("bash", "scripts/m11-validate.sh"),)
     assert commands.cleanup == (("bash", "scripts/m11-cleanup.sh"),)
     assert commands.destroy == (("bash", "scripts/m11-destroy.sh"),)
-    assert commands.residual[:3] == ("oci", "search", "resource")
-    assert "oci-wazuh-demo" in commands.residual[-1]
+    assert commands.residual[:2] == ("python3", "scripts/m11-residual.py")
+    assert commands.residual[-1] == "oci-wazuh-demo"
 
 
 def test_runner_environment_keeps_orm_profile_free() -> None:
@@ -126,6 +126,7 @@ def test_destroy_path_purges_only_state_owned_log_analytics_and_retries() -> Non
     bucket = (ROOT / "scripts/cleanup-project-bootstrap-bucket.sh").read_text(encoding="utf-8")
 
     assert "purge-project-log-analytics.sh" in destroy
+    assert "m11-residual.py" in destroy
     assert "cleanup-project-dashboard-content.sh" in destroy
     assert "cleanup-project-bootstrap-bucket.sh" in destroy
     assert 'destroy_max_attempts="${DESTROY_MAX_ATTEMPTS:-12}"' in destroy
