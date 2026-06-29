@@ -24,11 +24,15 @@ owned="$(jq -r --arg project "$project" "$resource_filter | .values.freeform_tag
   exit 6
 }
 
-group_id="$(jq -r "$resource_filter | .values.id" "$state_json")"
+group_name="$(jq -r "$resource_filter | .values.display_name" "$state_json")"
+[[ "$group_name" == "${project}-log-analytics" && "$group_name" =~ ^[A-Za-z0-9][A-Za-z0-9_-]{0,126}$ ]] || {
+  echo "log_analytics_purge=blocked reason=unsafe_group_name" >&2
+  exit 6
+}
 compartment_id="$(jq -r "$resource_filter | .values.compartment_id" "$state_json")"
 namespace="$(jq -r "$resource_filter | .values.namespace" "$state_json")"
 end_time="$(python3 -c 'from datetime import datetime, timedelta, timezone; print((datetime.now(timezone.utc) + timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%SZ"))')"
-query="logGroupId:\"$group_id\""
+query="'Log Group' = '$group_name'"
 profile_args=(--profile "$profile")
 
 estimate_file="$RUNTIME/log-analytics-purge-estimate.json"
