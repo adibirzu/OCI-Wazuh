@@ -12,6 +12,7 @@ mkdir -p "$RUNTIME" "$VALIDATION"
 state_json="$RUNTIME/dashboard-teardown-state.json"
 expected_tsv="$RUNTIME/dashboard-saved-searches.tsv"
 inventory_json="$RUNTIME/dashboard-saved-search-inventory.json"
+dashboard_inventory_json="$RUNTIME/dashboard-inventory.json"
 delete_log="$RUNTIME/dashboard-saved-search-delete.log"
 terraform -chdir="$TF_DIR" show -json terraform.tfstate > "$state_json"
 
@@ -33,6 +34,12 @@ compartment_id="$(jq -r --arg project "$project" '
   echo "dashboard_content_cleanup=blocked reason=ownership_mismatch" >&2
   exit 6
 }
+dashboard_id="$(jq -r --arg project "$project" '.dashboards[0] | select(.freeformTags.project == $project) | .dashboardId' <<< "$import_details")"
+dashboard_name="$(jq -r --arg project "$project" '.dashboards[0] | select(.freeformTags.project == $project) | .displayName' <<< "$import_details")"
+[[ -n "$dashboard_id" && "$dashboard_name" == "${project}-correlation" ]] || {
+  echo "dashboard_content_cleanup=blocked reason=dashboard_ownership_mismatch" >&2
+  exit 6
+}
 
 jq -r --arg project "$project" '
   .dashboards[0]
@@ -48,9 +55,28 @@ expected_count="$(wc -l < "$expected_tsv" | tr -d ' ')"
   exit 6
 }
 
-oci --profile "$profile" management-dashboard saved-search list \
-  --compartment-id "$compartment_id" \
-  --all > "$inventory_json"
+visible_search_count=0
+live_dashboard_count=0
+for inventory_attempt in $(seq 1 12); do
+  oci --profile "$profile" management-dashboard saved-search list \
+    --compartment-id "$compartment_id" --all > "$inventory_json"
+  oci --profile "$profile" management-dashboard dashboard list \
+    --compartment-id "$compartment_id" --all > "$dashboard_inventory_json"
+  visible_search_count="$(jq --rawfile expected "$expected_tsv" '
+    ($expected | split("\n") | map(select(length > 0) | split("\t")[0])) as $ids
+    | [.data.items[]? | select(.id as $id | $ids | index($id))] | length
+  ' "$inventory_json")"
+  live_dashboard_count="$(jq --arg id "$dashboard_id" '[.data.items[]? | select(.id == $id)] | length' "$dashboard_inventory_json")"
+  if [[ "$visible_search_count" -eq "$expected_count" && "$live_dashboard_count" -eq 1 ]]; then
+    break
+  fi
+  echo "dashboard_content_cleanup=waiting_for_inventory attempt=$inventory_attempt/12" >&2
+  sleep 10
+done
+if [[ "$live_dashboard_count" -gt 0 && "$visible_search_count" -ne "$expected_count" ]]; then
+  echo "dashboard_content_cleanup=failed reason=incomplete_eventual_inventory" >&2
+  exit 7
+fi
 
 deleted_count=0
 missing_count=0
@@ -76,6 +102,42 @@ while IFS=$'\t' read -r search_id expected_name; do
     --force >> "$delete_log" 2>&1
   deleted_count=$((deleted_count + 1))
 done < "$expected_tsv"
+
+if [[ "$live_dashboard_count" -gt 0 ]]; then
+  [[ "$live_dashboard_count" -eq 1 ]] || {
+    echo "dashboard_content_cleanup=blocked reason=ambiguous_dashboard" >&2
+    exit 6
+  }
+  actual_dashboard_project="$(jq -r --arg id "$dashboard_id" '.data.items[] | select(.id == $id) | ."freeform-tags".project // ""' "$dashboard_inventory_json")"
+  actual_dashboard_name="$(jq -r --arg id "$dashboard_id" '.data.items[] | select(.id == $id) | ."display-name" // ""' "$dashboard_inventory_json")"
+  [[ "$actual_dashboard_project" == "$project" && "$actual_dashboard_name" == "$dashboard_name" ]] || {
+    echo "dashboard_content_cleanup=blocked reason=dashboard_ownership_mismatch" >&2
+    exit 6
+  }
+  oci --profile "$profile" management-dashboard dashboard delete \
+    --management-dashboard-id "$dashboard_id" --force >> "$delete_log" 2>&1
+fi
+
+remaining_count=1
+for absence_attempt in $(seq 1 12); do
+  oci --profile "$profile" management-dashboard saved-search list \
+    --compartment-id "$compartment_id" --all > "$inventory_json"
+  oci --profile "$profile" management-dashboard dashboard list \
+    --compartment-id "$compartment_id" --all > "$dashboard_inventory_json"
+  remaining_searches="$(jq --rawfile expected "$expected_tsv" '
+    ($expected | split("\n") | map(select(length > 0) | split("\t")[0])) as $ids
+    | [.data.items[]? | select(.id as $id | $ids | index($id))] | length
+  ' "$inventory_json")"
+  remaining_dashboards="$(jq --arg id "$dashboard_id" '[.data.items[]? | select(.id == $id)] | length' "$dashboard_inventory_json")"
+  remaining_count=$((remaining_searches + remaining_dashboards))
+  [[ "$remaining_count" -eq 0 ]] && break
+  echo "dashboard_content_cleanup=waiting_for_absence attempt=$absence_attempt/12" >&2
+  sleep 10
+done
+[[ "$remaining_count" -eq 0 ]] || {
+  echo "dashboard_content_cleanup=failed reason=residual_content" >&2
+  exit 7
+}
 
 jq -n \
   --arg project "$project" \
