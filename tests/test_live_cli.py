@@ -179,7 +179,11 @@ def test_wazuh_cloud_init_uses_bounded_package_retries() -> None:
 
 
 def test_published_python_entrypoints_resolve_project_modules() -> None:
-    for script in ("m11-live.py", "m11-discover.py"):
+    residual = (ROOT / "scripts/m11-residual.py").read_text(encoding="utf-8")
+    assert '_tfvar("tenancy_id")' in residual
+    assert '_tfvar("compartment_id")' in residual
+
+    for script in ("m11-live.py", "m11-discover.py", "m11-residual.py"):
         result = subprocess.run(
             [sys.executable, str(ROOT / "scripts" / script), "--help"],
             cwd=ROOT,
