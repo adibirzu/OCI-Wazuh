@@ -185,6 +185,7 @@ def test_wazuh_cloud_init_uses_bounded_package_retries() -> None:
     assert "system package installation failed after bounded retries" in cloud_init
     assert 'printf "stage=%s exit=%s command=%q\\n"' in cloud_init
     assert 'command=%q' in cloud_init
+    assert 'stage="wazuh-content"\n      install -d -o wazuh -g wazuh -m 0750 /var/ossec/logs/oci' in cloud_init
 
 
 def test_published_python_entrypoints_resolve_project_modules() -> None:

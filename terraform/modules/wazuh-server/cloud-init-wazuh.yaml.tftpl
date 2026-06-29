@@ -150,14 +150,13 @@ write_files:
       fi
 
       stage="wazuh-content"
+      install -d -o wazuh -g wazuh -m 0750 /var/ossec/logs/oci
       install -o root -g wazuh -m 0640 "$INSTALL_ROOT"/content/wazuh/decoders/*.xml /var/ossec/etc/decoders/
       install -o root -g wazuh -m 0640 "$INSTALL_ROOT"/content/wazuh/rules/*.xml /var/ossec/etc/rules/
       install -o root -g root -m 0755 \
         "$INSTALL_ROOT/content/wazuh/consumer/oci_log_consumer.py" \
         "$INSTALL_ROOT/oci_log_consumer.py"
       touch /var/ossec/logs/oci/audit.json /var/ossec/logs/oci/flow.json
-      chown -R wazuh:wazuh /var/ossec/logs/oci
-      chmod 0750 /var/ossec/logs/oci
       chmod 0640 /var/ossec/logs/oci/*.json
 
       python3 - <<'PY'
