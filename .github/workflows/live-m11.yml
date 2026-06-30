@@ -138,7 +138,7 @@ jobs:
           echo "runtime_diagnostics=encrypted count=$encrypted"
       - name: Upload redacted validation evidence
         if: always()
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: m11-validation
           path: artifacts/validation/
