@@ -102,37 +102,80 @@ resolve_jumpbox_metadata_key() {
   return 1
 }
 
-resolve_ssh_key() {
-  local purpose="${1:-wazuh}"
-  if [[ -n "${GOAD_JUMPBOX_SSH_KEY:-}" && -f "$GOAD_JUMPBOX_SSH_KEY" ]]; then
-    printf '%s\n' "$GOAD_JUMPBOX_SSH_KEY"
+key_matches_jumpbox_metadata() {
+  local private="$1" jumpbox_id authorized wanted derived
+  [[ -f "$private" && ! -L "$private" ]] || return 1
+  jumpbox_id="$(instance_id_by_name jumpbox 2>/dev/null || true)"
+  [[ -n "$jumpbox_id" ]] || return 1
+  authorized="$(oci_cli compute instance get \
+    --instance-id "$jumpbox_id" \
+    --query 'data.metadata."ssh_authorized_keys"' \
+    --raw-output 2>/dev/null || true)"
+  wanted="$(printf '%s\n' "$authorized" | awk 'NF >= 2 {print $1 " " $2; exit}')"
+  derived="$(ssh-keygen -y -f "$private" 2>/dev/null | awk 'NF >= 2 {print $1 " " $2; exit}')"
+  [[ -n "$wanted" && "$wanted" != "null" && "$derived" == "$wanted" ]]
+}
+
+resolve_goad_workspace() {
+  local base="$1" workspace="" candidate=""
+  if [[ -n "${GOAD_WORKSPACE_PATH:-}" ]]; then
+    workspace="${GOAD_WORKSPACE_PATH/#\~/$HOME}"
+    [[ -d "$workspace" ]] || return 1
+    printf '%s\n' "$workspace"
     return 0
   fi
+  if [[ -n "${GOAD_INSTANCE_ID:-}" ]]; then
+    [[ "$GOAD_INSTANCE_ID" =~ ^[A-Za-z0-9._-]+$ ]] || return 1
+    workspace="$base/workspace/$GOAD_INSTANCE_ID"
+    [[ -d "$workspace" ]] || return 1
+    printf '%s\n' "$workspace"
+    return 0
+  fi
+  local -a workspaces=()
+  for candidate in "$base"/workspace/*; do
+    [[ -d "$candidate" && -f "$candidate/instance.json" ]] && workspaces+=("$candidate")
+  done
+  [[ "${#workspaces[@]}" -eq 1 ]] || return 1
+  printf '%s\n' "${workspaces[0]}"
+}
+
+resolve_ssh_key() {
+  local purpose="${1:-wazuh}"
   local base="${GOAD_PATH:-$HOME/dev/GOADv3}"
+  local workspace="" candidate="" explicit_key=""
   local -a candidates=()
   if [[ "$purpose" == "jumpbox" ]]; then
+    explicit_key="${GOAD_JUMPBOX_SSH_KEY:-}"
+    explicit_key="${explicit_key/#\~/$HOME}"
+    if [[ -n "$explicit_key" ]] && key_matches_jumpbox_metadata "$explicit_key"; then
+      printf '%s\n' "$explicit_key"
+      return 0
+    fi
     if candidate="$(resolve_jumpbox_metadata_key)"; then
       candidates+=("$candidate")
     fi
-    candidates+=(
-      "$base/ad/GOAD/providers/oci/ssh_keys/ubuntu-jumpbox.pem"
-      "$base/template/provider/oci/ssh_keys/ubuntu-jumpbox.pem"
-      "$(tfvar_value ssh_private_key_path)"
-    )
+    if workspace="$(resolve_goad_workspace "$base")"; then
+      candidates+=(
+        "$workspace/ssh_keys/ubuntu-jumpbox.pem"
+        "$workspace/provider/ssh_keys/ubuntu-jumpbox.pem"
+      )
+    fi
   else
-    candidates+=(
-      "$(tfvar_value ssh_private_key_path)"
-      "$base/ad/GOAD/providers/oci/ssh_keys/ubuntu-jumpbox.pem"
-      "$base/template/provider/oci/ssh_keys/ubuntu-jumpbox.pem"
-    )
+    candidates+=("$(tfvar_value ssh_private_key_path)")
   fi
   for candidate in "${candidates[@]}"; do
     candidate="${candidate/#\~/$HOME}"
-    if [[ -n "$candidate" && -f "$candidate" ]]; then
+    if [[ "$purpose" == "jumpbox" ]] && key_matches_jumpbox_metadata "$candidate"; then
+      printf '%s\n' "$candidate"
+      return 0
+    elif [[ "$purpose" != "jumpbox" && -n "$candidate" && -f "$candidate" && ! -L "$candidate" ]]; then
       printf '%s\n' "$candidate"
       return 0
     fi
   done
+  if [[ "$purpose" == "jumpbox" ]]; then
+    echo "No unique GOAD workspace key matches deployed jumpbox metadata; set GOAD_INSTANCE_ID or GOAD_WORKSPACE_PATH." >&2
+  fi
   return 1
 }
 
